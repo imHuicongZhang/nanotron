@@ -1,6 +1,6 @@
 checkpoints:
   checkpoint_interval: 10000
-  checkpoints_path: smoke_test/checkpoints
+  checkpoints_path: smoke_test/checkpoints_dp4
   checkpoints_path_is_shared_file_system: false
   resume_checkpoint_path: null
   save_initial_state: false
@@ -12,11 +12,11 @@ data_stages:
   name: Smoke Stage
   start_training_step: 1
 general:
-  benchmark_csv_path: smoke_test/benchmark.csv
+  benchmark_csv_path: smoke_test/benchmark_dp4.csv
   consumed_train_samples: null
   ignore_sanity_checks: true
   project: smoke
-  run: t4_smoke
+  run: h200_dp4_smoke
   seed: 42
   step: null
 lighteval: null
