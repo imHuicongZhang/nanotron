@@ -184,9 +184,8 @@ class BlendableDataset(torch.utils.data.Dataset):
         """
         stats = {}
         for dataset_idx, dataset in enumerate(self.datasets):
-            assert (
-                "s3" in dataset.folder_path
-            ), "Only S3 paths are supported for consumption stats"  # TODO: remove this
+            # NOTE: upstream fork asserted S3-only here (marked "TODO: remove this"); removed so
+            # local-disk dataset folders work. consumed-token accounting is keyed by the folder path string.
             stats[dataset.folder_path] = {"tokens": self.consumed_tokens[dataset_idx]}
         return stats
 

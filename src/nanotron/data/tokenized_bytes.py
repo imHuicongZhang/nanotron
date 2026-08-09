@@ -417,21 +417,24 @@ class TokenizedBytesFolderDataset(DatatroveFolderDataset):
                 except Exception as e:
                     raise RuntimeError(f"Failed to read cache file on rank {dist.get_rank()}: {e}")
 
+        # NOTE: adapted to PUBLIC datatrove 0.5.0 DatatroveFolderDataset signature.
+        # - eos_token_id -> positions_from_eos_token_id (same semantics: EOS id used to reset per-doc positions)
+        # - dropped max_tokens / read_path / matched_files / file_sizes (HF-fork-only kwargs; S3 offload +
+        #   per-dataset token cap + cached file-list — irrelevant for local-disk data).
         super().__init__(
             folder_path=folder_path,
             seq_len=seq_len,
             filename_pattern=filename_pattern,
             recursive=recursive,
             token_size=token_size,
-            max_tokens=max_tokens,
             shuffle=shuffle,
             seed=seed,
             return_positions=return_positions,
-            eos_token_id=eos_token_id,
-            read_path=folder_read_path,
-            matched_files=matched_files,
-            file_sizes=file_sizes,
+            positions_from_eos_token_id=eos_token_id,
         )
+        # public datatrove sets self.folder_path = get_datafolder(folder_path) (a DataFolder object);
+        # nanotron's consumption/offset accounting compares it as a string, so restore the original string.
+        self.folder_path = folder_path
 
         self.subset_log = TBFolderDatasetLog(
             dataset_type=self.__class__.__name__,
@@ -449,6 +452,15 @@ class TokenizedBytesFolderDataset(DatatroveFolderDataset):
             num_epochs=num_samples // self.lens[-1] if num_samples and self.lens else 0,
             files_order=[str(f.file_path) for f in self.files],
         )
+
+    def __getitem__(self, item):
+        # Public datatrove 0.5.0 DatatroveFolderDataset.__getitem__ indexes files directly and
+        # raises IndexError once `item` reaches len(self) (== one epoch over this folder). nanotron's
+        # own datasets (TokenizedBytesFileDataset / OldTokenizedBytesFolderDataset) wrap with
+        # `item % len(self)` so training can span multiple epochs — train_steps here targets ~3 epochs
+        # / 30B tokens over ~10B tokens of data. Without this wrap every run dies at the 1-epoch
+        # boundary (~step 4768, consumed_tokens 10B) with "IndexError: list index out of range".
+        return super().__getitem__(item % len(self))
 
 
 def build_dataset(
