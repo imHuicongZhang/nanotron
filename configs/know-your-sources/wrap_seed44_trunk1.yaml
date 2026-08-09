@@ -8,7 +8,7 @@
 #
 # steps        : 1 -> 4292
 # LR schedule  : warmup 0->500 linear to 0.0005; constant; decay from step 12875 over 1430 steps -> 0
-# resume       : trunk folder: latest.txt auto-resume. Pre-seed step 0 from /scratch/bvandur1/zhuicon1/checkpoints/_init_1.5B_seed44/0 (tools/seed_trunk_dirs.sh).
+# resume       : trunk folder <ckpt_root>/{setting}_seed{seed}_trunk: latest.txt auto-resume. Pre-seed step 0 from _init_1.5B_seed<S>/0.
 general:
   project: kys-epoch-wsd
   run: wrap_seed44_trunk1
@@ -39,8 +39,7 @@ model:
     pad_token_id: null
     pretraining_tp: 1
     use_cache: false
-tokenizer:
-  tokenizer_name_or_path: /scratch/bvandur1/zhuicon1/tokenizers/llama2-unsloth-tokenizer
+tokenizer: {}
 tokens:
   train_steps: 4292
   val_check_interval: -1
@@ -50,14 +49,10 @@ data_stages:
 - name: S0_top10B
   start_training_step: 1
   data:
-    dataset:
-      dataset_folder:
-      - /scratch/bvandur1/zhuicon1/nanotron_tokenized/wrap/tokenized
+    dataset: {}
     num_loading_workers: 1
     seed: 44
 checkpoints:
-  checkpoints_path: /scratch/bvandur1/zhuicon1/checkpoints/kys/wrap-seed44-trunk
-  resume_checkpoint_path: /scratch/bvandur1/zhuicon1/checkpoints/kys/wrap-seed44-trunk
   load_optimizer: true
   load_lr_scheduler: true
   checkpoint_interval: 1500

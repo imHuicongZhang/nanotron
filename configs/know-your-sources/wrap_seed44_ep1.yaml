@@ -8,7 +8,7 @@
 #
 # steps        : 4293 -> 4768
 # LR schedule  : warmup 0->500 linear to 0.0005; constant; decay from step 4292 over 476 steps -> 0
-# resume       : direct trunk step dir 4292 (has model_config.json, so parse_ckpt_path uses it as-is and ignores the trunk latest.txt).
+# resume       : direct trunk step dir 4292 (== lr_decay_starting_step; it has model_config.json, so parse_ckpt_path uses it as-is and ignores the trunk latest.txt).
 general:
   project: kys-epoch-wsd
   run: wrap_seed44_ep1
@@ -39,8 +39,7 @@ model:
     pad_token_id: null
     pretraining_tp: 1
     use_cache: false
-tokenizer:
-  tokenizer_name_or_path: /scratch/bvandur1/zhuicon1/tokenizers/llama2-unsloth-tokenizer
+tokenizer: {}
 tokens:
   train_steps: 4768
   val_check_interval: -1
@@ -50,14 +49,10 @@ data_stages:
 - name: S0_top10B
   start_training_step: 1
   data:
-    dataset:
-      dataset_folder:
-      - /scratch/bvandur1/zhuicon1/nanotron_tokenized/wrap/tokenized
+    dataset: {}
     num_loading_workers: 1
     seed: 44
 checkpoints:
-  checkpoints_path: /scratch/bvandur1/zhuicon1/checkpoints/kys/wrap-seed44-ep1
-  resume_checkpoint_path: /scratch/bvandur1/zhuicon1/checkpoints/kys/wrap-seed44-trunk/4292
   load_optimizer: true
   load_lr_scheduler: true
   checkpoint_interval: 100000

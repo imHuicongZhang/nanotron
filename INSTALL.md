@@ -142,10 +142,12 @@ can start as soon as its trunk segment has written its final checkpoint). Before
 trunk segment, seed the trunk directory:
 
 ```bash
-mkdir -p $CKPT/kys/<setting>-seed<S>-trunk
-cp -al $CKPT/_init_1.5B_seed<S>/0 $CKPT/kys/<setting>-seed<S>-trunk/0
-echo 0 > $CKPT/kys/<setting>-seed<S>-trunk/latest.txt
+T=<ckpt_root>/<setting>_seed<S>_trunk
+mkdir -p $T && cp -al <init_root>/_init_1.5B_seed<S>/0 $T/0 && echo 0 > $T/latest.txt
 ```
+
+The templates contain **no absolute paths at all**. `data_root`, `tokenizer_path`, `ckpt_root`
+and `wandb.dir` in `deploy/clusters.yaml` are the only locations anyone sets; see `SOP.md` §2.
 
 ---
 

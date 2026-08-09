@@ -42,7 +42,43 @@ OWNED = {
     'parallelism': ('dp', 'tp', 'pp'),
     'tokens': ('micro_batch_size', 'batch_accumulation_per_replica'),
     'optimizer': ('zero_stage',),
+    'tokenizer': ('tokenizer_name_or_path',),
+    'checkpoints': ('checkpoints_path', 'resume_checkpoint_path'),
 }
+
+# ---------------------------------------------------------------------------------------
+# setting -> corpus subdirectory under `data_root`. HARDCODED HERE ON PURPOSE.
+#
+# Three different naming schemes are in play for the same six arms, and they do not line up:
+#
+#   paper setting        HF/repo folder        internal run name              corpus dir
+#   -------------------  --------------------  -----------------------------  ----------------
+#   QUALITY-BASE         quality_base          quality-base                   10B-base-shuf42
+#   QUALITY-FIRST        quality_first         quality-first                  quality-first
+#   DIVERSITY-ORIENTED   diversity_oriented    diversity-first                diversity-first
+#   WRAP-INSPIRED        wrap_inspired         wrap                           wrap
+#   REWIRE-INSPIRED      rewire_inspired       rewrite                        rewrite
+#   DISAGREEMENT-AWARE   disagreement_aware    signal-disagreement-lambda05   signal-disagreement-lambda05
+#
+# Note especially: DIVERSITY-ORIENTED's corpus is `diversity-first`, REWIRE-INSPIRED's is
+# `rewrite`, DISAGREEMENT-AWARE's is `signal-disagreement-lambda05`, and QUALITY-BASE's is
+# `10B-base-shuf42` (NOT `quality-base`, and NOT the old unshuffled `10B-base`).
+#
+# Wiring these by hand is a trap: a wrong-but-existing path does not crash. Training runs to
+# completion on the wrong corpus and the numbers are silently meaningless. So nobody wires
+# them by hand — `data_root` is the single value a deployer sets, and this table does the rest.
+# tools/assert_invariants.py then verifies each resolved path by token count before any GPU
+# time is spent.
+# ---------------------------------------------------------------------------------------
+SETTING_CORPUS = {
+    'quality-base':                 '10B-base-shuf42',
+    'quality-first':                'quality-first',
+    'diversity-first':              'diversity-first',
+    'wrap':                         'wrap',
+    'rewrite':                      'rewrite',
+    'signal-disagreement-lambda05': 'signal-disagreement-lambda05',
+}
+CORPUS_LEAF = 'tokenized'   # <data_root>/<corpus dir>/tokenized/*.ds
 
 
 def die(msg):
@@ -187,6 +223,51 @@ def main():
 
     run_name = cfg['general']['run']
     setting, seedpart, kind = run_name.rsplit('_', 2)[0], f'seed{args.seed}', run_name.rsplit('_', 1)[1]
+
+    # --- dataset_folder: composed, never copied ---------------------------------------------
+    data_root = prof.get('data_root')
+    if not data_root:
+        die(f'data_root not set in {args.profile}. It is the ONE path a deployer fills in: the '
+            f'directory holding the six tokenized corpora. Templates carry no dataset paths, so '
+            f'nothing can be rendered until this points somewhere real.')
+    if setting not in SETTING_CORPUS:
+        die(f'no corpus mapping for setting {setting!r} (from general.run={run_name!r}). '
+            f'Known: {sorted(SETTING_CORPUS)}')
+    dataset_folder = str(Path(data_root) / SETTING_CORPUS[setting] / CORPUS_LEAF)
+    stage = cfg['data_stages'][0]['data']
+    if stage.get('dataset', {}).get('dataset_folder'):
+        die(f'template already sets data_stages[0].data.dataset.dataset_folder — dataset paths '
+            f'must not be baked into templates; they are composed from data_root.')
+    stage.setdefault('dataset', {})['dataset_folder'] = [dataset_folder]
+
+    # --- tokenizer and checkpoint paths: same treatment, same reason -------------------------
+    tok_path = prof.get('tokenizer_path')
+    ckpt_root = prof.get('ckpt_root')
+    for k, v in (('tokenizer_path', tok_path), ('ckpt_root', ckpt_root)):
+        if not v:
+            die(f'{k} not set in {args.profile}. Templates carry no absolute paths at all — '
+                f'tokenizer, checkpoints and data are all composed from deploy/clusters.yaml.')
+    if cfg.get('tokenizer', {}).get('tokenizer_name_or_path'):
+        die('template already sets tokenizer.tokenizer_name_or_path — composed from tokenizer_path.')
+    if cfg.get('checkpoints', {}).get('checkpoints_path'):
+        die('template already sets checkpoints.checkpoints_path — composed from ckpt_root.')
+    cfg.setdefault('tokenizer', {})['tokenizer_name_or_path'] = str(tok_path)
+
+    trunk_dir = Path(ckpt_root) / f'{setting}_{seedpart}_trunk'
+    if kind.startswith('trunk'):
+        # All three segments share ONE directory and resume via latest.txt, so a segment
+        # boundary and a mid-segment crash-restart use the same mechanism. Pre-seed step 0.
+        ckpt_path, resume = trunk_dir, trunk_dir
+    else:
+        # Resume from the trunk's STEP DIRECTORY, never the folder: parse_ckpt_path resolves a
+        # folder through latest.txt, which would silently point every branch at the trunk's
+        # latest step (12875) instead of its own branch point. The step is the branch's own
+        # lr_decay_starting_step by construction, so the two cannot drift apart.
+        branch_step = cfg['optimizer']['learning_rate_scheduler']['lr_decay_starting_step']
+        ckpt_path = Path(ckpt_root) / f'{setting}_{seedpart}_{kind}'
+        resume = trunk_dir / str(branch_step)
+    cfg.setdefault('checkpoints', {})['checkpoints_path'] = str(ckpt_path)
+    cfg['checkpoints']['resume_checkpoint_path'] = str(resume)
     # Provenance that surfaces in the wandb UI and is filterable. The authoritative record is
     # still config.nanotron_config.tokens.*, which nanotron uploads wholesale; these tags exist
     # so `mbs` can be audited at a glance across 108 runs without opening each config.
@@ -222,7 +303,9 @@ def main():
               f'mbs={mbs} accum={accum}, {c["gpus_per_node"]} GPU/node)\n'
               f'# seed     : {args.seed}  -> assigned cluster {assign[args.seed]}\n'
               f'# global batch: {mbs} x {accum} x {dp} = {seq_per_step} seq '
-              f'= {tok_per_step:,} tokens/step  [INVARIANT]\n')
+              f'= {tok_per_step:,} tokens/step  [INVARIANT]\n'
+              f'# corpus   : setting {setting} -> {SETTING_CORPUS[setting]}/{CORPUS_LEAF}\n'
+              f'#            composed from data_root={data_root}\n')
     text = banner + yaml.safe_dump(cfg, sort_keys=False)
 
     if args.out:

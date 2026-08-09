@@ -61,7 +61,49 @@ python tools/assert_invariants.py --config rendered/<name>.yaml --log train.log 
 
 ---
 
-## 2. Launching
+## 2. Paths: four values, and nothing else
+
+**The 108 templates contain no absolute paths at all** — verified, `grep -rlE "/(scratch|weka|shared)/" configs/know-your-sources/` returns 0. Every location is composed at render time from `deploy/clusters.yaml`:
+
+| field | what it is |
+|---|---|
+| `data_root` | directory holding the six tokenized corpora |
+| `tokenizer_path` | the llama2-unsloth tokenizer **directory** (not `tokenizer.json`) |
+| `ckpt_root` | where checkpoints are written (reserve ~5.3 TB, 2.3 TB after pruning) |
+| `wandb.dir` | where offline run directories go (shared storage — §4.2) |
+
+That is the complete set. **Do not edit paths in the config templates**; `render_config.py` refuses to render a template that sets any of them.
+
+### Why the setting → corpus mapping is not configurable
+
+It lives hardcoded in `render_config.py` because three naming schemes are in play for the same six arms and they do not line up:
+
+| paper setting | repo folder | internal run name | corpus dir |
+|---|---|---|---|
+| QUALITY-BASE | `quality_base` | `quality-base` | **`10B-base-shuf42`** |
+| QUALITY-FIRST | `quality_first` | `quality-first` | `quality-first` |
+| DIVERSITY-ORIENTED | `diversity_oriented` | **`diversity-first`** | `diversity-first` |
+| WRAP-INSPIRED | `wrap_inspired` | `wrap` | `wrap` |
+| REWIRE-INSPIRED | `rewire_inspired` | **`rewrite`** | `rewrite` |
+| DISAGREEMENT-AWARE | `disagreement_aware` | `signal-disagreement-lambda05` | `signal-disagreement-lambda05` |
+
+Wiring these by hand gets at least one wrong, and **a wrong-but-existing path does not crash**: nanotron reads whatever corpus is there, trains to completion, and the numbers are meaningless. So nobody retypes them — `data_root` is set once and the table does the rest.
+
+### The two silent failures this prevents, and how they are caught
+
+| failure | what nanotron does | caught by |
+|---|---|---|
+| right path, **wrong corpus** | trains normally on the wrong data | `assert_invariants.py` token-count check |
+| `resume_checkpoint_path` doesn't resolve | `serialize/main.py:231` logs *"No previous checkpoint found"* at **INFO** and returns `None` → **starts from random init**. A cooldown branch runs its 476 steps, exits 0, and has annealed noise | `assert_invariants.py --check-resume` |
+
+```bash
+python tools/assert_invariants.py --config rendered/<name>.yaml                  # after render
+python tools/assert_invariants.py --config rendered/<name>.yaml --check-resume   # before launch
+```
+
+The corpus check compares the summed `.ds.metadata` token counts against the recorded value for that corpus (cross-checked against raw `.ds` bytes/2; they match exactly for all six). It caught a deliberately mis-pointed `wrap` → `rewrite` corpus on a 264-token difference. Note `diversity-first` is legitimately ~1.1% short of 10B — a property of that corpus, not an error.
+
+## 3. Launching
 
 Templates in `configs/know-your-sources/` are deliberately **not runnable as-is** — no
 `parallelism`, `micro_batch_size`, `batch_accumulation_per_replica`, `zero_stage` or
@@ -78,7 +120,7 @@ This writes two files: the config, and a companion `.env` with the wandb wiring.
 
 ```bash
 set -a; source rendered/quality-first_seed43_trunk1.env; set +a
-python tools/assert_invariants.py --config rendered/quality-first_seed43_trunk1.yaml
+python tools/assert_invariants.py --config rendered/quality-first_seed43_trunk1.yaml --check-resume
 torchrun --nproc_per_node=8 run_train.py --config-file rendered/quality-first_seed43_trunk1.yaml
 ```
 
@@ -89,15 +131,18 @@ may start as soon as its trunk segment has written its final checkpoint (4292 / 
 Before the first trunk segment of each chain, seed the trunk directory:
 
 ```bash
-T=$CKPT/kys/<setting>-seed<S>-trunk
-mkdir -p $T && cp -al $CKPT/_init_1.5B_seed<S>/0 $T/0 && echo 0 > $T/latest.txt
+T=<ckpt_root>/<setting>_seed<S>_trunk          # note underscores: dir stem == run name
+mkdir -p $T && cp -al <init_root>/_init_1.5B_seed<S>/0 $T/0 && echo 0 > $T/latest.txt
 ```
+
+`cp -al` hardlinks, so seeding all 18 trunks costs no extra disk. Verify afterwards with
+`tools/hash_init_checkpoint.py $T/0 --check init_1.5B_seed<S>.hash.json`.
 
 ---
 
-## 3. wandb
+## 4. wandb
 
-### 3.1 What nanotron actually does
+### 4.1 What nanotron actually does
 
 Verified by reading `src/nanotron/trainer.py` and by running wandb 0.27.0 locally — not from
 general wandb knowledge, because the wiring is unusually thin:
@@ -119,7 +164,7 @@ Verified that wandb picks all of them up from `WANDB_ENTITY`, `WANDB_TAGS`,
 `WANDB_RUN_GROUP`, `WANDB_JOB_TYPE` — `render_config.py` writes exactly those into the
 companion `.env`.
 
-### 3.2 The chosen flow: offline on his side, synced by you
+### 4.2 The chosen flow: offline on his side, synced by you
 
 **The grid runs `WANDB_MODE=offline`. Tianjian never syncs. You sync, and that makes the runs
 yours.**
@@ -178,7 +223,7 @@ wandb sync --entity <YOUR_ENTITY> --project kys-epoch-wsd /tmp/wbtest/wandb/offl
 Offline runs keep their name, tags, group, config and full step history; the only thing lost
 is live monitoring during the run.
 
-### 3.3 Alternatives that were considered, and what each costs
+### 4.3 Alternatives that were considered, and what each costs
 
 | option | cost |
 |---|---|
@@ -187,11 +232,11 @@ is live monitoring during the run.
 | **Service-account key shipped with the repo** | A long-lived credential that can write to *any* project in your entity, sitting in a file copied between clusters, into `.env`s, shell history, and SLURM job environments (`scontrol show job` exposes them). Cannot be scoped per project; revoking it kills every run using it. Same-day stopgap at best, never committed, rotate immediately after. |
 | **He owns the runs, you pull with `api.runs()`** | No credential moves, but the record lives in his account — if it lapses you lose it and cannot administer the project. Worse for a paper. |
 
-### 3.5 Naming, tags, grouping
+### 4.4 Naming, tags, grouping
 
 `project` is **never defaulted**: `render_config.py` aborts while `wandb.project` is null, and
 aborts again if it disagrees with the template's `general.project`. `entity` is not set at all
-in offline mode (§3.2) — it is supplied by `wandb sync --entity`.
+in offline mode (§4.2) — it is supplied by `wandb sync --entity`.
 
 These guards exist because wandb's fallback is silent, not loud. During this investigation an
 online `wandb.init()` with **no `WANDB_API_KEY` set** did *not* fail — it found a cached
@@ -225,7 +270,7 @@ Also set: `WANDB_RUN_GROUP={setting}_seed{n}` (groups the 6 runs of one chain) a
 The authoritative record is still `config.nanotron_config.tokens.*`, which nanotron uploads
 in full; the tags exist so a wrong `mbs` is visible at a glance in the runs table.
 
-### 3.6 Trunk segments: three runs or one?
+### 4.5 Trunk segments: three runs or one?
 
 **Three separate wandb runs**, and that is the recommendation.
 
@@ -251,19 +296,30 @@ correct absolute positions.
 
 ---
 
-## 4. Division of labour
+## 5. Division of labour
 
 **You — before he starts:** nothing blocking. `wandb.project` is already `kys-epoch-wsd` and
 `mode: offline`; no entity is needed until sync. Optionally run the 30-second sync probe in
-§3.2 so the destination is confirmed before there is anything valuable to lose.
+§4.2 so the destination is confirmed before there is anything valuable to lose.
 
 **You — after the grid finishes:** `wandb login`, then
 `wandb sync --entity <YOUR_ENTITY> --project kys-epoch-wsd --sync-all <his path>/wandb`.
 That single command is what makes the 108 runs yours.
 
-**Him — once:** `pip install wandb` (no login, no key, no account). Fill in
-`deploy/clusters.yaml`: `wandb.dir` (shared storage — see §3.2), the `slurm:` block, and
-confirm `gpus_per_node` / `dp`. Nothing renders until `wandb.dir` is set.
+**Him — once:** `pip install wandb` (no login, no key, no account). Fill in exactly five
+values in `deploy/clusters.yaml` and nothing else:
+
+| field | value |
+|---|---|
+| `data_root` | where the six tokenized corpora were unpacked |
+| `tokenizer_path` | the tokenizer **directory** |
+| `ckpt_root` | checkpoint destination (~5.3 TB) |
+| `wandb.dir` | shared storage for offline runs (§4.2) |
+| `clusters.h200.slurm.*` | partition / gres / time, and confirm `gpus_per_node` / `dp` |
+
+He does **not** touch dataset paths, the setting→corpus mapping, `micro_batch_size`, or any
+of the 108 templates. `render_config.py` refuses to render while any of the four paths is
+null, so there is no silent-default path.
 
 **Him — per run:** render, source the `.env`, run the preflight assert, launch. He does
 **not** run `wandb sync`; he leaves the `offline-run-*` directories where they are and tells

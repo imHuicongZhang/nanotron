@@ -54,16 +54,18 @@ TRUNK_CKPT_INTERVAL = 1500              # restart insurance only; never lands on
 BRANCH_CKPT_INTERVAL = 100_000          # never fires; branches keep only save_final_state
 
 SEEDS = [42, 43, 44]
-TOK = '/scratch/bvandur1/zhuicon1/nanotron_tokenized'
-SETTINGS = {
-    # paper name              tokenized corpus
-    'quality-base':                 f'{TOK}/10B-base-shuf42/tokenized',   # re-shuffled 2026-08-09
-    'quality-first':                f'{TOK}/quality-first/tokenized',
-    'diversity-first':              f'{TOK}/diversity-first/tokenized',
-    'wrap':                         f'{TOK}/wrap/tokenized',
-    'rewrite':                      f'{TOK}/rewrite/tokenized',
-    'signal-disagreement-lambda05': f'{TOK}/signal-disagreement-lambda05/tokenized',
-}
+# Setting names only — NO dataset paths. Templates must stay portable: the corpus location is
+# a per-cluster deployment fact, so `tools/render_config.py` composes each `dataset_folder`
+# from the single `data_root` in deploy/clusters.yaml plus a mapping it owns internally.
+# Baking DSAI paths in here would make all 108 files wrong on any other machine.
+SETTINGS = [
+    'quality-base',
+    'quality-first',
+    'diversity-first',
+    'wrap',
+    'rewrite',
+    'signal-disagreement-lambda05',
+]
 
 CKPT_ROOT = '/scratch/bvandur1/zhuicon1/checkpoints/kys'
 INIT_ROOT = '/scratch/bvandur1/zhuicon1/checkpoints'
@@ -105,33 +107,34 @@ OPT_FACTORY = {
 
 def build(setting, seed, kind):
     """kind in {trunk1, trunk2, trunk3, ep1, ep2, ep3}."""
-    trunk_dir = f'{CKPT_ROOT}/{setting}-seed{seed}-trunk'
-
     if kind.startswith('trunk'):
         seg = int(kind[-1])
         train_steps = TRUNK_SEGMENTS[seg - 1]
         # trunk carries the EP3 decay params but stops at/before the decay-start step, so the
         # decay branch is only ever entered at offset 0 -> lr == initial_lr (see module docstring)
         decay_start, decay_steps = BRANCHES['ep3'][0], BRANCHES['ep3'][1]
-        ckpt_path = trunk_dir
-        resume = trunk_dir                      # latest.txt; pre-seeded with the init as step 0
         interval = TRUNK_CKPT_INTERVAL
-        resume_note = ('trunk folder: latest.txt auto-resume. Pre-seed step 0 from '
-                       f'{INIT_ROOT}/_init_1.5B_seed{seed}/0 (tools/seed_trunk_dirs.sh).')
+        resume_note = ('trunk folder <ckpt_root>/{setting}_seed{seed}_trunk: latest.txt '
+                       'auto-resume. Pre-seed step 0 from _init_1.5B_seed<S>/0.')
     else:
         decay_start, decay_steps, train_steps = BRANCHES[kind]
-        ckpt_path = f'{CKPT_ROOT}/{setting}-seed{seed}-{kind}'
-        resume = f'{trunk_dir}/{decay_start}'   # DIRECT step dir, not the folder
         interval = BRANCH_CKPT_INTERVAL
-        resume_note = (f'direct trunk step dir {decay_start} (has model_config.json, so '
-                       'parse_ckpt_path uses it as-is and ignores the trunk latest.txt).')
+        resume_note = (f'direct trunk step dir {decay_start} (== lr_decay_starting_step; it has '
+                       'model_config.json, so parse_ckpt_path uses it as-is and ignores the '
+                       'trunk latest.txt).')
 
     return {
         # `run` is the wandb run name verbatim (patch #8 removes upstream's timestamp prefix)
         # and matches this file's stem, so config name == wandb run name == checkpoint dir stem.
         'general': {'project': PROJECT, 'run': f'{setting}_seed{seed}_{kind}', 'seed': seed},
         'model': MODEL,
-        'tokenizer': {'tokenizer_name_or_path': TOKENIZER},
+        # tokenizer_name_or_path, checkpoints_path and resume_checkpoint_path are all composed
+        # by render_config.py from deploy/clusters.yaml (tokenizer_path / ckpt_root). Baking
+        # them in would point 108 files at DSAI paths. A missing resume_checkpoint_path is the
+        # nastiest of the three: parse_ckpt_path logs "No previous checkpoint found" at INFO
+        # and returns None, so a cooldown branch would train from RANDOM INIT and finish
+        # normally with meaningless weights.
+        'tokenizer': {},
         'tokens': {
             'train_steps': train_steps,
             'val_check_interval': -1,
@@ -142,14 +145,15 @@ def build(setting, seed, kind):
             'name': 'S0_top10B',
             'start_training_step': 1,
             'data': {
-                'dataset': {'dataset_folder': [SETTINGS[setting]]},
+                # dataset_folder is intentionally ABSENT — render_config.py composes it from
+                # deploy/clusters.yaml's `data_root` plus its own setting->subdirectory map.
+                # The setting is recovered from general.run, so it cannot drift from the file.
+                'dataset': {},
                 'num_loading_workers': 1,
                 'seed': seed,
             },
         }],
         'checkpoints': {
-            'checkpoints_path': ckpt_path,
-            'resume_checkpoint_path': resume,
             'load_optimizer': True,
             'load_lr_scheduler': True,
             'checkpoint_interval': interval,

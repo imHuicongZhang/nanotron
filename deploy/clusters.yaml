@@ -40,6 +40,45 @@
 global_batch_seq: 1024        # 1024 sequences x 2048 tokens = 2,097,152 tokens/step. INVARIANT.
 sequence_length: 2048
 
+# THE ONE PATH A DEPLOYER SETS. Directory containing the six tokenized corpora, i.e. the place
+# the .ds data was downloaded/unpacked to. Each arm's dataset_folder is composed by
+# tools/render_config.py as:
+#
+#     <data_root>/<corpus subdir>/tokenized
+#
+# The setting -> subdir mapping lives INSIDE render_config.py and is not configurable, because
+# three different naming schemes are in play for the same six arms and they do not line up
+# (disagreement_aware / signal-disagreement-lambda05, quality_base / 10B-base-shuf42,
+# diversity_oriented / diversity-first). A wrong-but-existing path does not crash — training
+# completes and the numbers are silently wrong — so the mapping is not left to be retyped.
+#
+# Expected layout under data_root:
+#     10B-base-shuf42/tokenized/           quality-first/tokenized/
+#     diversity-first/tokenized/           wrap/tokenized/
+#     rewrite/tokenized/                   signal-disagreement-lambda05/tokenized/
+# each holding 16 *.ds plus matching *.ds.index and *.ds.metadata.
+#
+# tools/assert_invariants.py verifies every resolved path by token count before any GPU time.
+data_root: null               # <- FILL IN, e.g. /shared/scratch/kys/nanotron_tokenized
+
+# The other two path roots. Templates contain NO absolute paths at all, so these three fields
+# plus wandb.dir are the complete set of locations a deployer supplies.
+#
+#   tokenizer_path  the llama2-unsloth tokenizer DIRECTORY (not tokenizer.json — nanotron
+#                   wants the dir, and .ds.metadata line 1 must name the same dir).
+#   ckpt_root       where checkpoints are written. render_config.py composes
+#                     <ckpt_root>/<setting>_seed<n>_trunk        (all 3 trunk segments share it)
+#                     <ckpt_root>/<setting>_seed<n>_<ep1|ep2|ep3>
+#                   and points each branch's resume at <trunk>/<lr_decay_starting_step>.
+#
+# Why these are not baked into the templates either: a wrong resume_checkpoint_path is the
+# worst silent failure in the whole pipeline. serialize/main.py:231 logs "No previous
+# checkpoint found" at INFO and returns None, so nanotron starts from RANDOM INIT. A cooldown
+# branch would run its 476 steps and finish normally having annealed noise. Reserve
+# ~5.3 TB under ckpt_root (2.3 TB after pruning trunk restart points).
+tokenizer_path: null          # <- FILL IN, e.g. /shared/scratch/kys/llama2-unsloth-tokenizer
+ckpt_root: null               # <- FILL IN, e.g. /shared/scratch/kys/checkpoints
+
 # wandb. The grid runs OFFLINE and is synced afterwards by whoever should own the runs.
 #
 # Why offline rather than a team invite: an offline run carries NO ownership until it is

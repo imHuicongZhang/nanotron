@@ -37,6 +37,29 @@ import yaml
 EXPECTED_MBS = 16
 EXPECTED_TOK_PER_STEP = 2_097_152
 
+# Corpus identity, keyed by the corpus subdirectory name. Token counts are the sum of line 2
+# of every *.ds.metadata in the folder, cross-checked against raw .ds bytes/2 (they matched
+# exactly for all six on 2026-08-09). Source: tmp/kys/manifest/provenance.tsv, Gate 4.
+#
+# This is the check that catches a path which EXISTS but holds the wrong corpus. That failure
+# is otherwise silent: nanotron starts, trains for 27 hours, and produces numbers that mean
+# nothing. Note diversity-first is legitimately ~1.1% short of 10B — that is a property of the
+# corpus, not an error.
+EXPECTED_CORPUS = {
+    '10B-base-shuf42':              (10_000_003_137, 16),
+    '10B-base':                     (10_000_003_137, 16),   # pre-shuffle; should NOT be used
+    'quality-first':                (10_000_002_634, 16),
+    'diversity-first':              ( 9_889_637_833, 16),
+    'wrap':                         (10_000_002_419, 16),
+    'rewrite':                      (10_000_002_683, 16),
+    'signal-disagreement-lambda05': (10_000_002_333, 16),
+}
+DEPRECATED_CORPUS = {
+    '10B-base': 'the UNSHUFFLED quality-base corpus. Its .ds stream is a 16-period sawtooth of '
+                'pure-upper / pure-lower quality strata, so every optimizer step draws its whole '
+                'batch from one stratum. Use 10B-base-shuf42.',
+}
+
 # nanotron/trainer.py logs this banner once at startup:
 #   mbs: 16 | grad_accum: 8 | cp: 1 | sequence_length: 2048 | global_batch_size: 1024 | ...
 BANNER = re.compile(
@@ -78,6 +101,119 @@ def check_config(path: Path):
     if mbs * accum * dp != cfg["tokens"].get("_gbs", mbs * accum * dp):
         errs.append("global batch inconsistent")
     return errs, (mbs, accum, dp, seq)
+
+
+def check_corpus(cfg_path: Path):
+    """Verify the rendered dataset_folder points at the corpus it claims to.
+
+    Four ways this goes wrong, all caught here rather than 27 hours in:
+      - data_root typo               -> folder missing
+      - corpus not downloaded yet    -> folder present but no .ds
+      - .ds.metadata not shipped     -> nanotron's own vocab_size assert would fire at startup
+      - RIGHT path, WRONG corpus     -> token count disagrees. This is the silent one.
+    """
+    import yaml
+    cfg = yaml.safe_load(cfg_path.read_text())
+    errs = []
+    try:
+        folders = cfg["data_stages"][0]["data"]["dataset"]["dataset_folder"]
+    except (KeyError, TypeError):
+        return ["rendered config has no data_stages[0].data.dataset.dataset_folder — "
+                "did render_config.py fail to compose it from data_root?"]
+    if len(folders) != 1:
+        errs.append(f"expected exactly 1 dataset_folder, got {len(folders)}: {folders}")
+    for f in folders:
+        p = Path(f)
+        corpus = p.parent.name                      # <data_root>/<corpus>/tokenized
+        print(f"corpus  : {corpus}  ({p})")
+        if corpus in DEPRECATED_CORPUS:
+            errs.append(f"{corpus} is deprecated: {DEPRECATED_CORPUS[corpus]}")
+        if not p.is_dir():
+            errs.append(f"{p} does not exist or is not a directory")
+            continue
+        ds = sorted(p.glob("*.ds"))
+        meta = sorted(p.glob("*.ds.metadata"))
+        if not ds:
+            errs.append(f"{p} contains no *.ds shards")
+            continue
+        if len(meta) != len(ds):
+            errs.append(f"{p}: {len(ds)} *.ds but {len(meta)} *.ds.metadata — nanotron reads "
+                        f"vocab_size from .ds.metadata and will refuse to start without it")
+        total = 0
+        for m in meta:
+            try:
+                with open(m) as fh:
+                    fh.readline()                    # line 1: <tokenizer dir>|<token size>
+                    total += int(fh.readline().strip())
+            except Exception as e:
+                errs.append(f"{m}: unreadable ({e!r})")
+        exp = EXPECTED_CORPUS.get(corpus)
+        if exp is None:
+            errs.append(f"{corpus}: no expected token count on record — unknown corpus name")
+            continue
+        exp_tok, exp_shards = exp
+        print(f"          {len(ds)} shards, {total:,} tokens (expected {exp_tok:,})")
+        if len(ds) != exp_shards:
+            errs.append(f"{corpus}: {len(ds)} shards, expected {exp_shards}")
+        if total != exp_tok:
+            errs.append(f"{corpus}: {total:,} tokens but this corpus should have "
+                        f"{exp_tok:,} ({total - exp_tok:+,}). The path exists but does not hold "
+                        f"the corpus it claims to — check data_root and the download.")
+    return errs
+
+
+def check_resume(cfg_path: Path):
+    """Verify this run will actually resume from where it claims to.
+
+    Run this immediately before launching each job. It is the only guard against the worst
+    silent failure in the pipeline: `serialize/main.py:231` logs "No previous checkpoint
+    found" at INFO level and returns None when `resume_checkpoint_path` does not resolve, so
+    nanotron proceeds from RANDOM INIT. A cooldown branch would run its 476/954/1430 steps,
+    exit 0, write a checkpoint, and be entirely meaningless.
+    """
+    import yaml
+    cfg = yaml.safe_load(cfg_path.read_text())
+    errs = []
+    ck = cfg.get("checkpoints", {})
+    resume = Path(ck.get("resume_checkpoint_path", ""))
+    run = cfg.get("general", {}).get("run", "?")
+    kind = run.rsplit("_", 1)[-1]
+    print(f"resume  : {resume}")
+    if not resume.is_dir():
+        errs.append(f"resume_checkpoint_path {resume} does not exist. nanotron would log 'No "
+                    f"previous checkpoint found' at INFO and START FROM RANDOM INIT.")
+        return errs
+    if kind.startswith("trunk"):
+        # folder form: resolved through latest.txt
+        latest = resume / "latest.txt"
+        if not latest.is_file():
+            errs.append(f"{latest} missing — the trunk directory must be pre-seeded with the "
+                        f"init as step 0 and a latest.txt containing 0, or the first segment "
+                        f"starts from random init.")
+        else:
+            step = latest.read_text().strip()
+            tgt = resume / step
+            print(f"          latest.txt -> step {step}")
+            if not (tgt / "model_config.json").is_file():
+                errs.append(f"latest.txt points at step {step} but {tgt}/model_config.json "
+                            f"is missing")
+    else:
+        # direct step-dir form: must BE a checkpoint, and must be the right step
+        want = str(cfg["optimizer"]["learning_rate_scheduler"]["lr_decay_starting_step"])
+        if resume.name != want:
+            errs.append(f"branch {kind} resumes from step dir {resume.name} but its "
+                        f"lr_decay_starting_step is {want} — the branch point and the decay "
+                        f"start must be the same step or the cooldown is not equivalent to an "
+                        f"independent run")
+        if not (resume / "model_config.json").is_file():
+            errs.append(f"{resume}/model_config.json missing — parse_ckpt_path only treats a "
+                        f"directory as a checkpoint if that file is present; without it this "
+                        f"branch starts from random init")
+        if (resume / "latest.txt").is_file():
+            errs.append(f"{resume} contains latest.txt — it is being treated as a run folder, "
+                        f"not a step directory; the branch would resume from the trunk's LATEST "
+                        f"step instead of its own branch point")
+    return errs
 
 
 def check_log(path: Path, at_step: int, expect):
@@ -122,14 +258,27 @@ def main():
     ap.add_argument("--config", type=Path, required=True, help="a RENDERED config (not a template)")
     ap.add_argument("--log", type=Path, help="training log, for the post-step-200 check")
     ap.add_argument("--at-step", type=int, default=200)
+    ap.add_argument("--skip-corpus", action="store_true",
+                    help="skip the dataset checks (use only when the corpora are not on this host)")
+    ap.add_argument("--check-resume", action="store_true",
+                    help="also verify resume_checkpoint_path resolves; run this immediately "
+                         "before launching each job, once its predecessor has finished")
     args = ap.parse_args()
 
     errs, expect = check_config(args.config)
+    if not args.skip_corpus:
+        errs += check_corpus(args.config)
+    if args.check_resume:
+        errs += check_resume(args.config)
     if args.log:
         errs += check_log(args.log, args.at_step, expect)
     if errs:
         fail(errs)
-    print(f"OK: micro_batch_size={EXPECTED_MBS}, {EXPECTED_TOK_PER_STEP:,} tokens/step")
+    extra = [] if args.skip_corpus else ["corpus verified by token count"]
+    if args.check_resume:
+        extra.append("resume path verified")
+    print(f"OK: micro_batch_size={EXPECTED_MBS}, {EXPECTED_TOK_PER_STEP:,} tokens/step"
+          + (", " + ", ".join(extra) if extra else ""))
 
 
 if __name__ == "__main__":
