@@ -4,7 +4,7 @@ Target: **H200 (Hopper, sm_90)**. Blackwell/B300 notes are in Appendix A in case
 later. Verified 2026-08-09 by dumping the actual wheels with `cuobjdump`, not from release
 notes.
 
-> **`pip install` alone is not enough.** nanotron needs 8 source patches to run this grid,
+> **`pip install` alone is not enough.** nanotron needs 9 source patches to run this grid,
 > and none of them are upstream. Install from **this fork**, not `huggingface/nanotron`.
 > See §4.
 
@@ -87,7 +87,7 @@ wall-clock limit.** Those are the last blanks in `deploy/clusters.yaml`.
 
 ---
 
-## 4. The 8 patches — all still required
+## 4. The 9 patches — all still required
 
 Upstream `huggingface/nanotron` `main` is **still at `2411b022`, dated 2026-04-07** — verified
 2026-08-09 via `git ls-remote` and the GitHub API (HEAD sha
@@ -99,6 +99,7 @@ as necessary on H200 as they would be on Blackwell.
 
 | # | file | what | why |
 |---|---|---|---|
+| 0 | `scaling/parametrization.py` | `config.model.X` → `config.X` (4 attrs) | **upstream bug**: `llama.py:1102` constructs the parametrizator with `config=config.model` (a `ModelArgs`), so upstream's `config.model.init_method.std` raises `AttributeError` at model init. Predates this grid (fork commit `75cb1f1c`) |
 | 1 | `data/nanoset.py` | `eos_token_id` → `positions_from_eos_token_id` | public datatrove 0.5.0 signature |
 | 2 | `data/tokenized_bytes.py` | same rename; drop HF-fork-only kwargs | ditto |
 | 3 | `data/tokenized_bytes.py` | restore `self.folder_path` as `str` | consumption accounting compares it as a string |
@@ -109,7 +110,7 @@ as necessary on H200 as they would be on Blackwell.
 | 7 | `pyproject.toml` | `torch>=2.7.0`, `numpy>=2.0,<2.1`, `flash-attn>=2.8.0` | old pins block the stack above |
 | 8 | `trainer.py` | wandb run name = `general.run` verbatim | upstream prepends a `dd/mm/YYYY_HH:MM:SS_` timestamp; breaks run selection across 108 runs |
 
-Patch #5 is the one that bites hardest if skipped: it fails 4768 steps into a run, not at
+Patches #0 and #5 are the ones that bite if skipped — #0 fails immediately at model init, #5 fails 4768 steps in. Patch #5 in particular: it fails 4768 steps into a run, not at
 startup. Patch #6 only affects the generation / kv-cache path (`run_generate.py`); the
 training path calls `flash_attn_varlen_func` with keyword arguments whose signature is
 unchanged between 2.6 and 2.8.

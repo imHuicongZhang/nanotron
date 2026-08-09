@@ -91,6 +91,17 @@ comments), and confirm with the §5.1 end-to-end smoke (`data_preprocessing_guid
 **Multi-epoch check:** if `train_steps` spans >1 epoch, confirm a run crosses the 1-epoch boundary
 (S0: step ~4768 / 10B tok) without `IndexError` — that exercises source edit #5.
 
+## Patch #0 (pre-existing, fork commit 75cb1f1c — documented 2026-08-09)
+
+0. **`src/nanotron/scaling/parametrization.py`** (~48): `StandardParametrizator.__init__` reads
+   `config.model.init_method.std` / `config.model.model_config.*` / `config.parallelism.tp`,
+   but `models/llama.py:1102` constructs it as `parametrizator_cls(config=config.model)` —
+   i.e. it is handed a `ModelArgs`, not the full `Config`. Upstream therefore raises
+   `AttributeError: 'ModelArgs' object has no attribute 'model'` the moment a `RandomInit`
+   model is built. Fixed here to `config.init_method.std` / `config.model_config.*`; the
+   `self.tp` line is dropped because `ModelArgs` has no `parallelism`. This predates the KYS
+   grid but was never written down, and it is load-bearing: without it nothing trains at all.
+
 ## Patches #6-#8 (added 2026-08-09)
 
 6. **`src/nanotron/models/llama.py`** (~547/551/554): slice `bert_padding.unpad_input(...)[:4]`

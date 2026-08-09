@@ -20,7 +20,7 @@ git clone nanotron-kys.bundle nanotron-kys && cd nanotron-kys && git checkout ky
 
 Pinned upstream commit `2411b022a75fb7f7561a1bb4166706da5e1b76de` (2026-04-07), which is
 **still upstream `main` HEAD** as of 2026-08-09 — a fresh clone of `huggingface/nanotron`
-gives byte-identical source. 7 patches on top; see `INSTALL.md` §4 for which and why.
+gives byte-identical source. 9 patches on top; see `INSTALL.md` §4 for which and why.
 
 Includes:
 - `INSTALL.md` — install instructions (H200 primary, Blackwell appendix)
