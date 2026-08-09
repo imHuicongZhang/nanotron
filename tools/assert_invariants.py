@@ -18,7 +18,7 @@ curve will look wrong; the runs are simply no longer measuring the same objectiv
 Run it two ways:
 
   preflight (before any GPU time — this is the cheap one):
-      python tools/assert_invariants.py --config rendered/quality-base_seed42_trunk1.yaml
+      python tools/assert_invariants.py --config rendered/quality_base_seed42_trunk1.yaml
 
   smoke test (after ~200 steps of a real run, catches an edited config or a stale env):
       python tools/assert_invariants.py --config rendered/x.yaml --log train.log --at-step 200
@@ -55,7 +55,7 @@ EXPECTED_CORPUS = {
     'signal-disagreement-lambda05': (10_000_002_333, 16),
 }
 DEPRECATED_CORPUS = {
-    '10B-base': 'the UNSHUFFLED quality-base corpus. Its .ds stream is a 16-period sawtooth of '
+    '10B-base': 'the UNSHUFFLED quality_base corpus. Its .ds stream is a 16-period sawtooth of '
                 'pure-upper / pure-lower quality strata, so every optimizer step draws its whole '
                 'batch from one stratum. Use 10B-base-shuf42.',
 }

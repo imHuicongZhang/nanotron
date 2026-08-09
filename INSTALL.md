@@ -127,9 +127,9 @@ Templates in `configs/know-your-sources/` are **deliberately not runnable as-is*
 
 ```bash
 python tools/render_config.py \
-    --template configs/know-your-sources/quality-first_seed43_trunk1.yaml \
-    --cluster h200 --seed 43 --out rendered/quality-first_seed43_trunk1.yaml
-torchrun --nproc_per_node=8 run_train.py --config-file rendered/quality-first_seed43_trunk1.yaml
+    --template configs/know-your-sources/quality_first_seed43_trunk1.yaml \
+    --cluster h200 --seed 43 --out rendered/quality_first_seed43_trunk1.yaml
+torchrun --nproc_per_node=8 run_train.py --config-file rendered/quality_first_seed43_trunk1.yaml
 ```
 
 The renderer derives `accum = 1024 / (mbs × dp)` so every run takes exactly

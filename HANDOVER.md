@@ -25,7 +25,7 @@ gives byte-identical source. 9 patches on top; see `INSTALL.md` §4 for which an
 Includes:
 - `INSTALL.md` — install instructions (H200 primary, Blackwell appendix)
 - `tools/probe_blackwell.py` — 30-second on-hardware go/no-go check
-- `tools/gen_kys_configs.py` — emits the 108 experiment templates
+- `tools/generate_configs.py` — emits the 108 experiment templates
 - `tools/render_config.py` + `deploy/clusters.yaml` — per-cluster deployment stamping
 - `tools/hash_init_checkpoint.py` — init-checkpoint verification
 - `tools/assert_invariants.py` — preflight + step-200 batch-invariant assertion
@@ -50,18 +50,18 @@ Templates deliberately do **not** parse on their own: `parallelism`, `micro_batc
 
 | setting | folder | size |
 |---|---|---:|
-| quality-base | `10B-base-shuf42/tokenized` | ~20.06 GB |
-| quality-first | `quality-first/tokenized` | 20.12 GB |
-| diversity-first | `diversity-first/tokenized` | 19.88 GB |
+| quality_base | `10B-base-shuf42/tokenized` | ~20.06 GB |
+| quality_first | `quality-first/tokenized` | 20.12 GB |
+| diversity_oriented | `diversity-first/tokenized` | 19.88 GB |
 | wrap | `wrap/tokenized` | 20.14 GB |
-| rewrite | `rewrite/tokenized` | 20.13 GB |
-| signal-disagreement-λ0.5 | `signal-disagreement-lambda05/tokenized` | 20.10 GB |
+| rewire | `rewrite/tokenized` | 20.13 GB |
+| disagreement_aware_0p5 | `signal-disagreement-lambda05/tokenized` | 20.10 GB |
 
 16 `.ds` shards each plus `.ds.index` / `.ds.metadata`. **Ship the `.ds.metadata` files** —
 nanotron's config validator reads `vocab_size` from them and refuses to start without it
 (`Model's vocab_size (32000) does not match dataset's (None)`).
 
-`10B-base-shuf42` is the re-shuffled quality-base corpus (seed 42, matching the other five);
+`10B-base-shuf42` is the re-shuffled quality_base corpus (seed 42, matching the other five);
 it replaces the old unshuffled `10B-base`. Do not ship the old one.
 
 ## 5. Init checkpoints — 27.1 GB
@@ -171,7 +171,7 @@ mismatches**, only one of which is the stale-corpus problem:
 | size | 97 GB total | 120.4 GB total |
 
 nanotron's `TokenizedBytes` path reads `.ds` only. Pointing `data_root` at a downloaded HF
-snapshot resolves to nothing, for **all six arms**, not just quality-base.
+snapshot resolves to nothing, for **all six arms**, not just quality_base.
 
 ### (b) Names: the HF folders are the *repo* naming scheme
 

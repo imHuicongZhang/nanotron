@@ -51,18 +51,21 @@ OWNED = {
 #
 # Three different naming schemes are in play for the same six arms, and they do not line up:
 #
-#   paper setting        HF/repo folder        internal run name              corpus dir
-#   -------------------  --------------------  -----------------------------  ----------------
-#   QUALITY-BASE         quality_base          quality-base                   10B-base-shuf42
-#   QUALITY-FIRST        quality_first         quality-first                  quality-first
-#   DIVERSITY-ORIENTED   diversity_oriented    diversity-first                diversity-first
-#   WRAP-INSPIRED        wrap_inspired         wrap                           wrap
-#   REWIRE-INSPIRED      rewire_inspired       rewrite                        rewrite
-#   DISAGREEMENT-AWARE   disagreement_aware    signal-disagreement-lambda05   signal-disagreement-lambda05
+#   paper setting        HF/repo folder      setting name (ours)     corpus dir (ON DISK)
+#   -------------------  ------------------  ----------------------  ----------------------------
+#   QUALITY-BASE         quality_base        quality_base            10B-base-shuf42
+#   QUALITY-FIRST        quality_first       quality_first           quality-first
+#   DIVERSITY-ORIENTED   diversity_oriented  diversity_oriented      diversity-first
+#   WRAP-INSPIRED        wrap_inspired       wrap                    wrap
+#   REWIRE-INSPIRED      rewire_inspired     rewire                  rewrite
+#   DISAGREEMENT-AWARE   disagreement_aware  disagreement_aware_0p5  signal-disagreement-lambda05
 #
-# Note especially: DIVERSITY-ORIENTED's corpus is `diversity-first`, REWIRE-INSPIRED's is
-# `rewrite`, DISAGREEMENT-AWARE's is `signal-disagreement-lambda05`, and QUALITY-BASE's is
-# `10B-base-shuf42` (NOT `quality-base`, and NOT the old unshuffled `10B-base`).
+# The right-hand column is the ONLY one that touches the filesystem, and none of those names
+# changed when the setting labels were renamed (2026-08-09) — they are the actual directory
+# names of the tokenized corpora. Note especially: diversity_oriented's corpus is
+# `diversity-first`, rewire's is `rewrite`, disagreement_aware_0p5's is
+# `signal-disagreement-lambda05`, and quality_base's is `10B-base-shuf42` (NOT `quality_base`,
+# and NOT the old unshuffled `10B-base`).
 #
 # Wiring these by hand is a trap: a wrong-but-existing path does not crash. Training runs to
 # completion on the wrong corpus and the numbers are silently meaningless. So nobody wires
@@ -71,12 +74,12 @@ OWNED = {
 # time is spent.
 # ---------------------------------------------------------------------------------------
 SETTING_CORPUS = {
-    'quality-base':                 '10B-base-shuf42',
-    'quality-first':                'quality-first',
-    'diversity-first':              'diversity-first',
-    'wrap':                         'wrap',
-    'rewrite':                      'rewrite',
-    'signal-disagreement-lambda05': 'signal-disagreement-lambda05',
+    'quality_base':           '10B-base-shuf42',
+    'quality_first':          'quality-first',
+    'diversity_oriented':     'diversity-first',
+    'wrap':                   'wrap',
+    'rewire':                 'rewrite',
+    'disagreement_aware_0p5': 'signal-disagreement-lambda05',
 }
 CORPUS_LEAF = 'tokenized'   # <data_root>/<corpus dir>/tokenized/*.ds
 

@@ -101,12 +101,12 @@ It lives hardcoded in `render_config.py` because three naming schemes are in pla
 
 | paper setting | repo folder | internal run name | corpus dir |
 |---|---|---|---|
-| QUALITY-BASE | `quality_base` | `quality-base` | **`10B-base-shuf42`** |
-| QUALITY-FIRST | `quality_first` | `quality-first` | `quality-first` |
-| DIVERSITY-ORIENTED | `diversity_oriented` | **`diversity-first`** | `diversity-first` |
+| QUALITY-BASE | `quality_base` | `quality_base` | **`10B-base-shuf42`** |
+| QUALITY-FIRST | `quality_first` | `quality_first` | `quality-first` |
+| DIVERSITY-ORIENTED | `diversity_oriented` | `diversity_oriented` | **`diversity-first`** |
 | WRAP-INSPIRED | `wrap_inspired` | `wrap` | `wrap` |
-| REWIRE-INSPIRED | `rewire_inspired` | **`rewrite`** | `rewrite` |
-| DISAGREEMENT-AWARE | `disagreement_aware` | `signal-disagreement-lambda05` | `signal-disagreement-lambda05` |
+| REWIRE-INSPIRED | `rewire_inspired` | `rewire` | **`rewrite`** |
+| DISAGREEMENT-AWARE | `disagreement_aware` | `disagreement_aware_0p5` | **`signal-disagreement-lambda05`** |
 
 Wiring these by hand gets at least one wrong, and **a wrong-but-existing path does not crash**: nanotron reads whatever corpus is there, trains to completion, and the numbers are meaningless. So nobody retypes them — `data_root` is set once and the table does the rest.
 
@@ -132,17 +132,17 @@ Templates in `configs/know-your-sources/` are deliberately **not runnable as-is*
 
 ```bash
 python tools/render_config.py \
-    --template configs/know-your-sources/quality-first_seed43_trunk1.yaml \
+    --template configs/know-your-sources/quality_first_seed43_trunk1.yaml \
     --cluster h200 --seed 43 \
-    --out rendered/quality-first_seed43_trunk1.yaml
+    --out rendered/quality_first_seed43_trunk1.yaml
 ```
 
 This writes two files: the config, and a companion `.env` with the wandb wiring. Then:
 
 ```bash
-set -a; source rendered/quality-first_seed43_trunk1.env; set +a
-python tools/assert_invariants.py --config rendered/quality-first_seed43_trunk1.yaml --check-resume
-torchrun --nproc_per_node=8 run_train.py --config-file rendered/quality-first_seed43_trunk1.yaml
+set -a; source rendered/quality_first_seed43_trunk1.env; set +a
+python tools/assert_invariants.py --config rendered/quality_first_seed43_trunk1.yaml --check-resume
+torchrun --nproc_per_node=8 run_train.py --config-file rendered/quality_first_seed43_trunk1.yaml
 ```
 
 Order per (setting, seed): `trunk1 → trunk2 → trunk3`, then `ep1`, `ep2`, `ep3`. Each branch
@@ -281,8 +281,8 @@ Run names (patch #8 makes these exact, no timestamp prefix):
 {setting}_seed{n}_ep1      {setting}_seed{n}_ep2      {setting}_seed{n}_ep3
 ```
 
-`{setting}` ∈ `quality-base, quality-first, diversity-first, wrap, rewrite,
-signal-disagreement-lambda05`. Config filename == wandb run name == checkpoint dir stem.
+`{setting}` ∈ `quality_base, quality_first, diversity_oriented, wrap, rewire,
+disagreement_aware_0p5`. Config filename == wandb run name == checkpoint dir stem.
 
 Tags (auto-generated into the `.env`):
 
@@ -378,8 +378,8 @@ import wandb
 runs = list(wandb.Api().runs("<YOUR_ENTITY>/zhc-1p5b-10b-wsd"))
 print(f"{len(runs)} runs in project (expected 108)")
 missing = {f"{s}_seed{d}_{k}"
-           for s in ["quality-base","quality-first","diversity-first","wrap","rewrite",
-                     "signal-disagreement-lambda05"]
+           for s in ["quality_base","quality_first","diversity_oriented","wrap","rewire",
+                     "disagreement_aware_0p5"]
            for d in (42,43,44)
            for k in ("trunk1","trunk2","trunk3","ep1","ep2","ep3")} - {r.name for r in runs}
 print(f"missing ({len(missing)}):", sorted(missing)[:10])
