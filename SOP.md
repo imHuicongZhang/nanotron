@@ -119,72 +119,84 @@ Verified that wandb picks all of them up from `WANDB_ENTITY`, `WANDB_TAGS`,
 `WANDB_RUN_GROUP`, `WANDB_JOB_TYPE` — `render_config.py` writes exactly those into the
 companion `.env`.
 
-### 3.2 Can his runs log into your entity under his own account?
+### 3.2 The chosen flow: offline on his side, synced by you
 
-**Yes, and this is the recommended path.** No API key is shared.
+**The grid runs `WANDB_MODE=offline`. Tianjian never syncs. You sync, and that makes the runs
+yours.**
 
-*On your side (once):*
-1. wandb → your **Team** (org/team entity). If you only have a personal entity, create a Team —
-   personal entities cannot take collaborators.
-2. Invite his wandb account to that team (Team Settings → Members → Invite). Member role is
-   enough; it can create runs in team projects.
-3. Create the project `kys-epoch-wsd` inside the team, or let the first run create it.
-4. Give him the exact strings for `entity` and `project`. Nothing else.
+Why this beats a team invite: an offline run carries **no ownership until it is synced** —
+verified, `run.entity` is the empty string when `WANDB_ENTITY` is unset at init, and nothing
+about a destination is written into the run directory. The entity is chosen entirely at sync
+time. Consequences:
 
-*On his side (once):*
+- your API key never leaves your machine;
+- he needs **no wandb account at all** — only `pip install wandb`;
+- it does not matter whether his compute nodes have outbound internet;
+- the runs end up owned and administered by you, which is what you want for a paper.
+
+`deploy/clusters.yaml` therefore has `mode: offline`, `project: kys-epoch-wsd`, and
+**`entity: null` on purpose**. `render_config.py` refuses to render if `entity` is set while
+`mode: offline`, and never writes `WANDB_ENTITY` into the `.env`.
+
+**His side — once:**
 ```bash
-pip install wandb            # nanotron logs nothing at all if this is missing
-wandb login                  # HIS OWN key, stored in his ~/.netrc
+pip install wandb          # nanotron silently logs NOTHING if this is missing
 ```
-Then he only ever sources the generated `.env`; he never types an entity or project.
+No `wandb login`. No key. He fills `wandb.dir` in `deploy/clusters.yaml` (see below), sources
+each generated `.env`, and launches. That is the whole of his involvement.
 
-Runs land in **your** project, attributed to **his** account. You keep ownership; he keeps his
-credential.
+> **`wandb.dir` must be shared storage.** It becomes `WANDB_DIR`, where every offline run
+> directory is written. If it is unset, wandb falls back to the process working directory —
+> on a compute node that is the standard way to lose an entire grid's logs. It must (a)
+> outlive the job, (b) be readable from wherever the sync happens. `render_config.py` refuses
+> to render for offline mode while `wandb.dir` is null.
 
-### 3.3 If that does not work — alternatives, and what each costs
+**He does NOT run `wandb sync`.** He leaves the `offline-run-*` directories in place and tells
+you the path. The generated `.env` says so in a comment, for whoever reads it at 3am.
+
+**Your side — after the grid finishes:**
+```bash
+wandb login                                   # your key, your machine
+wandb sync --entity <YOUR_ENTITY> --project kys-epoch-wsd --sync-all <path>/wandb
+```
+`wandb sync` takes `-e/--entity` and `-p/--project` explicitly (confirmed in `wandb sync
+--help` for wandb 0.27.0), so the destination is stated at sync time rather than inherited
+from whatever environment happens to be loaded.
+
+**One thing to verify before the grid, not after:** sync a single throwaway offline run and
+confirm it lands in the entity you expect. The offline half is verified here (no entity is
+recorded); the sync half depends on your account's team/project layout and takes 30 seconds
+to confirm:
+
+```bash
+WANDB_MODE=offline WANDB_DIR=/tmp/wbtest python -c "
+import wandb; r=wandb.init(project='kys-epoch-wsd', name='sync-probe'); wandb.log({'x':1}); wandb.finish()"
+wandb sync --entity <YOUR_ENTITY> --project kys-epoch-wsd /tmp/wbtest/wandb/offline-run-*
+# then delete the probe run from the UI
+```
+
+Offline runs keep their name, tags, group, config and full step history; the only thing lost
+is live monitoring during the run.
+
+### 3.3 Alternatives that were considered, and what each costs
 
 | option | cost |
 |---|---|
-| **Team invite (above)** | none beyond an invite. **Do this.** |
-| **Service-account key shipped with the repo** | A long-lived credential that can write to *any* project in your entity, sitting in a file that gets copied between clusters, into `.env`s, into shell history and into SLURM job environments (`scontrol show job` exposes them). It cannot be scoped per project and revoking it kills every run using it. Only acceptable as a same-day stopgap, never committed — and if it is ever used, rotate it the moment the grid finishes. |
-| **He owns the runs, you use a wandb Report / `api.runs()` to pull them** | No credential moves, but the runs live in his entity — if his account or funding lapses you lose the record, and you cannot administer the project. Acceptable as a fallback, worse for a paper. |
-| **Offline + ship the run directories, you sync them** | See 3.4. Zero credential exchange, and the runs end up owned by you. Slightly more manual. |
-
-### 3.4 If his compute nodes have no outbound internet
-
-This is common, and nanotron handles it **only** because it does nothing clever: it calls
-plain `wandb.init()`, so all standard wandb env vars apply.
-
-Verified locally with `WANDB_API_KEY` unset and `WANDB_MODE=offline`: `wandb.init` succeeds,
-the run is written to `$WANDB_DIR/wandb/offline-run-<ts>-<id>/`, metrics log normally, and
-wandb prints the resync command. **No API key is needed on the compute node at all.**
-
-Set `wandb.mode: offline` in `deploy/clusters.yaml`; the renderer propagates it to
-`WANDB_MODE` in every `.env`. Then, from a login node that does have egress:
-
-```bash
-wandb login                                  # once, whoever owns the destination entity
-export WANDB_ENTITY=<entity> WANDB_PROJECT=<project>
-wandb sync --sync-all                        # or: wandb sync path/to/offline-run-*
-```
-
-Two things to get right, or this bites later:
-- Point `WANDB_DIR` at shared storage the login node can also see, not node-local `/tmp`.
-- Sync with the credential of whoever should **own** the runs. Offline runs carry no
-  ownership until sync, so this is the cleanest way for his compute to produce runs that end
-  up in your account with no key ever leaving your machine.
-
-Offline runs keep their name, tags, group, config and full step history; the only loss is
-live monitoring.
+| **Offline + you sync (chosen)** | No credential exchange, no account needed on his side, runs owned by you. Cost: no live monitoring, and one manual sync step at the end. |
+| **Team invite — he logs into your entity with his own key** | Works (nanotron reads `WANDB_ENTITY` from the environment; verified). Cost: he needs a wandb account, an invite, and his compute nodes need egress. Strictly more moving parts than offline for no gain here. |
+| **Service-account key shipped with the repo** | A long-lived credential that can write to *any* project in your entity, sitting in a file copied between clusters, into `.env`s, shell history, and SLURM job environments (`scontrol show job` exposes them). Cannot be scoped per project; revoking it kills every run using it. Same-day stopgap at best, never committed, rotate immediately after. |
+| **He owns the runs, you pull with `api.runs()`** | No credential moves, but the record lives in his account — if it lapses you lose it and cannot administer the project. Worse for a paper. |
 
 ### 3.5 Naming, tags, grouping
 
-`entity` and `project` are **never defaulted**. `render_config.py` aborts while either is
-null in `deploy/clusters.yaml`, and also aborts if `wandb.project` disagrees with the
-template's `general.project`. This exists because wandb silently falls back to whatever
-account holds the cached credential on the machine — which is not hypothetical: during this
-investigation an online `wandb.init()` with no `WANDB_API_KEY` set did **not** fail, it
-created a run under the cached local login.
+`project` is **never defaulted**: `render_config.py` aborts while `wandb.project` is null, and
+aborts again if it disagrees with the template's `general.project`. `entity` is not set at all
+in offline mode (§3.2) — it is supplied by `wandb sync --entity`.
+
+These guards exist because wandb's fallback is silent, not loud. During this investigation an
+online `wandb.init()` with **no `WANDB_API_KEY` set** did *not* fail — it found a cached
+credential in `~/.netrc` and created a real run under that account. "No key" does not mean
+"no upload".
 
 Run names (patch #8 makes these exact, no timestamp prefix):
 
@@ -239,12 +251,20 @@ correct absolute positions.
 
 ---
 
-## 4. What you need before Tianjian starts
+## 4. Division of labour
 
-**You:** create/choose the Team entity, invite his wandb account, decide the project name,
-and send him the two strings. Fill `wandb.entity` / `wandb.project` in
-`deploy/clusters.yaml` — nothing renders until you do.
+**You — before he starts:** nothing blocking. `wandb.project` is already `kys-epoch-wsd` and
+`mode: offline`; no entity is needed until sync. Optionally run the 30-second sync probe in
+§3.2 so the destination is confirmed before there is anything valuable to lose.
 
-**Him:** `pip install wandb`, `wandb login` with his own key, fill the `slurm:` block and
-confirm `gpus_per_node`/`dp` in `deploy/clusters.yaml`, then render and launch. If his
-compute nodes have no egress, set `wandb.mode: offline` and sync from a login node per 3.4.
+**You — after the grid finishes:** `wandb login`, then
+`wandb sync --entity <YOUR_ENTITY> --project kys-epoch-wsd --sync-all <his path>/wandb`.
+That single command is what makes the 108 runs yours.
+
+**Him — once:** `pip install wandb` (no login, no key, no account). Fill in
+`deploy/clusters.yaml`: `wandb.dir` (shared storage — see §3.2), the `slurm:` block, and
+confirm `gpus_per_node` / `dp`. Nothing renders until `wandb.dir` is set.
+
+**Him — per run:** render, source the `.env`, run the preflight assert, launch. He does
+**not** run `wandb sync`; he leaves the `offline-run-*` directories where they are and tells
+you the path.

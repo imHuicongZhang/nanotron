@@ -156,18 +156,34 @@ def main():
     # back to whichever account holds the cached credential on that machine — which is exactly
     # how a run silently lands in a personal default project. Hence: refuse without it.
     wb = prof.get('wandb') or {}
-    missing_wb = [k for k in ('entity', 'project') if not wb.get(k)]
-    if missing_wb:
-        die(f'wandb.{missing_wb} not set in {args.profile}. These are mandatory — without an '
-            f'explicit entity, wandb silently logs to the cached credential\'s default account. '
-            f'Fill them in before rendering anything.')
+    mode = wb.get('mode', 'offline')
+    if mode not in ('online', 'offline'):
+        die(f'wandb.mode must be online|offline, got {mode!r}')
+    if not wb.get('project'):
+        die(f'wandb.project not set in {args.profile}. Mandatory — wandb otherwise files runs '
+            f'under a default project.')
     if wb['project'] != cfg.get('general', {}).get('project'):
         die(f'wandb.project ({wb["project"]!r}) != template general.project '
             f'({cfg.get("general", {}).get("project")!r}); they must match or the run and its '
             f'config will land in different projects.')
-    mode = wb.get('mode', 'online')
-    if mode not in ('online', 'offline'):
-        die(f'wandb.mode must be online|offline, got {mode!r}')
+    if mode == 'offline':
+        # An offline run records entity='' and takes its destination from `wandb sync --entity`
+        # at sync time. Setting WANDB_ENTITY at init would bake a destination into every run
+        # directory, which defeats the point of syncing as the owner.
+        if wb.get('entity'):
+            die(f'wandb.entity is set ({wb["entity"]!r}) while wandb.mode is offline. Offline '
+                f'runs must stay unattributed — the entity is chosen by whoever runs '
+                f'`wandb sync --entity ...`, and that is what makes them theirs. Remove it.')
+        if not wb.get('dir'):
+            die(f'wandb.dir not set in {args.profile}. Offline runs are written to WANDB_DIR; '
+                f'if it is unset wandb falls back to the working directory, which on a compute '
+                f'node is the standard way to lose every log in the grid. Point it at shared '
+                f'storage that outlives the job and is readable from the sync host.')
+    else:
+        if not wb.get('entity'):
+            die(f'wandb.entity not set in {args.profile} and wandb.mode is online. Without an '
+                f'explicit entity, wandb logs to whatever cached credential exists on the '
+                f'machine.')
 
     run_name = cfg['general']['run']
     setting, seedpart, kind = run_name.rsplit('_', 2)[0], f'seed{args.seed}', run_name.rsplit('_', 1)[1]
@@ -180,9 +196,19 @@ def main():
             f'tok_per_step:{tok_per_step}']
     env_lines = [
         '# sourced by the launcher; written by tools/render_config.py — do not edit',
-        f'export WANDB_ENTITY={wb["entity"]}',
         f'export WANDB_PROJECT={wb["project"]}',
         f'export WANDB_MODE={mode}',
+    ]
+    if mode == 'offline':
+        env_lines += [
+            f'export WANDB_DIR={wb["dir"]}',
+            '# NOTE: WANDB_ENTITY is deliberately NOT exported. Offline runs stay unattributed;',
+            '# the owner is decided by `wandb sync --entity <E> --project <P>` on the sync host.',
+            '# Do NOT run `wandb sync` here — leave the offline-run directories in place.',
+        ]
+    else:
+        env_lines += [f'export WANDB_ENTITY={wb["entity"]}']
+    env_lines += [
         f'export WANDB_RUN_GROUP={setting}_{seedpart}',   # one group per (setting,seed) chain
         f'export WANDB_JOB_TYPE={kind}',
         f'export WANDB_TAGS={",".join(tags)}',
@@ -205,7 +231,9 @@ def main():
         envp = args.out.with_suffix('.env')
         envp.write_text('\n'.join(env_lines) + '\n')
         print(f'wrote {args.out}  (mbs={mbs} accum={accum} dp={dp} -> {tok_per_step:,} tok/step)')
-        print(f'wrote {envp}  (WANDB_ENTITY={wb["entity"]} project={wb["project"]} mode={mode})')
+        dest = (f'entity set at sync time; WANDB_DIR={wb["dir"]}' if mode == 'offline'
+                else f'WANDB_ENTITY={wb["entity"]}')
+        print(f'wrote {envp}  (project={wb["project"]} mode={mode}, {dest})')
     if args.do_print or not args.out:
         print(text)
 

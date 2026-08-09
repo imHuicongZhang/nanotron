@@ -40,15 +40,27 @@
 global_batch_seq: 1024        # 1024 sequences x 2048 tokens = 2,097,152 tokens/step. INVARIANT.
 sequence_length: 2048
 
-# wandb destination. BOTH values are mandatory and have no default: render_config.py refuses
-# to emit anything while either is null, so a run can never land in whoever-happens-to-be-
-# logged-in's default project. `entity` is NOT a nanotron config field (nanotron calls
-# wandb.init without entity=), so the renderer exports it as WANDB_ENTITY in the companion
-# .env file instead — verified that wandb picks it up from the environment.
+# wandb. The grid runs OFFLINE and is synced afterwards by whoever should own the runs.
+#
+# Why offline rather than a team invite: an offline run carries NO ownership until it is
+# synced — verified, `run.entity` is the empty string when WANDB_ENTITY is unset at init. The
+# entity is decided entirely at sync time by `wandb sync --entity`. So the person who syncs
+# owns the runs, the API key never leaves their machine, the collaborator needs no wandb
+# account at all, and it does not matter whether his compute nodes have outbound internet.
+#
+# CONSEQUENCE: `entity` is deliberately absent here and is NEVER written into the rendered
+# .env. Setting it at init would bake a destination into every run directory, which is exactly
+# what we are avoiding. render_config.py refuses to render if `entity` is set while
+# mode: offline.
 wandb:
-  entity: null                # <- FILL IN (the owning team/entity, e.g. an org or team slug)
-  project: null               # <- FILL IN (must match general.project in the templates)
-  mode: online                # online | offline  (offline needs no API key; sync later)
+  project: kys-epoch-wsd      # must match general.project in the templates
+  mode: offline               # offline | online
+  entity: null                # offline: leave null (set with `wandb sync --entity` instead)
+  # Where offline run directories are written (becomes WANDB_DIR). MUST be on storage that
+  # survives the job AND is readable from wherever the sync eventually happens. Node-local
+  # /tmp is the classic way to lose an entire grid's logs — the renderer refuses a null value
+  # for offline mode rather than letting wandb default to the cwd.
+  dir: null                   # <- collaborator fills in, e.g. /shared/scratch/kys/wandb
 
 # Peak HBM model fitted to the measured H100 run (mbs=4: 28.1 GiB steady, 48.5 GiB peak
 # allocated, 51.6 GiB peak reserved of 80 GB). render_config.py uses this to refuse an
