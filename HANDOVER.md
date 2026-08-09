@@ -7,7 +7,7 @@ Everything needed to run the 72-run per-epoch-WSD grid on a fresh cluster. Sizes
 
 | item | size | note |
 |---|---:|---|
-| `nanotron-kys` worktree | 14.4 MB | branch `kys/epoch-wsd` |
+| `nanotron-kys` worktree | 14.4 MB | branch `huicong-dev` |
 | `.git` | 17.3 MB | carries tags `upstream-pin-2411b022`, `kys-patched-base` |
 
 Ship as a git bundle so history and tags survive:
@@ -15,7 +15,7 @@ Ship as a git bundle so history and tags survive:
 ```bash
 git bundle create nanotron-kys.bundle --all
 # receiving side:
-git clone nanotron-kys.bundle nanotron-kys && cd nanotron-kys && git checkout kys/epoch-wsd
+git clone nanotron-kys.bundle nanotron-kys && cd nanotron-kys && git checkout huicong-dev
 ```
 
 Pinned upstream commit `2411b022a75fb7f7561a1bb4166706da5e1b76de` (2026-04-07), which is
@@ -154,3 +154,68 @@ objective, not a rounding artefact.
 clusters named in `seed_assignment` disagree about `micro_batch_size`, and refuses an `mbs`
 that will not fit a cluster's HBM. H100 (80 GB) caps `mbs` at 4; H200 (141 GB) allows 16 —
 so a grid spanning both must run mbs=4 on both sides.
+
+---
+
+## 9. BLOCKING — the HF dataset is not what `data_root` expects
+
+Checked 2026-08-09 against the upload staging tree at `tmp/kys/repo/`. **Three separate
+mismatches**, only one of which is the stale-corpus problem:
+
+### (a) Format: HF holds raw `.parquet`, not tokenized `.ds`
+
+| | HF repo | what `data_root` must contain |
+|---|---|---|
+| files | `part_*.parquet` (raw text + score columns) | `*.ds`, `*.ds.index`, `*.ds.metadata` |
+| layout | `<arm>/part_*.parquet` | `<corpus>/tokenized/*.ds` |
+| size | 97 GB total | 120.4 GB total |
+
+nanotron's `TokenizedBytes` path reads `.ds` only. Pointing `data_root` at a downloaded HF
+snapshot resolves to nothing, for **all six arms**, not just quality-base.
+
+### (b) Names: the HF folders are the *repo* naming scheme
+
+HF has `quality_base / quality_first / diversity_oriented / wrap_inspired / rewire_inspired /
+disagreement_aware`. `SETTING_CORPUS` maps to `10B-base-shuf42 / quality-first /
+diversity-first / wrap / rewrite / signal-disagreement-lambda05`. **Zero overlap** — this is
+exactly the three-naming-scheme collision §2 of `SOP.md` warns about.
+
+### (c) Content: `quality_base` is pre-shuffle, and its metadata says otherwise
+
+`quality_base/` holds **400 parquet files** — the unshuffled `part_00000..199` (anchor) +
+`qbase_00000..199` (strategy) two-block layout. The other five hold 25–35 shards, the
+post-shuffle 500k-row layout. But `quality_base/metadata.json` currently states:
+
+```json
+"note": "... already merged and shuffled.",
+"shuffle_seed": 42,
+"layout_note": "part_*.parquet are the shared anchor shards; qbase_*.parquet are this setting's 5B raw component."
+```
+
+The first two claims are **false for the data actually in the folder**. This is a published
+correctness problem independent of Tianjian's run.
+
+### Resolution
+
+**For the training handover:** ship the tokenized `.ds` corpora directly (§4, 120.4 GB). That
+is already the plan and needs no HF change. HF is the public paper artifact, not the
+transfer channel. If you *want* HF to be the transfer channel, the `.ds` files have to be
+uploaded as their own repo/revision under the corpus-dir names — a separate 120.4 GB upload.
+
+**For the HF repo itself (do before the paper is public):**
+
+1. Replace `quality_base/*.parquet` — 400 files out, ~15 in (7,253,187 docs ÷ 500k rows/shard),
+   ~18 GB either way. A folder swap, not a repo rebuild; the other five arms are untouched.
+2. Fix `quality_base/metadata.json` twice: `shuffle_seed`/`note` become true only after the
+   swap, and `layout_note` becomes **wrong** — the shuffled output is uniform
+   `part_NNNNN.parquet` with no anchor/strategy split, so that sentence must go.
+3. Update `tmp/kys/manifest/provenance.tsv`: `tokenized_folder` moves from
+   `…/10B-base/tokenized` to `…/10B-base-shuf42/tokenized`. The doc *set* is unchanged (the
+   shuffle is a permutation, verified by doc_id multiset equality), so a set-based
+   `docid_digest` is stable, but any order-sensitive digest and `gates.md` Gate 6/9 need
+   re-running.
+4. Re-upload time: 18 GB. The original 97 GB upload's HF cache-state files were written across
+   ~2m18s, which would imply ~700 MB/s — but those mtimes may record post-transfer bookkeeping
+   rather than the transfer itself, so treat that as unverified. Size is the reliable number.
+
+**Gate:** none of this can start until Task A (`10B-base-shuf42`) exists.

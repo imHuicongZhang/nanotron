@@ -5,6 +5,27 @@ config templates (each trunk is 3 chained segments). H200, `dp=8 tp=1 pp=1`, sin
 
 ---
 
+## READ FIRST — five ways this pipeline fails silently
+
+Every one of these produces a run that **exits 0 and looks fine**. None shows up in a loss
+curve. Each has a guard; the guards only help if they are actually run.
+
+| # | failure | what you see | guard |
+|---|---|---|---|
+| 1 | **`wandb sync` reports success but uploads nothing** | "done", then you count runs later and find 40 instead of 108 | §4.6 — a *failed* sync still writes `.synced`; the retry needs `--include-synced` |
+| 2 | **`wandb` package not installed** | training completes with zero metrics and no error at all | `assert_invariants.py` env preflight |
+| 3 | **`resume_checkpoint_path` doesn't resolve** | a cooldown branch trains from **random init**, exits 0, writes a checkpoint | `assert_invariants.py --check-resume` |
+| 4 | **right path, wrong corpus** | trains to completion on the wrong data | `assert_invariants.py` token-count check |
+| 5 | **`micro_batch_size` raised to "use the headroom"** | loss curve looks perfect; the run is no longer comparable to the other 71 | §1, and `--log … --at-step 200` |
+
+After rendering, and again immediately before each launch:
+
+```bash
+python tools/assert_invariants.py --config rendered/<name>.yaml --check-resume
+```
+
+---
+
 ## 1. The one thing not to change: `micro_batch_size = 16`
 
 **It is pinned for numerical comparability, not tuned for throughput.** 109.7 GiB of 141 GB
@@ -334,3 +355,40 @@ null, so there is no silent-default path.
 **Him — per run:** render, source the `.env`, run the preflight assert, launch. He does
 **not** run `wandb sync`; he leaves the `offline-run-*` directories where they are and tells
 you the path.
+
+### 4.6 Syncing — the trap that loses runs silently
+
+**A failed `wandb sync` still marks the run directory as synced.** Verified on wandb 0.27.0:
+a sync that died with `ERROR ... entity ... not found (404)` and uploaded nothing still wrote
+`run-<id>.wandb.synced` into the offline run directory. `wandb sync --sync-all` then **skips
+that run on every subsequent attempt and reports success**.
+
+This is the failure mode where you come back later expecting 108 runs and find 40, with no
+error anywhere to explain the other 68.
+
+**Always, after any sync:**
+
+```bash
+# 1. sync, naming the destination explicitly
+wandb sync --entity <YOUR_ENTITY> --project zhc-1p5b-10b-wsd --sync-all <path>/wandb
+
+# 2. RECONCILE. This is not optional.
+python - <<'PY'
+import wandb
+runs = list(wandb.Api().runs("<YOUR_ENTITY>/zhc-1p5b-10b-wsd"))
+print(f"{len(runs)} runs in project (expected 108)")
+missing = {f"{s}_seed{d}_{k}"
+           for s in ["quality-base","quality-first","diversity-first","wrap","rewrite",
+                     "signal-disagreement-lambda05"]
+           for d in (42,43,44)
+           for k in ("trunk1","trunk2","trunk3","ep1","ep2","ep3")} - {r.name for r in runs}
+print(f"missing ({len(missing)}):", sorted(missing)[:10])
+PY
+
+# 3. if anything is missing, retry with --include-synced or the .synced marker will skip it
+wandb sync --include-synced --entity <YOUR_ENTITY> --project zhc-1p5b-10b-wsd <path>/wandb
+```
+
+`--include-synced` is the only way past the marker short of deleting the `.synced` files by
+hand. Re-syncing an already-uploaded run is idempotent (same run id), so it is safe to pass
+it whenever the count is short.

@@ -12,7 +12,7 @@ pull upstream deliberately and bump this file in the same commit.
 | Commit date | 2026-04-07 15:25:09 +0200 |
 | nanotron version at pin | `0.4` (`setup.py` / `pyproject.toml`) |
 | Git tag for this point | `upstream-pin-2411b022` |
-| Work branch | `kys/epoch-wsd` |
+| Work branch | `huicong-dev` |
 | Recorded | 2026-08-09 |
 
 ## Citation string
@@ -53,6 +53,6 @@ pybind11                 # Nanoset compiles a C++ index helper at runtime
 git fetch upstream
 git log --oneline 2411b022..upstream/main     # review what actually changed
 # then, deliberately:
-git rebase --onto <new-sha> 2411b022 kys/epoch-wsd
+git rebase --onto <new-sha> 2411b022 huicong-dev
 # re-run the compatibility check in COMPATIBILITY.md before trusting any run
 ```
