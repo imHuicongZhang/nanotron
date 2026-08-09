@@ -1,0 +1,18 @@
+From 56f80cb50f7b3b582fa635a85b0d8f2cb3bd9d5f Mon Sep 17 00:00:00 2001
+From: Huicong Zhang <zhuicon1@jh.edu>
+Date: Mon, 18 May 2026 13:46:16 -0400
+Subject: [PATCH 3/6] Ignore .bak files
+
+---
+ .gitignore | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.gitignore b/.gitignore
+index f4c89a70..60783b55 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -170,3 +170,4 @@ datatrove/
+ eval_results/
+ tb_logs/
+ .nanoset_cache/
++*.bak

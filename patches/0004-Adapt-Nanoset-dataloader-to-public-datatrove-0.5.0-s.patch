@@ -1,0 +1,123 @@
+From 456b09cd3224054fcc9bb189992662ca7848fe00 Mon Sep 17 00:00:00 2001
+From: Huicong Zhang <wytrocheung207@gmail.com>
+Date: Sun, 9 Aug 2026 13:57:37 -0400
+Subject: [PATCH 4/6] Adapt Nanoset dataloader to public datatrove 0.5.0
+ signature
+
+nanotron 0.4's "new dataloader" (upstream 1dfee7f, SmolLM3) was written against a
+HuggingFace-INTERNAL datatrove fork whose DatatroveFolderDataset accepted extra
+kwargs (max_tokens, eos_token_id, read_path, matched_files, file_sizes). No public
+datatrove release or main provides that signature (verified against 0.3.0/0.4.0/
+0.5.0/0.9.0 and main). Adapt nanotron to the PUBLIC signature instead.
+
+Pinned env: datatrove[io]==0.5.0, numpy==2.0.2, huggingface_hub<1.0, pybind11
+(0.5.0 is the newest datatrove exposing positions_from_eos_token_id that still
+allows hub <1.0, required by transformers 4.46.3 / tokenizers 0.20.3).
+
+Four sites:
+1. nanoset.py: eos_token_id= -> positions_from_eos_token_id= (1:1 semantics).
+2. tokenized_bytes.py super().__init__: same rename; drop max_tokens/read_path/
+   matched_files/file_sizes (HF-fork-only S3 offload, per-dataset cap, cached
+   file list -- irrelevant for local-disk data).
+   LIMITATION: per-dataset dataset_max_tokens is no longer enforced; keep it None.
+3. tokenized_bytes.py: restore self.folder_path as a str -- public datatrove sets
+   it to a DataFolder object but nanotron's consumption/offset accounting compares
+   it as a string.
+4. blendable_dataset.py get_consumption_stats: drop assert "s3" in folder_path
+   (already marked "TODO: remove this" upstream) so local-disk folders work.
+
+Plus the multi-epoch fix:
+5. tokenized_bytes.py __getitem__: wrap with item % len(self). Public datatrove's
+   DatatroveFolderDataset.__getitem__ indexes files directly with NO wrap, so
+   item >= len(self) walks bisect off the file list -> IndexError at EXACTLY the
+   1-epoch boundary (S0 10B data: step ~4768, consumed_tokens 10.0B). nanotron's
+   own TokenizedBytesFileDataset / OldTokenizedBytesFolderDataset already wrap;
+   this subclass lost it when re-pointed at the public class. Required for the
+   3-epoch / 30B runs.
+
+See PATCH_NOTES.md for the full write-up.
+---
+ src/nanotron/data/nanoset.py                  |  2 +-
+ .../data/nemo_dataset/blendable_dataset.py    |  5 ++---
+ src/nanotron/data/tokenized_bytes.py          | 22 ++++++++++++++-----
+ 3 files changed, 20 insertions(+), 9 deletions(-)
+
+diff --git a/src/nanotron/data/nanoset.py b/src/nanotron/data/nanoset.py
+index 026970cc..3cbe6067 100644
+--- a/src/nanotron/data/nanoset.py
++++ b/src/nanotron/data/nanoset.py
+@@ -72,7 +72,7 @@ class Nanoset(torch.utils.data.Dataset):
+                     token_size=self.token_size,
+                     shuffle=True,
+                     return_positions=self.return_positions,  # if set to True, the position ids are directly build datatrove
+-                    eos_token_id=self.eos_token_id,
++                    positions_from_eos_token_id=self.eos_token_id,  # public datatrove 0.5.0: was eos_token_id (same semantics)
+                 )
+             )
+ 
+diff --git a/src/nanotron/data/nemo_dataset/blendable_dataset.py b/src/nanotron/data/nemo_dataset/blendable_dataset.py
+index 96c49fe0..0f1dbde6 100644
+--- a/src/nanotron/data/nemo_dataset/blendable_dataset.py
++++ b/src/nanotron/data/nemo_dataset/blendable_dataset.py
+@@ -184,9 +184,8 @@ class BlendableDataset(torch.utils.data.Dataset):
+         """
+         stats = {}
+         for dataset_idx, dataset in enumerate(self.datasets):
+-            assert (
+-                "s3" in dataset.folder_path
+-            ), "Only S3 paths are supported for consumption stats"  # TODO: remove this
++            # NOTE: upstream fork asserted S3-only here (marked "TODO: remove this"); removed so
++            # local-disk dataset folders work. consumed-token accounting is keyed by the folder path string.
+             stats[dataset.folder_path] = {"tokens": self.consumed_tokens[dataset_idx]}
+         return stats
+ 
+diff --git a/src/nanotron/data/tokenized_bytes.py b/src/nanotron/data/tokenized_bytes.py
+index 3b8a5437..ecf85e03 100644
+--- a/src/nanotron/data/tokenized_bytes.py
++++ b/src/nanotron/data/tokenized_bytes.py
+@@ -417,21 +417,24 @@ class TokenizedBytesFolderDataset(DatatroveFolderDataset):
+                 except Exception as e:
+                     raise RuntimeError(f"Failed to read cache file on rank {dist.get_rank()}: {e}")
+ 
++        # NOTE: adapted to PUBLIC datatrove 0.5.0 DatatroveFolderDataset signature.
++        # - eos_token_id -> positions_from_eos_token_id (same semantics: EOS id used to reset per-doc positions)
++        # - dropped max_tokens / read_path / matched_files / file_sizes (HF-fork-only kwargs; S3 offload +
++        #   per-dataset token cap + cached file-list — irrelevant for local-disk data).
+         super().__init__(
+             folder_path=folder_path,
+             seq_len=seq_len,
+             filename_pattern=filename_pattern,
+             recursive=recursive,
+             token_size=token_size,
+-            max_tokens=max_tokens,
+             shuffle=shuffle,
+             seed=seed,
+             return_positions=return_positions,
+-            eos_token_id=eos_token_id,
+-            read_path=folder_read_path,
+-            matched_files=matched_files,
+-            file_sizes=file_sizes,
++            positions_from_eos_token_id=eos_token_id,
+         )
++        # public datatrove sets self.folder_path = get_datafolder(folder_path) (a DataFolder object);
++        # nanotron's consumption/offset accounting compares it as a string, so restore the original string.
++        self.folder_path = folder_path
+ 
+         self.subset_log = TBFolderDatasetLog(
+             dataset_type=self.__class__.__name__,
+@@ -450,6 +453,15 @@ class TokenizedBytesFolderDataset(DatatroveFolderDataset):
+             files_order=[str(f.file_path) for f in self.files],
+         )
+ 
++    def __getitem__(self, item):
++        # Public datatrove 0.5.0 DatatroveFolderDataset.__getitem__ indexes files directly and
++        # raises IndexError once `item` reaches len(self) (== one epoch over this folder). nanotron's
++        # own datasets (TokenizedBytesFileDataset / OldTokenizedBytesFolderDataset) wrap with
++        # `item % len(self)` so training can span multiple epochs — train_steps here targets ~3 epochs
++        # / 30B tokens over ~10B tokens of data. Without this wrap every run dies at the 1-epoch
++        # boundary (~step 4768, consumed_tokens 10B) with "IndexError: list index out of range".
++        return super().__getitem__(item % len(self))
++
+ 
+ def build_dataset(
+     dataset_folder: str,

@@ -1,0 +1,228 @@
+From 75cb1f1ce647252de8c9b903e9027f94a6902611 Mon Sep 17 00:00:00 2001
+From: Huicong Zhang <zhuicon1@jh.edu>
+Date: Mon, 18 May 2026 13:08:29 -0400
+Subject: [PATCH 1/6] Fix ModelArgs/Config bugs in parametrization + add JHU
+ smoke configs
+
+---
+ smoke_test/config_smoke_dp4.yaml        | 91 +++++++++++++++++++++++++
+ smoke_test/config_smoke_t4.yaml         | 91 +++++++++++++++++++++++++
+ src/nanotron/scaling/parametrization.py |  9 ++-
+ 3 files changed, 186 insertions(+), 5 deletions(-)
+ create mode 100644 smoke_test/config_smoke_dp4.yaml
+ create mode 100644 smoke_test/config_smoke_t4.yaml
+
+diff --git a/smoke_test/config_smoke_dp4.yaml b/smoke_test/config_smoke_dp4.yaml
+new file mode 100644
+index 00000000..0e3d71b8
+--- /dev/null
++++ b/smoke_test/config_smoke_dp4.yaml
+@@ -0,0 +1,91 @@
++checkpoints:
++  checkpoint_interval: 10000
++  checkpoints_path: smoke_test/checkpoints
++  checkpoints_path_is_shared_file_system: false
++  resume_checkpoint_path: null
++  save_initial_state: false
++data_stages:
++- data:
++    dataset: null
++    num_loading_workers: 1
++    seed: 42
++  name: Smoke Stage
++  start_training_step: 1
++general:
++  benchmark_csv_path: smoke_test/benchmark.csv
++  consumed_train_samples: null
++  ignore_sanity_checks: true
++  project: smoke
++  run: t4_smoke
++  seed: 42
++  step: null
++lighteval: null
++logging:
++  iteration_step_info_interval: 1
++  log_level: info
++  log_level_replica: info
++model:
++  ddp_bucket_cap_mb: 25
++  dtype: bfloat16
++  init_method:
++    std: 0.025
++  make_vocab_size_divisible_by: 1
++  model_config:
++    bos_token_id: 1
++    eos_token_id: 2
++    hidden_act: silu
++    hidden_size: 256
++    initializer_range: 0.02
++    intermediate_size: 768
++    is_llama_config: true
++    max_position_embeddings: 512
++    num_attention_heads: 4
++    num_hidden_layers: 4
++    num_key_value_heads: 2
++    pad_token_id: null
++    pretraining_tp: 1
++    rms_norm_eps: 1.0e-05
++    rope_scaling: null
++    tie_word_embeddings: true
++    use_cache: true
++    vocab_size: 256
++optimizer:
++  accumulate_grad_in_fp32: true
++  clip_grad: 1.0
++  learning_rate_scheduler:
++    learning_rate: 0.0003
++    lr_decay_starting_step: null
++    lr_decay_steps: 13
++    lr_decay_style: cosine
++    lr_warmup_steps: 2
++    lr_warmup_style: linear
++    min_decay_lr: 1.0e-05
++  optimizer_factory:
++    adam_beta1: 0.9
++    adam_beta2: 0.95
++    adam_eps: 1.0e-08
++    name: adamW
++    torch_adam_is_fused: true
++  weight_decay: 0.01
++  zero_stage: 0
++parallelism:
++  dp: 4
++  expert_parallel_size: 1
++  pp: 1
++  pp_engine: 1f1b
++  tp: 1
++  tp_linear_async_communication: false
++  tp_mode: ALL_REDUCE
++profiler: null
++tokenizer:
++  tokenizer_max_length: null
++  tokenizer_name_or_path: robot-test/dummy-tokenizer-wordlevel
++  tokenizer_revision: null
++tokens:
++  batch_accumulation_per_replica: 1
++  limit_test_batches: 0
++  limit_val_batches: 0
++  micro_batch_size: 2
++  sequence_length: 512
++  train_steps: 20
++  val_check_interval: -1
+diff --git a/smoke_test/config_smoke_t4.yaml b/smoke_test/config_smoke_t4.yaml
+new file mode 100644
+index 00000000..0dad3fd1
+--- /dev/null
++++ b/smoke_test/config_smoke_t4.yaml
+@@ -0,0 +1,91 @@
++checkpoints:
++  checkpoint_interval: 10000
++  checkpoints_path: smoke_test/checkpoints
++  checkpoints_path_is_shared_file_system: false
++  resume_checkpoint_path: null
++  save_initial_state: false
++data_stages:
++- data:
++    dataset: null
++    num_loading_workers: 1
++    seed: 42
++  name: Smoke Stage
++  start_training_step: 1
++general:
++  benchmark_csv_path: smoke_test/benchmark.csv
++  consumed_train_samples: null
++  ignore_sanity_checks: true
++  project: smoke
++  run: t4_smoke
++  seed: 42
++  step: null
++lighteval: null
++logging:
++  iteration_step_info_interval: 1
++  log_level: info
++  log_level_replica: info
++model:
++  ddp_bucket_cap_mb: 25
++  dtype: bfloat16
++  init_method:
++    std: 0.025
++  make_vocab_size_divisible_by: 1
++  model_config:
++    bos_token_id: 1
++    eos_token_id: 2
++    hidden_act: silu
++    hidden_size: 256
++    initializer_range: 0.02
++    intermediate_size: 768
++    is_llama_config: true
++    max_position_embeddings: 512
++    num_attention_heads: 4
++    num_hidden_layers: 4
++    num_key_value_heads: 2
++    pad_token_id: null
++    pretraining_tp: 1
++    rms_norm_eps: 1.0e-05
++    rope_scaling: null
++    tie_word_embeddings: true
++    use_cache: true
++    vocab_size: 256
++optimizer:
++  accumulate_grad_in_fp32: true
++  clip_grad: 1.0
++  learning_rate_scheduler:
++    learning_rate: 0.0003
++    lr_decay_starting_step: null
++    lr_decay_steps: 13
++    lr_decay_style: cosine
++    lr_warmup_steps: 2
++    lr_warmup_style: linear
++    min_decay_lr: 1.0e-05
++  optimizer_factory:
++    adam_beta1: 0.9
++    adam_beta2: 0.95
++    adam_eps: 1.0e-08
++    name: adamW
++    torch_adam_is_fused: true
++  weight_decay: 0.01
++  zero_stage: 0
++parallelism:
++  dp: 1
++  expert_parallel_size: 1
++  pp: 1
++  pp_engine: 1f1b
++  tp: 1
++  tp_linear_async_communication: false
++  tp_mode: ALL_REDUCE
++profiler: null
++tokenizer:
++  tokenizer_max_length: null
++  tokenizer_name_or_path: robot-test/dummy-tokenizer-wordlevel
++  tokenizer_revision: null
++tokens:
++  batch_accumulation_per_replica: 1
++  limit_test_batches: 0
++  limit_val_batches: 0
++  micro_batch_size: 2
++  sequence_length: 512
++  train_steps: 20
++  val_check_interval: -1
+diff --git a/src/nanotron/scaling/parametrization.py b/src/nanotron/scaling/parametrization.py
+index 8324eccf..c55f61e3 100644
+--- a/src/nanotron/scaling/parametrization.py
++++ b/src/nanotron/scaling/parametrization.py
+@@ -48,11 +48,10 @@ class StandardParametrizator(Parametrizator):
+             nn.Linear: self._parametrize_column_linear,
+         }
+ 
+-        self.std = config.model.init_method.std
+-        self.num_layers = config.model.model_config.num_hidden_layers
+-        self.tp = config.parallelism.tp
+-        self.scaling_method = config.model.init_method.scaling_method
+-        self.hidden_size = config.model.model_config.hidden_size
++        self.std = config.init_method.std
++        self.num_layers = config.model_config.num_hidden_layers
++        self.scaling_method = config.init_method.scaling_method
++        self.hidden_size = config.model_config.hidden_size
+ 
+     def _parametrize_column_linear(self, param_name: str, module: nn.Module):
+         assert param_name in ["weight", "bias"]
