@@ -179,7 +179,7 @@ time. Consequences:
 - it does not matter whether his compute nodes have outbound internet;
 - the runs end up owned and administered by you, which is what you want for a paper.
 
-`deploy/clusters.yaml` therefore has `mode: offline`, `project: kys-epoch-wsd`, and
+`deploy/clusters.yaml` therefore has `mode: offline`, `project: zhc-1p5b-10b-wsd`, and
 **`entity: null` on purpose**. `render_config.py` refuses to render if `entity` is set while
 `mode: offline`, and never writes `WANDB_ENTITY` into the `.env`.
 
@@ -202,23 +202,33 @@ you the path. The generated `.env` says so in a comment, for whoever reads it at
 **Your side — after the grid finishes:**
 ```bash
 wandb login                                   # your key, your machine
-wandb sync --entity <YOUR_ENTITY> --project kys-epoch-wsd --sync-all <path>/wandb
+wandb sync --entity <YOUR_ENTITY> --project zhc-1p5b-10b-wsd --sync-all <path>/wandb
 ```
 `wandb sync` takes `-e/--entity` and `-p/--project` explicitly (confirmed in `wandb sync
 --help` for wandb 0.27.0), so the destination is stated at sync time rather than inherited
 from whatever environment happens to be loaded.
 
-**One thing to verify before the grid, not after:** sync a single throwaway offline run and
-confirm it lands in the entity you expect. The offline half is verified here (no entity is
-recorded); the sync half depends on your account's team/project layout and takes 30 seconds
-to confirm:
+**Both directions of the entity question were tested end to end (2026-08-09):**
 
-```bash
-WANDB_MODE=offline WANDB_DIR=/tmp/wbtest python -c "
-import wandb; r=wandb.init(project='kys-epoch-wsd', name='sync-probe'); wandb.log({'x':1}); wandb.finish()"
-wandb sync --entity <YOUR_ENTITY> --project kys-epoch-wsd /tmp/wbtest/wandb/offline-run-*
-# then delete the probe run from the UI
-```
+| test | result |
+|---|---|
+| offline `wandb.init`, `WANDB_ENTITY` unset | `run.entity == ''` — no destination baked in |
+| `wandb sync` with `WANDB_ENTITY` = a **bogus** entity | `ERROR ... entity ... not found (404)`. **Nothing was created** — verified the project did not appear under the cached-credential account. It does *not* silently fall back to `~/.netrc`. |
+| `wandb sync` with `WANDB_ENTITY` = the real entity | run lands in exactly that entity, name and history intact |
+
+So supplying the entity at sync time is reliable: a wrong value is a loud 404, not a
+misfiled run.
+
+> **Gotcha, and this one will bite.** A *failed* sync still writes a `.synced` marker into the
+> offline run directory. `wandb sync --sync-all` then **skips** that run on retry and reports
+> success having uploaded nothing. After any failed or partial sync, retry with
+> `--include-synced`:
+>
+> ```bash
+> wandb sync --include-synced --entity <YOUR_ENTITY> --project zhc-1p5b-10b-wsd <path>/wandb
+> ```
+>
+> Always reconcile the count afterwards: **108 runs** expected in the project.
 
 Offline runs keep their name, tags, group, config and full step history; the only thing lost
 is live monitoring during the run.
@@ -298,12 +308,12 @@ correct absolute positions.
 
 ## 5. Division of labour
 
-**You — before he starts:** nothing blocking. `wandb.project` is already `kys-epoch-wsd` and
+**You — before he starts:** nothing blocking. `wandb.project` is already `zhc-1p5b-10b-wsd` and
 `mode: offline`; no entity is needed until sync. Optionally run the 30-second sync probe in
 §4.2 so the destination is confirmed before there is anything valuable to lose.
 
 **You — after the grid finishes:** `wandb login`, then
-`wandb sync --entity <YOUR_ENTITY> --project kys-epoch-wsd --sync-all <his path>/wandb`.
+`wandb sync --entity <YOUR_ENTITY> --project zhc-1p5b-10b-wsd --sync-all <his path>/wandb`.
 That single command is what makes the 108 runs yours.
 
 **Him — once:** `pip install wandb` (no login, no key, no account). Fill in exactly five

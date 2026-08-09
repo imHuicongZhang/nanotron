@@ -10,7 +10,7 @@
 # LR schedule  : warmup 0->500 linear to 0.0005; constant; decay from step 12875 over 1430 steps -> 0
 # resume       : trunk folder <ckpt_root>/{setting}_seed{seed}_trunk: latest.txt auto-resume. Pre-seed step 0 from _init_1.5B_seed<S>/0.
 general:
-  project: kys-epoch-wsd
+  project: zhc-1p5b-10b-wsd
   run: diversity-first_seed44_trunk1
   seed: 44
 model:

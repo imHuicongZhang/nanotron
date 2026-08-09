@@ -67,10 +67,14 @@ SETTINGS = [
     'signal-disagreement-lambda05',
 ]
 
-CKPT_ROOT = '/scratch/bvandur1/zhuicon1/checkpoints/kys'
-INIT_ROOT = '/scratch/bvandur1/zhuicon1/checkpoints'
-TOKENIZER = '/scratch/bvandur1/zhuicon1/tokenizers/llama2-unsloth-tokenizer'
-PROJECT = 'kys-epoch-wsd'
+# No path constants live here any more — ckpt_root / tokenizer_path / data_root are all
+# supplied per cluster in deploy/clusters.yaml and composed by tools/render_config.py.
+#
+# One wandb project for the WHOLE grid. All 108 configs carry this same string; runs are
+# distinguished by general.run, tags and WANDB_RUN_GROUP. 108 one-run projects would make
+# cross-run aggregation impossible. `general.project` is a required field on GeneralArgs and
+# is used for nothing but wandb.init(project=...) — it feeds no checkpoint or log path.
+PROJECT = 'zhc-1p5b-10b-wsd'
 
 MODEL = {
     'ddp_bucket_cap_mb': 25,

@@ -103,6 +103,62 @@ def check_config(path: Path):
     return errs, (mbs, accum, dp, seq)
 
 
+def check_env(cfg_path: Path):
+    """Preflight the logging environment.
+
+    The headline case: nanotron does `try: import wandb / except ImportError: wandb = None`
+    and then guards every logging call with `if wandb is not None`. So a MISSING wandb
+    package produces a training run with **zero logs and no error at all** — 72 runs later
+    you have checkpoints and no loss curves. Nothing else in the pipeline notices.
+    """
+    import os
+    import yaml
+    cfg = yaml.safe_load(cfg_path.read_text())
+    errs = []
+
+    try:
+        import wandb
+        print(f"wandb   : {wandb.__version__}")
+    except ImportError:
+        return ["wandb is NOT installed in this environment. nanotron wraps `import wandb` in "
+                "try/except ImportError and silently skips ALL logging when it fails — the run "
+                "trains to completion with no metrics and no warning. `pip install wandb`."]
+
+    mode = os.environ.get("WANDB_MODE")
+    proj = os.environ.get("WANDB_PROJECT")
+    ent = os.environ.get("WANDB_ENTITY")
+    wdir = os.environ.get("WANDB_DIR")
+    cfg_proj = cfg.get("general", {}).get("project")
+    print(f"          WANDB_MODE={mode} WANDB_PROJECT={proj} WANDB_DIR={wdir}")
+
+    if mode is None:
+        errs.append("WANDB_MODE is unset — did you `source` the generated .env? Without it "
+                    "wandb defaults to online and will use whatever cached credential exists "
+                    "on this machine.")
+    elif mode == "offline":
+        if ent:
+            errs.append(f"WANDB_ENTITY is set ({ent}) but mode is offline. Offline runs must "
+                        f"stay unattributed; the owner is chosen by `wandb sync --entity`.")
+        if not wdir:
+            errs.append("WANDB_DIR is unset in offline mode — wandb writes run directories to "
+                        "the working directory, which on a compute node is how a whole grid's "
+                        "logs get lost.")
+        else:
+            p = Path(wdir)
+            if not p.is_dir():
+                errs.append(f"WANDB_DIR {p} does not exist")
+            elif not os.access(p, os.W_OK):
+                errs.append(f"WANDB_DIR {p} is not writable")
+            if str(p).startswith(("/tmp", "/var/tmp", "/dev/shm", "/scratch/local")):
+                errs.append(f"WANDB_DIR {p} looks node-local. Offline runs must land on shared "
+                            f"storage that outlives the job and is readable from the sync host.")
+    if proj and cfg_proj and proj != cfg_proj:
+        errs.append(f"WANDB_PROJECT={proj} but config general.project={cfg_proj}; nanotron "
+                    f"passes the CONFIG value to wandb.init, so the env var would be ignored "
+                    f"and the run would land in {cfg_proj}.")
+    return errs
+
+
 def check_corpus(cfg_path: Path):
     """Verify the rendered dataset_folder points at the corpus it claims to.
 
@@ -263,9 +319,14 @@ def main():
     ap.add_argument("--check-resume", action="store_true",
                     help="also verify resume_checkpoint_path resolves; run this immediately "
                          "before launching each job, once its predecessor has finished")
+    ap.add_argument("--skip-env", action="store_true",
+                    help="skip the wandb/environment preflight (use when rendering on a host "
+                         "that will not run the training)")
     args = ap.parse_args()
 
     errs, expect = check_config(args.config)
+    if not args.skip_env:
+        errs += check_env(args.config)
     if not args.skip_corpus:
         errs += check_corpus(args.config)
     if args.check_resume:

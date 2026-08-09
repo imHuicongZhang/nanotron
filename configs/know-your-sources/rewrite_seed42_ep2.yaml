@@ -10,7 +10,7 @@
 # LR schedule  : warmup 0->500 linear to 0.0005; constant; decay from step 8583 over 954 steps -> 0
 # resume       : direct trunk step dir 8583 (== lr_decay_starting_step; it has model_config.json, so parse_ckpt_path uses it as-is and ignores the trunk latest.txt).
 general:
-  project: kys-epoch-wsd
+  project: zhc-1p5b-10b-wsd
   run: rewrite_seed42_ep2
   seed: 42
 model:

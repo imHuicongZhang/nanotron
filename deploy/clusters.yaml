@@ -1,6 +1,6 @@
 # Per-cluster DEPLOYMENT profile. This is the only place parallelism is written down.
 #
-# The experiment templates under configs/kys/ carry no `parallelism:` block, no
+# The experiment templates under configs/know-your-sources/ carry no `parallelism:` block, no
 # `micro_batch_size` / `batch_accumulation_per_replica`, no `zero_stage`, no `sequence_length`.
 # `tools/render_config.py` stamps them in and DERIVES the accumulation so that
 #
@@ -92,7 +92,7 @@ ckpt_root: null               # <- FILL IN, e.g. /shared/scratch/kys/checkpoints
 # what we are avoiding. render_config.py refuses to render if `entity` is set while
 # mode: offline.
 wandb:
-  project: kys-epoch-wsd      # must match general.project in the templates
+  project: zhc-1p5b-10b-wsd      # must match general.project in the templates
   mode: offline               # offline | online
   entity: null                # offline: leave null (set with `wandb sync --entity` instead)
   # Where offline run directories are written (becomes WANDB_DIR). MUST be on storage that
