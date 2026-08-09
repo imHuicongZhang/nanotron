@@ -544,14 +544,21 @@ class CausalSelfAttention(nn.Module, AttachableStore):
                 )
                 # Remove pad tokens from key_states and concatenate samples in key_unpad
                 # cu_seqlens_k is the cumulative sequence lengths of key_states
+                # PATCH #6 (2026-08-09, Blackwell stack): slice [:4] instead of unpacking a fixed
+                # 4-tuple. flash-attn <=2.6.x returns
+                #   (x_unpad, indices, cu_seqlens, max_seqlen_in_batch)
+                # while >=2.7.x appends a 5th element `used_seqlens_in_batch`, so a bare 4-way
+                # unpack raises "too many values to unpack". sm_100 kernels only exist from
+                # flash-attn 2.8.x built on CUDA >=12.8, so Blackwell forces that upgrade.
+                # [:4] is correct on both; nanotron never uses the 5th value.
                 (query_unpad, indices_q, cu_seqlens_q, max_seqlen_q) = bert_padding.unpad_input(
                     query_states,
                     sequence_mask,
-                )
+                )[:4]
                 (key_unpad, indices_k, cu_seqlens_k, max_seqlen_k) = bert_padding.unpad_input(
                     key_states, sequence_mask
-                )
-                (value_unpad, _, _, _) = bert_padding.unpad_input(value_states, sequence_mask)
+                )[:4]
+                (value_unpad, _, _, _) = bert_padding.unpad_input(value_states, sequence_mask)[:4]
 
                 # NOTE: this scale is for µTransfer,
                 # in SP, we use sqrt(1/d_h)

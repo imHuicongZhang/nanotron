@@ -372,7 +372,16 @@ class DistributedTrainer:
                         rank=world_rank,
                     )
             elif world_rank == self.logger_ranks[0]:
-                run_name = f"{current_time}_{self.config.general.run}"
+                # PATCH #8 (2026-08-09): use `general.run` verbatim as the wandb run name.
+                # Upstream prepends `{dd/mm/YYYY_HH:MM:SS}_`, which makes the 108 runs of this
+                # grid impossible to select by name (and puts '/' and ':' in every name). The
+                # KYS grid needs exactly `{setting}_seed{n}_{trunk1..3|ep1..3}` so 72 logical
+                # runs can be aggregated afterwards. Set KYS_WANDB_TIMESTAMP_PREFIX=1 to
+                # restore upstream behaviour. Logging-only: cannot affect training numerics.
+                if os.environ.get("KYS_WANDB_TIMESTAMP_PREFIX", "0") == "1":
+                    run_name = f"{current_time}_{self.config.general.run}"
+                else:
+                    run_name = self.config.general.run
                 x_stats_sampling_interval = os.environ.get("STATS_SAMPLING_INTERVAL_IN_SEC", None)
 
                 wandb_settings = {}

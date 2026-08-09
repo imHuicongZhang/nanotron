@@ -1,0 +1,85 @@
+# quality-base / seed 44 / trunk3
+#
+# EXPERIMENT template — no `parallelism:`, no micro_batch_size / batch_accumulation_per_replica,
+# no zero_stage, no sequence_length. Those are DEPLOYMENT and are stamped by
+#   tools/render_config.py --template <this file> --cluster <c> --seed 44
+# which derives accum = 1024 / (mbs * dp) so the 2,097,152-token global batch is invariant.
+# This file will NOT parse on its own; that is intentional.
+#
+# steps        : 8584 -> 12875
+# LR schedule  : warmup 0->500 linear to 0.0005; constant; decay from step 12875 over 1430 steps -> 0
+# resume       : trunk folder: latest.txt auto-resume. Pre-seed step 0 from /scratch/bvandur1/zhuicon1/checkpoints/_init_1.5B_seed44/0 (tools/seed_trunk_dirs.sh).
+general:
+  project: kys-epoch-wsd
+  run: quality-base_seed44_trunk3
+  seed: 44
+model:
+  ddp_bucket_cap_mb: 25
+  dtype: bfloat16
+  init_method:
+    std: 0.02
+  make_vocab_size_divisible_by: 1
+  model_config:
+    is_llama_config: true
+    hidden_size: 2048
+    num_hidden_layers: 28
+    num_attention_heads: 16
+    num_key_value_heads: 16
+    intermediate_size: 5632
+    vocab_size: 32000
+    tie_word_embeddings: true
+    hidden_act: silu
+    max_position_embeddings: 2048
+    rope_theta: 10000.0
+    rope_interleaved: false
+    rms_norm_eps: 1.0e-05
+    attention_bias: false
+    bos_token_id: 1
+    eos_token_id: 2
+    pad_token_id: null
+    pretraining_tp: 1
+    use_cache: false
+tokenizer:
+  tokenizer_name_or_path: /scratch/bvandur1/zhuicon1/tokenizers/llama2-unsloth-tokenizer
+tokens:
+  train_steps: 12875
+  val_check_interval: -1
+  limit_val_batches: 0
+  limit_test_batches: 0
+data_stages:
+- name: S0_top10B
+  start_training_step: 1
+  data:
+    dataset:
+      dataset_folder:
+      - /scratch/bvandur1/zhuicon1/nanotron_tokenized/10B-base-shuf42/tokenized
+    num_loading_workers: 1
+    seed: 44
+checkpoints:
+  checkpoints_path: /scratch/bvandur1/zhuicon1/checkpoints/kys/quality-base-seed44-trunk
+  resume_checkpoint_path: /scratch/bvandur1/zhuicon1/checkpoints/kys/quality-base-seed44-trunk
+  load_optimizer: true
+  load_lr_scheduler: true
+  checkpoint_interval: 1500
+  save_initial_state: false
+  save_final_state: true
+optimizer:
+  weight_decay: 0.1
+  clip_grad: 1.0
+  accumulate_grad_in_fp32: true
+  learning_rate_scheduler:
+    learning_rate: 0.0005
+    lr_warmup_steps: 500
+    lr_warmup_style: linear
+    lr_decay_starting_step: 12875
+    lr_decay_style: linear
+    lr_decay_steps: 1430
+    min_decay_lr: 0.0
+  optimizer_factory:
+    adam_beta1: 0.9
+    adam_beta2: 0.95
+    adam_eps: 1.0e-08
+    name: adamW
+    torch_adam_is_fused: true
+logging:
+  iteration_step_info_interval: 1

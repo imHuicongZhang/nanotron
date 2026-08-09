@@ -14,9 +14,13 @@ classifiers = [
     "Topic :: Software Development"
 ]
 dependencies = [
-    "torch>=1.13.1",
+    # PATCH #7 (2026-08-09, Blackwell stack). torch>=2.7 is the first release whose cu128 wheels
+    # carry sm_100 SASS; 2.4.1+cu124 stops at sm_90 and ships no PTX, so it cannot run on
+    # Blackwell at all. numpy<2 was already stale and inconsistent with this project's own
+    # `nanosets` extra — datatrove >=0.4 requires numpy>=2; <2.1 keeps numba 0.60 happy.
+    "torch>=2.7.0",
     "pyyaml",
-    "numpy<2",
+    "numpy>=2.0,<2.1",
     "packaging",
     "safetensors",
     "dacite",
@@ -46,7 +50,11 @@ test = [
 ]
 
 fast-modeling = [
-    "flash-attn>=2.5.0,<2.7.0",
+    # PATCH #7 (2026-08-09, Blackwell stack). The old `<2.7.0` cap excludes every build that can
+    # emit sm_100: flash-attn's setup.py only gained `arch=compute_100,code=sm_100` at 2.7+, and
+    # gates it on CUDA >=12.8. 2.8.x also changed `bert_padding.unpad_input` from a 4- to a
+    # 5-tuple, which patch #6 in models/llama.py absorbs.
+    "flash-attn>=2.8.0",
 ]
 
 nanosets = [

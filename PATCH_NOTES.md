@@ -90,3 +90,25 @@ Re-run the pip line above, re-apply the 5 source edits (they're committed in-tre
 comments), and confirm with the §5.1 end-to-end smoke (`data_preprocessing_guide.md` §5.1).
 **Multi-epoch check:** if `train_steps` spans >1 epoch, confirm a run crosses the 1-epoch boundary
 (S0: step ~4768 / 10B tok) without `IndexError` — that exercises source edit #5.
+
+## Patches #6-#8 (added 2026-08-09)
+
+6. **`src/nanotron/models/llama.py`** (~547/551/554): slice `bert_padding.unpad_input(...)[:4]`
+   instead of unpacking a fixed 4-tuple. flash-attn ≤2.6.x returns
+   `(x_unpad, indices, cu_seqlens, max_seqlen_in_batch)`; ≥2.7.x appends a 5th element
+   `used_seqlens_in_batch`, so a bare 4-way unpack raises `too many values to unpack`.
+   Affects the generation / kv-cache path only — the training path calls
+   `flash_attn_varlen_func` with keyword args whose signature is unchanged. Required because
+   sm_100 kernels only exist from flash-attn 2.8.x, and H200/H100 use the same 2.8.x wheel.
+
+7. **`pyproject.toml`**: `torch>=1.13.1` → `torch>=2.7.0`, `numpy<2` → `numpy>=2.0,<2.1`,
+   `flash-attn>=2.5.0,<2.7.0` → `flash-attn>=2.8.0`. The old caps make `pip install -e .`
+   fight the environment the rest of the stack requires (datatrove needs numpy≥2; the
+   `<2.7.0` flash-attn cap excludes every build that can emit sm_100). The `numpy<2` pin was
+   already stale and inconsistent with this project's own `nanosets` extra.
+
+8. **`src/nanotron/trainer.py`** (~375): use `config.general.run` verbatim as the wandb run
+   name. Upstream prepends `{dd/mm/YYYY_HH:MM:SS}_`, which puts `/` and `:` in every run name
+   and makes the 108 runs of the KYS grid impossible to select by name. Set
+   `KYS_WANDB_TIMESTAMP_PREFIX=1` to restore upstream behaviour. Logging-only; cannot affect
+   training numerics.

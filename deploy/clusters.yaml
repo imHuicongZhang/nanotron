@@ -1,0 +1,154 @@
+# Per-cluster DEPLOYMENT profile. This is the only place parallelism is written down.
+#
+# The experiment templates under configs/kys/ carry no `parallelism:` block, no
+# `micro_batch_size` / `batch_accumulation_per_replica`, no `zero_stage`, no `sequence_length`.
+# `tools/render_config.py` stamps them in and DERIVES the accumulation so that
+#
+#     micro_batch_size x batch_accumulation_per_replica x dp == global_batch_seq  (1024)
+#
+# holds by construction for every run on every cluster.
+#
+# ---------------------------------------------------------------------------------------
+# TWO DIFFERENT KINDS OF KNOB — do not confuse them (measured 2026-08-09, see §5 of HANDOVER)
+#
+#   dp   is mathematically FREE. MegatronPretrainingSampler fills a batch of
+#        `micro_batch_size * dp` consecutive samples and gives rank d the slice
+#        [d*mbs : (d+1)*mbs], so the PARTITION of the 1024-sequence global batch into
+#        micro-batches is consecutive blocks of size mbs regardless of dp. The accumulated
+#        gradient is (1/dp)(1/accum) * sum_j loss_j = the mean over all 1024/mbs
+#        micro-batches — independent of dp. Verified numerically: identical per-token
+#        weights for (mbs=4,dp=4,accum=64) vs (mbs=4,dp=8,accum=32), max diff 0.000e+00.
+#        Only floating-point rounding (all-reduce tree) differs.
+#
+#   mbs  is NOT free. `Loss.forward` does `masked_mean(loss, label_mask)`, and label_mask
+#        drops the token before every document boundary — measured mean 2.8 masked tokens
+#        per 2048-token sequence, range 0-10. So masked_mean's denominator n_j VARIES per
+#        micro-batch (rel-std 6.2e-4 at mbs=4, 3.9e-4 at mbs=16), and the effective
+#        per-token weight is 1/(n_micro * n_j). Regrouping the batch into different-sized
+#        micro-batches changes those weights: measured max relative difference
+#        mbs=4 vs mbs=8  -> 1.04e-3
+#        mbs=4 vs mbs=16 -> 1.43e-3
+#        mbs=8 vs mbs=16 -> 7.04e-4
+#        That is a real difference in the optimization objective, ~4 orders of magnitude
+#        above fp32 rounding — not a rounding artefact.
+#
+#   => micro_batch_size MUST be identical across every run in the grid.
+#      render_config.py refuses to render if the clusters named in `seed_assignment`
+#      disagree about it.
+# ---------------------------------------------------------------------------------------
+
+global_batch_seq: 1024        # 1024 sequences x 2048 tokens = 2,097,152 tokens/step. INVARIANT.
+sequence_length: 2048
+
+# wandb destination. BOTH values are mandatory and have no default: render_config.py refuses
+# to emit anything while either is null, so a run can never land in whoever-happens-to-be-
+# logged-in's default project. `entity` is NOT a nanotron config field (nanotron calls
+# wandb.init without entity=), so the renderer exports it as WANDB_ENTITY in the companion
+# .env file instead — verified that wandb picks it up from the environment.
+wandb:
+  entity: null                # <- FILL IN (the owning team/entity, e.g. an org or team slug)
+  project: null               # <- FILL IN (must match general.project in the templates)
+  mode: online                # online | offline  (offline needs no API key; sync later)
+
+# Peak HBM model fitted to the measured H100 run (mbs=4: 28.1 GiB steady, 48.5 GiB peak
+# allocated, 51.6 GiB peak reserved of 80 GB). render_config.py uses this to refuse an
+# mbs that will not fit a cluster's cards.
+memory_model:
+  static_gib: 28.1            # bf16 params + fp32 grads + fp32 master + Adam m,v (zero_stage 0)
+  per_micro_batch_seq_gib: 5.10
+  reserve_frac: 0.90          # refuse above 90% of card HBM (allocator fragmentation headroom)
+
+clusters:
+
+  h200:
+    # Collaborator's cluster. H200 SXM = same GH100 die as H100 (sm_90, 132 SM), 141 GB HBM3e.
+    # Fully covered by the prebuilt torch 2.8.0+cu128 and flash-attn 2.8.3 wheels
+    # (both carry sm_90 SASS) — no probe and no source build needed.
+    arch: sm_90
+    hbm_gib: 131.3            # 141 GB
+    gpus_per_node: 8
+    dp: 8
+    tp: 1
+    pp: 1
+    # ---------------------------------------------------------------------------------
+    # DO NOT RAISE micro_batch_size TO "USE THE HEADROOM". 109.7 GiB of 131.3 is 84%, and
+    # the remaining 16% is NOT free capacity to exploit — mbs is pinned for NUMERICAL
+    # COMPARABILITY across the 72 runs, not tuned for throughput.
+    #
+    # `Loss.forward` computes masked_mean(loss, label_mask) = (loss*mask).sum()/mask.sum(),
+    # and label_mask drops the token before every document boundary (measured: 2.8 masked
+    # tokens per 2048-token sequence, range 0-10). So masked_mean's denominator differs per
+    # micro-batch and the effective per-token weight is 1/(n_micro * n_j). Regrouping the
+    # same 1024 sequences into a different micro-batch size changes those weights:
+    #     mbs=4 vs mbs=16 -> 1.43e-3 relative
+    #     mbs=8 vs mbs=16 -> 7.04e-4 relative
+    # That is ~4 orders of magnitude above fp32 rounding. It changes the objective, not the
+    # speed. Changing mbs for ANY subset of the grid silently makes those runs
+    # non-comparable to the rest, and nothing in the loss curves will look wrong.
+    #
+    # (dp, by contrast, IS free: the micro-batch partition is consecutive blocks of size mbs
+    # regardless of dp — measured difference exactly 0.000e+00. Scale dp, never mbs.)
+    # ---------------------------------------------------------------------------------
+    micro_batch_size: 16      # 28.1 + 16*5.10 = 109.7 GiB (84% of 131.3) -> accum = 1024/(16*8) = 8
+    zero_stage: 0
+    slurm:
+      partition: null         # collaborator to fill
+      nodes: 1
+      gres: "gpu:h200:8"
+      time: null
+
+  h100:
+    # Our DSAI nodes. VERIFIED 2026-08-09 via `sinfo -N -o "%P %N %c %m %G"`:
+    #   nvl  n01-n16 : gpu:h100:4, 128 CPU, 1547000 MB   <- 4 GPUs/node, NOT 8
+    #   h100 h01-h16 : gpu:h100:4, 128 CPU, 1547000 MB
+    # 32 nodes / 128 H100. dp=4 is exactly one whole node.
+    # micro_batch_size 4 is the measured layout (85,920 iterations at 13.80 s/it median).
+    # NOTE: mbs=16 does NOT fit here — 109.7 GiB against 74.5 GiB usable. mbs=8 is 68.9 GiB
+    # allocated / ~72 GiB reserved = 97% of usable, which is too tight to rely on. So a grid
+    # that spans h100 and h200 must run mbs=4 on BOTH; see the uniformity rule above.
+    arch: sm_90
+    hbm_gib: 74.5             # 80 GB
+    gpus_per_node: 4
+    dp: 4
+    tp: 1
+    pp: 1
+    micro_batch_size: 16      # deliberately mismatched-looking: see note above. Set to 4 (and
+                              # set h200 to 4 as well) if you actually want to use both sides.
+    zero_stage: 0
+    slurm:
+      partition: "h100,nvl"
+      nodes: 1
+      gres: "gpu:h100:4"
+      time: "24:00:00"
+
+  b300:
+    # Not in use. Left null so the renderer aborts rather than assuming a topology.
+    # If we migrate: sm_100/sm_103 — see INSTALL.md appendix A, run tools/probe_blackwell.py.
+    arch: null
+    hbm_gib: 268.0            # 288 GB
+    gpus_per_node: null
+    dp: null
+    tp: 1
+    pp: 1
+    micro_batch_size: null
+    zero_stage: 0
+    slurm:
+      partition: null
+      nodes: null
+      gres: null
+      time: null
+
+# Seed -> cluster assignment. The grid may be SPLIT ONLY BY SEED: all six settings of a given
+# seed must land on the same cluster, so any six-way (between-setting) comparison is always
+# within one kernel/hardware generation. render_config.py enforces this — rendering
+# (seed, cluster) aborts unless `seed_assignment[seed] == cluster`.
+#
+# Current: everything on h200 (one architecture, one mbs, no cross-cluster term anywhere).
+# To split across h200 + our h100s, set micro_batch_size: 4 on BOTH clusters first, then e.g.
+#   42: h100
+#   43: h200
+#   44: h200
+seed_assignment:
+  42: h200
+  43: h200
+  44: h200
