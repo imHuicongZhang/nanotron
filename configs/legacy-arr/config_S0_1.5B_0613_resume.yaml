@@ -1,6 +1,6 @@
 general:
   project: exp-0616
-  run: quality-base-10B-1.5B-seed42
+  run: quality_base-10B-1.5B-seed42
   seed: 42
 model:
   ddp_bucket_cap_mb: 25

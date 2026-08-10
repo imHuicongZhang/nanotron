@@ -1,7 +1,7 @@
 general:
-  project: exp-0616
-  run: quality_base-10B-1.5B-seed42
-  seed: 42
+  project: exp-0715-lambda-sweep-seed43
+  run: disagreement_aware_0p0-10B-1.5B-seed43
+  seed: 43
 model:
   ddp_bucket_cap_mb: 25
   dtype: bfloat16
@@ -51,13 +51,16 @@ data_stages:
   data:
     dataset:
       dataset_folder:
-        - /scratch/bvandur1/zhuicon1/nanotron_tokenized/10B-base/tokenized
+        - /scratch/bvandur1/zhuicon1/nanotron_tokenized/signal-disagreement-lambda0/tokenized
     num_loading_workers: 1
-    seed: 42
+    seed: 43
 checkpoints:
-  checkpoints_path: /scratch/bvandur1/zhuicon1/checkpoints/quality-base-10B-1.5B-seed42
+  checkpoints_path: /scratch/bvandur1/zhuicon1/checkpoints/signal-disagreement-lambda0-10B-1.5B-seed43
+  resume_checkpoint_path: /scratch/bvandur1/zhuicon1/checkpoints/_init_1.5B_seed43/0  # shared init (weights only)
+  load_optimizer: false
+  load_lr_scheduler: false
   checkpoint_interval: 477  # ~1B tokens: 477 * 2,097,152 tok/step = 1.0003B (tok/step = mbs4*accum64*dp4*seq2048)
-  save_initial_state: true   # writes checkpoints_path/0/ before step 1 = shared init for the other 5 runs (copy 0/ to _init_1.5B_seed42/)
+  save_initial_state: false   # loads shared init via resume_checkpoint_path; does not regenerate
   save_final_state: true
 optimizer:
   zero_stage: 0  # was 1; ZeRO-1 + accumulate_grad_in_fp32 is NotImplemented in nanotron 0.4 (fp32_accum_hook reduce_scatter path). zero_stage 0 keeps fp32 grad accumulation.

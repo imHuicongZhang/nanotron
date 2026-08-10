@@ -55,12 +55,12 @@ load_lr_scheduler, checkpoint_interval, save_initial_state, save_final_state}`,
 
 | setting | sequences | tokens | `folder_path` is `str` | `ds[len(ds)] == ds[0]` |
 |---|---:|---:|:--:|:--:|
-| quality-base | 4,894,576 | 10.024 B | yes | yes |
-| quality-first | 4,908,594 | 10.053 B | yes | yes |
-| diversity-first | 4,850,875 | 9.935 B | yes | yes |
+| quality_base | 4,894,576 | 10.024 B | yes | yes |
+| quality_first | 4,908,594 | 10.053 B | yes | yes |
+| diversity_oriented | 4,850,875 | 9.935 B | yes | yes |
 | wrap | 4,913,882 | 10.064 B | yes | yes |
-| rewrite | 4,912,456 | 10.061 B | yes | yes |
-| signal-disagreement-λ0.5 | 4,904,946 | 10.045 B | yes | yes |
+| rewire | 4,912,456 | 10.061 B | yes | yes |
+| disagreement_aware_0p5 | 4,904,946 | 10.045 B | yes | yes |
 
 The last two columns exercise patch #3 (`folder_path` restored to `str`) and patch #5
 (multi-epoch modulo wrap) respectively.

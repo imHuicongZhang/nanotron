@@ -1,7 +1,7 @@
 general:
-  project: exp-0616
-  run: quality_base-10B-1.5B-seed42
-  seed: 42
+  project: exp-0626
+  run: quality_base-10B-1.5B-noshared-seed43
+  seed: 43
 model:
   ddp_bucket_cap_mb: 25
   dtype: bfloat16
@@ -31,7 +31,7 @@ tokenizer:
   tokenizer_name_or_path: /scratch/bvandur1/zhuicon1/tokenizers/llama2-unsloth-tokenizer
 tokens:
   sequence_length: 2048
-  train_steps: 14305
+  train_steps: 4768   # 1 epoch: round(10,000,000,529 / 2,097,152) -- no-shared quality_base (rank 5-15B raw, 10B)
   micro_batch_size: 4
   batch_accumulation_per_replica: 64  # dp4: 4*4*64 = 1024 seq = 2,097,152 tok/step (global batch unchanged)
   val_check_interval: -1
@@ -51,30 +51,33 @@ data_stages:
   data:
     dataset:
       dataset_folder:
-        - /scratch/bvandur1/zhuicon1/nanotron_tokenized/10B-base/tokenized
+        - /scratch/bvandur1/zhuicon1/nanotron_tokenized_7B/quality-base/tokenized
     num_loading_workers: 1
-    seed: 42
+    seed: 43
 checkpoints:
-  checkpoints_path: /scratch/bvandur1/zhuicon1/checkpoints/quality-base-10B-1.5B-seed42
+  checkpoints_path: /scratch/bvandur1/zhuicon1/checkpoints/quality-base-10B-1.5B-noshared-seed43
+  resume_checkpoint_path: /scratch/bvandur1/zhuicon1/checkpoints/_init_1.5B_seed43/0  # shared init (weights only)
+  load_optimizer: false
+  load_lr_scheduler: false
   checkpoint_interval: 477  # ~1B tokens: 477 * 2,097,152 tok/step = 1.0003B (tok/step = mbs4*accum64*dp4*seq2048)
-  save_initial_state: true   # writes checkpoints_path/0/ before step 1 = shared init for the other 5 runs (copy 0/ to _init_1.5B_seed42/)
+  save_initial_state: false   # loads shared init via resume_checkpoint_path; does not regenerate
   save_final_state: true
 optimizer:
-  zero_stage: 0  # was 1; ZeRO-1 + accumulate_grad_in_fp32 is NotImplemented in nanotron 0.4 (fp32_accum_hook reduce_scatter path). zero_stage 0 keeps fp32 grad accumulation.
+  zero_stage: 0  # ZeRO-1 + accumulate_grad_in_fp32 is NotImplemented in nanotron 0.4 (fp32_accum_hook reduce_scatter path). zero_stage 0 keeps fp32 grad accumulation.
   weight_decay: 0.1
   clip_grad: 1.0
   accumulate_grad_in_fp32: true
   learning_rate_scheduler:
-    # WSD (Warmup-Stable-Decay), SmolLM2-1.7B recipe shape.
-    # Boundaries derived from train_steps=14305 (see tokens block):
-    #   warmup 0->500 | stable 500->12875 (flat @ 5e-4) | decay 12875->14305 (linear -> 0)
-    #   lr_decay_starting_step = round(0.90*14305)=12875 ; lr_decay_steps = 14305-12875 = 1430 (last 10%)
+    # WSD (Warmup-Stable-Decay), SmolLM2-1.7B recipe shape, SAME proportions as original 1.5B.
+    # Re-derived for train_steps=4768 (1 epoch):
+    #   warmup 0->167 (3.5%) | stable 167->4291 (flat @ 5e-4) | decay 4291->4768 (linear -> 0, last 10%)
+    #   peak LR 5e-4 (unchanged from original 1.5B; NOT the 7B's 3e-4)
     learning_rate: 5.0e-4
-    lr_warmup_steps: 500
+    lr_warmup_steps: 167
     lr_warmup_style: linear
-    lr_decay_starting_step: 12875
+    lr_decay_starting_step: 4291
     lr_decay_style: linear
-    lr_decay_steps: 1430
+    lr_decay_steps: 477
     min_decay_lr: 0.0
   optimizer_factory:
     adam_beta1: 0.9

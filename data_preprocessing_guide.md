@@ -15,7 +15,7 @@ to check — do not treat those as settled.
 | Block | Path | Format | Files | Size | Tokens (per `_manifest.json`) |
 |---|---|---|---|---|---|
 | shared-top-5B | `/scratch/bvandur1/zhuicon1/data_rewrite/experiments/train/5B/shared-top-5B` | **Parquet** | 200 × `part_*.parquet` + `_manifest.json` | ~8.7 GB | 5,000,002,332 |
-| quality-first | `/scratch/bvandur1/zhuicon1/data_rewrite/experiments/train/5B/quality-first` | **Parquet** | 200 × `part_*.parquet` + `_manifest.json` | ~8.5 GB | (see its manifest) |
+| quality_first | `/scratch/bvandur1/zhuicon1/data_rewrite/experiments/train/5B/quality-first` | **Parquet** | 200 × `part_*.parquet` + `_manifest.json` | ~8.5 GB | (see its manifest) |
 
 Parquet schema (verified from `part_00000.parquet`): the text lives in the **`text`**
 column. (Other columns like `tokens-llama2`, `url`, `topic`, … are ignored by tokenization.)
@@ -200,7 +200,7 @@ the only string datatrove accepts (the `.json` file), line 192 crashes at config
 > We deliberately **reject** the hub-id alternative (`unsloth/llama-2-7b`): it needs internet
 > at both stages and risks the local `tokenizer.json` differing byte-wise from the hub copy.
 
-#### The fix (3 steps) — preprocess with `.json`, rewrite metadata to the DIR, train with the DIR
+#### The fix (3 steps) — preprocess with `.json`, rewire metadata to the DIR, train with the DIR
 1. **Preprocess** with the **`tokenizer.json` FILE** (the only value datatrove can load):
    `--tokenizer-name-or-path /scratch/bvandur1/zhuicon1/tokenizers/llama2-unsloth-tokenizer/tokenizer.json`
    → metadata line 1 becomes `…/llama2-unsloth-tokenizer/tokenizer.json|2`.
@@ -218,7 +218,7 @@ the only string datatrove accepts (the `.json` file), line 192 crashes at config
 ## 4. The reusable preprocessing command (parameterized)
 
 Define variables so the **same** commands work for every block now and later (other 5B
-blocks, rewritten data). Nothing here is hardcoded to shared-top-5B / quality-first.
+blocks, rewritten data). Nothing here is hardcoded to shared-top-5B / quality_first.
 
 ```bash
 # --- activate the env (nanotron-train: used for BOTH preprocessing and training; see §3.2) ---
@@ -331,7 +331,7 @@ python3 tools/preprocess_data_parquet.py \
 head -1 "$SMOKE_OUT"/*.ds.metadata    # expect: <…>/tokenizer.json|2
 ```
 
-**Step 3 — rewrite metadata to the tokenizer DIRECTORY** (§4b):
+**Step 3 — rewire metadata to the tokenizer DIRECTORY** (§4b):
 ```bash
 python3 tools/fix_ds_metadata.py --output-folder "$SMOKE_OUT" --tokenizer-dir "$TOK_DIR"
 head -1 "$SMOKE_OUT"/*.ds.metadata    # expect: <…>/llama2-unsloth-tokenizer|2  (byte-identical across files)
@@ -399,7 +399,7 @@ python -u -m torch.distributed.run --nproc_per_node 1 --nnodes 1 --rdzv_backend 
 If the dataloader complains there are too few samples, either lower `sequence_length` (e.g. 64)
 or put more than 10 docs in the subset (Step 1 `slice(0, N)`).
 
-**Gate:** only after this passes do you run §4 on the full `shared-top-5B` and `quality-first`
+**Gate:** only after this passes do you run §4 on the full `shared-top-5B` and `quality_first`
 blocks (then §4b on each, with the **same** `--tokenizer-dir`).
 
 ### 5.2 Sanity-check token counts vs the manifest
@@ -580,12 +580,12 @@ Implications for experiments:
   pretraining. It does **not** break cross-setting comparability — every setting (S0/S1/S2/S5/diversity) sees
   the same full-window attention, so **relative** conclusions (which setting is better) remain valid.
 - It becomes a **confound only if a setting changes the document-LENGTH distribution.** Our docs are short
-  (median ~526 tokens), so a ~2048 window packs ~4 docs and cross-doc contamination is heavy. If a rewrite
+  (median ~526 tokens), so a ~2048 window packs ~4 docs and cross-doc contamination is heavy. If a rewire
   makes docs longer/shorter, that setting packs fewer/more docs per window → lighter/heavier contamination,
   so an eval gap could partly reflect contamination level rather than data quality. When interpreting
-  rewrite-setting results, check whether the rewrite materially shifted the doc-length distribution; if so,
+  rewire-setting results, check whether the rewire materially shifted the doc-length distribution; if so,
   treat cross-doc contamination as a variable to control.
-- **S0** (original, un-rewritten data) is unaffected by the rewrite-length concern and can be run as-is.
+- **S0** (original, un-rewritten data) is unaffected by the rewire-length concern and can be run as-is.
 
 ## Caveat 3 — Nanoset compiles a C++ index helper at runtime → needs `pybind11`
 On first use of the Nanoset/TokenizedBytes dataloader, nanotron runs `make` to build a C++ helper
@@ -618,7 +618,7 @@ only the stuck task, but a clean re-run at 16 tasks is simplest). Symptom to che
 
 A concrete, reproducible application of this guide: tokenize both S0 blocks for training. Validated
 pre-flight (tokenizer `</s>`=2 / `<s>`=1, one trailing EOS, no BOS — both `AutoTokenizer` and
-`Tokenizer.from_file` agree) and follows §3.2 (env), §3.3/§4b (tokenizer file→dir + metadata rewrite),
+`Tokenizer.from_file` agree) and follows §3.2 (env), §3.3/§4b (tokenizer file→dir + metadata rewire),
 §4 (command), §5.2 (verify), and `# Caveats` 1 (fresh logging-dir) / 3 (pybind11) / 4 (shuffle_documents).
 
 ### Exact paths (the output dirs become `dataset_folder` in the training YAML)
@@ -704,7 +704,7 @@ total, NOT `train_tokens_sum + N_docs` — the EOS is already counted.)
 
 # Plan Example — Re-tokenize arms, add a new arm, relaunch exp-0616 (2026-06-20)
 
-Trigger: raw rewrite data was reorganized and a new arm `rewrite` was added; relaunch all arms except quality-10B-base.
+Trigger: raw rewire data was reorganized and a new arm `rewire` was added; relaunch all arms except quality-10B-base.
 Experimental contract: every arm's config is **identical except (a) 3-epoch step counts and (b) data-source fields**
 (`general.run`, `data_stages[].data.dataset.dataset_folder`, `checkpoints.checkpoints_path`, wandb id). Any other drift
 is a confound — verify parity before launching.
@@ -716,7 +716,7 @@ is a confound — verify parity before launching.
    (cpu partition, `--n-tasks 16` — 32 deadlocks; it `rm -rf`'s OUT+LOG so no stale-skip; runs fix_ds_metadata + VERIFY).
 3. **Recompute steps from ACTUAL `.ds` counts** (sum line-2 of `*.ds.metadata`): `train_steps = round(3*tok/2_097_152)`;
    `lr_decay_steps = round(0.1*train_steps)`; `lr_decay_starting_step = train_steps - lr_decay_steps`. Verify `ts*2_097_152/tok ≈ 3.000`.
-4. **Configs** — generate the new arm from a canonical template (copy quality-first, change only the data-source fields +
+4. **Configs** — generate the new arm from a canonical template (copy quality_first, change only the data-source fields +
    step counts); update existing arm step counts only if the `.ds` recompute differs. `diff`-verify parity (normalize the
    allowed fields, everything else must be identical; resume vs base differs only in `resume_checkpoint_path`+`load_*`).
 5. **Launch** each arm base + a chained `--dependency=afterany` resume backup, **always `--exclude=h06`** (bad GPU node).

@@ -31,7 +31,7 @@ construction.
 
 Usage:
     python tools/generate_configs.py --out configs/kys            # all 108
-    python tools/generate_configs.py --out /tmp/x --only quality-base:42:ep3
+    python tools/generate_configs.py --out /tmp/x --only quality_base:42:ep3
 """
 from __future__ import annotations
 
