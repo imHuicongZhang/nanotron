@@ -21,6 +21,14 @@ Only differences are build artifacts (`__pycache__/`, `nanotron.egg-info/`,
 
 ## 2. Config schema — all legacy YAMLs parse
 
+> **The 91 configs this check ran over are no longer in the tree.** They lived in
+> `configs/legacy-arr/` and were removed once the know-your-sources grid replaced them;
+> nothing in `tools/`, `deploy/`, or `configs/know-your-sources/` referenced them. They
+> remain recoverable verbatim from git history and from
+> `patches/0006-Add-ARR-submission-training-configs-verbatim-from-JH.patch`, which is the
+> commit that introduced them. The result below is the record of the check as run on
+> 2026-08-09, when the configs were present; it is unchanged evidence, not a live check.
+
 `get_config_from_file(..., skip_unused_config_keys=False, skip_null_keys=False)` over all
 91 configs in `configs/legacy-arr/`:
 
