@@ -37,22 +37,29 @@ import yaml
 EXPECTED_MBS = 16
 EXPECTED_TOK_PER_STEP = 2_097_152
 
-# Corpus identity, keyed by the corpus subdirectory name. Token counts are the sum of line 2
-# of every *.ds.metadata in the folder, cross-checked against raw .ds bytes/2 (they matched
-# exactly for all six on 2026-08-09). Source: tmp/kys/manifest/provenance.tsv, Gate 4.
+# Corpus identity, keyed by the corpus subdirectory name — the unified names, which are what
+# `data_root` holds when it is a snapshot of wytro/Know-Your-Sources-tokenized. See the
+# legacy-name remap table in tools/render_config.py if you are looking at an old /scratch tree.
+# Token counts are the sum of line 2 of every *.ds.metadata in the folder, cross-checked
+# against raw .ds bytes/2 (they matched exactly for all six on 2026-08-09). The counts are
+# properties of the data and did not change when the directories were renamed.
+# Source: tmp/kys/manifest/provenance.tsv, Gate 4.
 #
 # This is the check that catches a path which EXISTS but holds the wrong corpus. That failure
 # is otherwise silent: nanotron starts, trains for 27 hours, and produces numbers that mean
-# nothing. Note diversity-first is legitimately ~1.1% short of 10B — that is a property of the
-# corpus, not an error.
+# nothing. Note diversity_oriented is legitimately ~1.1% short of 10B — that is a property of
+# the corpus, not an error.
+#
+# Any corpus directory not listed here is REJECTED as unknown. That is deliberate: it is how
+# the retired pre-shuffle `10B-base` sawtooth corpus (and any other stray tree) is refused
+# rather than silently accepted.
 EXPECTED_CORPUS = {
-    '10B-base-shuf42':              (10_000_003_137, 16),
-    '10B-base':                     (10_000_003_137, 16),   # pre-shuffle; should NOT be used
-    'quality-first':                (10_000_002_634, 16),
-    'diversity-first':              ( 9_889_637_833, 16),
-    'wrap':                         (10_000_002_419, 16),
-    'rewrite':                      (10_000_002_683, 16),
-    'signal-disagreement-lambda05': (10_000_002_333, 16),
+    'quality_base':       (10_000_003_137, 16),
+    'quality_first':      (10_000_002_634, 16),
+    'diversity_oriented': ( 9_889_637_833, 16),
+    'wrap_inspired':      (10_000_002_419, 16),
+    'rewire_inspired':    (10_000_002_683, 16),
+    'disagreement_aware': (10_000_002_333, 16),
 }
 
 # nanotron/trainer.py logs this banner once at startup:

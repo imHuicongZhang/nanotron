@@ -50,19 +50,25 @@ Templates deliberately do **not** parse on their own: `parallelism`, `micro_batc
 
 | setting | folder | size |
 |---|---|---:|
-| quality_base | `10B-base-shuf42/tokenized` | ~20.06 GB |
-| quality_first | `quality-first/tokenized` | 20.12 GB |
-| diversity_oriented | `diversity-first/tokenized` | 19.88 GB |
-| wrap_inspired | `wrap/tokenized` | 20.14 GB |
-| rewire_inspired | `rewrite/tokenized` | 20.13 GB |
-| disagreement_aware | `signal-disagreement-lambda05/tokenized` | 20.10 GB |
+| quality_base | `quality_base/tokenized` | ~20.06 GB |
+| quality_first | `quality_first/tokenized` | 20.12 GB |
+| diversity_oriented | `diversity_oriented/tokenized` | 19.88 GB |
+| wrap_inspired | `wrap_inspired/tokenized` | 20.14 GB |
+| rewire_inspired | `rewire_inspired/tokenized` | 20.13 GB |
+| disagreement_aware | `disagreement_aware/tokenized` | 20.10 GB |
 
 16 `.ds` shards each plus `.ds.index` / `.ds.metadata`. **Ship the `.ds.metadata` files** —
 nanotron's config validator reads `vocab_size` from them and refuses to start without it
 (`Model's vocab_size (32000) does not match dataset's (None)`).
 
-`10B-base-shuf42` is the re-shuffled quality_base corpus (seed 42, matching the other five);
-it replaces the old unshuffled `10B-base`. Do not ship the old one.
+`quality_base` is the re-shuffled corpus (seed 42, matching the other five); it replaces the
+old unshuffled one. Do not ship the old one.
+
+Directory names above are the unified names, as published in
+`wytro/Know-Your-Sources-tokenized`. The original JHU `/scratch` tree used the pre-upload names
+(`10B-base-shuf42`, `quality-first`, `diversity-first`, `wrap`, `rewrite`,
+`signal-disagreement-lambda05`), which were remapped at upload time and will not resolve
+against the current `SETTING_CORPUS`.
 
 ## 5. Init checkpoints — 27.1 GB
 

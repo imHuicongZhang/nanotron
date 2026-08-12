@@ -97,18 +97,22 @@ That is the complete set. **Do not edit paths in the config templates**; `render
 
 ### Why the setting → corpus mapping is not configurable
 
-It lives hardcoded in `render_config.py` because three naming schemes are in play for the same six arms and they do not line up:
+There is now **one name per setting** — the setting label, the corpus directory under `data_root`, and the HuggingFace `config_name` are the same string:
 
-| paper setting | repo folder | internal run name | corpus dir |
-|---|---|---|---|
-| QUALITY-BASE | `quality_base` | `quality_base` | **`10B-base-shuf42`** |
-| QUALITY-FIRST | `quality_first` | `quality_first` | `quality-first` |
-| DIVERSITY-ORIENTED | `diversity_oriented` | `diversity_oriented` | **`diversity-first`** |
-| WRAP-INSPIRED | `wrap_inspired` | `wrap_inspired` | `wrap` |
-| REWIRE-INSPIRED | `rewire_inspired` | `rewire_inspired` | **`rewrite`** |
-| DISAGREEMENT-AWARE | `disagreement_aware` | `disagreement_aware` | **`signal-disagreement-lambda05`** |
+| paper setting | name (label == corpus dir == HF config_name) |
+|---|---|
+| QUALITY-BASE | `quality_base` |
+| QUALITY-FIRST | `quality_first` |
+| DIVERSITY-ORIENTED | `diversity_oriented` |
+| WRAP-INSPIRED | `wrap_inspired` |
+| REWIRE-INSPIRED | `rewire_inspired` |
+| DISAGREEMENT-AWARE | `disagreement_aware` |
 
-Wiring these by hand gets at least one wrong, and **a wrong-but-existing path does not crash**: nanotron reads whatever corpus is there, trains to completion, and the numbers are meaningless. So nobody retypes them — `data_root` is set once and the table does the rest.
+`data_root` is expected to be a snapshot of `wytro/Know-Your-Sources-tokenized`, whose layout is `<arm>/tokenized/*.ds` under exactly these six names.
+
+The mapping stays hardcoded in `render_config.py` even though it is now an identity map, because it is also the authoritative list of valid settings: rendering aborts on a `general.run` whose setting is not in it. **A wrong-but-existing path does not crash** — nanotron reads whatever corpus is there, trains to completion, and the numbers are meaningless. So nobody retypes paths; `data_root` is set once and the table does the rest.
+
+> **If you have the original JHU `/scratch` tree**, its directories carry the pre-upload names and will not resolve. They were remapped at upload time: `10B-base-shuf42` → `quality_base`, `quality-first` → `quality_first`, `diversity-first` → `diversity_oriented`, `wrap` → `wrap_inspired`, `rewrite` → `rewire_inspired`, `signal-disagreement-lambda05` → `disagreement_aware`. Point `data_root` at a directory of symlinks under the unified names, or re-download from the HF repo.
 
 ### The two silent failures this prevents, and how they are caught
 
@@ -122,7 +126,7 @@ python tools/assert_invariants.py --config rendered/<name>.yaml                 
 python tools/assert_invariants.py --config rendered/<name>.yaml --check-resume   # before launch
 ```
 
-The corpus check compares the summed `.ds.metadata` token counts against the recorded value for that corpus (cross-checked against raw `.ds` bytes/2; they match exactly for all six). It caught a deliberately mis-pointed `wrap` → `rewrite` corpus on a 264-token difference. Note `diversity-first` is legitimately ~1.1% short of 10B — a property of that corpus, not an error.
+The corpus check compares the summed `.ds.metadata` token counts against the recorded value for that corpus (cross-checked against raw `.ds` bytes/2; they match exactly for all six). It caught a deliberately mis-pointed `wrap_inspired` → `rewire_inspired` corpus on a 264-token difference. Note `diversity_oriented` is legitimately ~1.1% short of 10B — a property of that corpus, not an error.
 
 ## 3. Launching
 

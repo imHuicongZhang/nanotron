@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Stamp a per-cluster deployment profile onto an experiment template.
 
-The experiment templates (configs/kys/*.yaml) describe WHAT is being trained: model, data,
+The experiment templates (configs/know-your-sources/*.yaml) describe WHAT is being trained: model, data,
 LR schedule, branch point, step counts, seeds. They contain no `parallelism:` block and no
 `micro_batch_size` / `batch_accumulation_per_replica`. Those three numbers are *deployment*,
 not experiment, and live only in deploy/clusters.yaml.
@@ -21,9 +21,9 @@ by setting, so that any between-setting comparison stays inside one hardware gen
 mismatch.
 
 Usage:
-    python tools/render_config.py --template configs/kys/quality-base_seed42_trunk.yaml \
-        --cluster dsai --seed 42 --out /tmp/rendered.yaml
-    python tools/render_config.py --template ... --cluster dsai --seed 42 --print
+    python tools/render_config.py --template configs/know-your-sources/quality_base_seed42_trunk1.yaml \
+        --cluster h200 --seed 42 --out /tmp/rendered.yaml
+    python tools/render_config.py --template ... --cluster h200 --seed 42 --print
 """
 from __future__ import annotations
 
@@ -49,23 +49,45 @@ OWNED = {
 # ---------------------------------------------------------------------------------------
 # setting -> corpus subdirectory under `data_root`. HARDCODED HERE ON PURPOSE.
 #
-# Three different naming schemes are in play for the same six arms, and they do not line up:
+# ONE name per setting. The setting label, the corpus directory under `data_root`, and the
+# HuggingFace config_name are all the same string:
 #
-#   paper setting        HF/repo folder      setting name (ours)     corpus dir (ON DISK)
-#   -------------------  ------------------  ----------------------  ----------------------------
-#   QUALITY-BASE         quality_base        quality_base            10B-base-shuf42
-#   QUALITY-FIRST        quality_first       quality_first           quality-first
-#   DIVERSITY-ORIENTED   diversity_oriented  diversity_oriented      diversity-first
-#   WRAP-INSPIRED        wrap_inspired       wrap_inspired           wrap
-#   REWIRE-INSPIRED      rewire_inspired     rewire_inspired         rewrite
-#   DISAGREEMENT-AWARE   disagreement_aware  disagreement_aware      signal-disagreement-lambda05
+#   paper setting        name (label == corpus dir == HF config_name)
+#   -------------------  --------------------------------------------
+#   QUALITY-BASE         quality_base
+#   QUALITY-FIRST        quality_first
+#   DIVERSITY-ORIENTED   diversity_oriented
+#   WRAP-INSPIRED        wrap_inspired
+#   REWIRE-INSPIRED      rewire_inspired
+#   DISAGREEMENT-AWARE   disagreement_aware
 #
-# The right-hand column is the ONLY one that touches the filesystem, and none of those names
-# changed when the setting labels were renamed (2026-08-09) — they are the actual directory
-# names of the tokenized corpora. Note especially: diversity_oriented's corpus is
-# `diversity-first`, rewire_inspired's is `rewrite`, disagreement_aware's is
-# `signal-disagreement-lambda05`, and quality_base's is `10B-base-shuf42` (NOT `quality_base`,
-# and NOT the old unshuffled `10B-base`).
+# This mapping is therefore an identity map today. It is kept as an explicit dict because it
+# is also the authoritative list of valid settings — render_config refuses a `general.run`
+# whose setting is not a key here, which is what catches a typo'd or renamed template.
+#
+# WHERE THE NAMES COME FROM. `data_root` is expected to be a snapshot of
+# wytro/Know-Your-Sources-tokenized, whose layout is <arm>/tokenized/*.ds under exactly these
+# six names (verified against the live repo listing 2026-08-12: 6 arms x 16 .ds + .ds.index +
+# .ds.metadata, plus a tokenizer/ directory).
+#
+# CONSEQUENCE FOR THE ORIGINAL JHU /scratch LAYOUT. The corpora were tokenized under different
+# directory names and were remapped to the unified names at upload time:
+#
+#   legacy on-disk (JHU /scratch)   ->  unified (here, and on HuggingFace)
+#   10B-base-shuf42                 ->  quality_base
+#   quality-first                   ->  quality_first
+#   diversity-first                 ->  diversity_oriented
+#   wrap                            ->  wrap_inspired
+#   rewrite                         ->  rewire_inspired
+#   signal-disagreement-lambda05    ->  disagreement_aware
+#
+# This file now describes the HuggingFace layout, NOT the legacy /scratch layout. Rendering
+# against an untouched legacy tree will resolve to paths that do not exist; point `data_root`
+# at a directory of symlinks under the unified names, or re-download from the HF repo.
+#
+# (History: the setting labels were unified in two passes, 2026-08-09 and 2026-08-12. The
+# corpus directory names followed on 2026-08-12, which is what collapsed the three naming
+# schemes this table used to reconcile down to one.)
 #
 # Wiring these by hand is a trap: a wrong-but-existing path does not crash. Training runs to
 # completion on the wrong corpus and the numbers are silently meaningless. So nobody wires
@@ -74,12 +96,12 @@ OWNED = {
 # time is spent.
 # ---------------------------------------------------------------------------------------
 SETTING_CORPUS = {
-    'quality_base':           '10B-base-shuf42',
-    'quality_first':          'quality-first',
-    'diversity_oriented':     'diversity-first',
-    'wrap_inspired':          'wrap',
-    'rewire_inspired':        'rewrite',
-    'disagreement_aware':     'signal-disagreement-lambda05',
+    'quality_base':       'quality_base',
+    'quality_first':      'quality_first',
+    'diversity_oriented': 'diversity_oriented',
+    'wrap_inspired':      'wrap_inspired',
+    'rewire_inspired':    'rewire_inspired',
+    'disagreement_aware': 'disagreement_aware',
 }
 CORPUS_LEAF = 'tokenized'   # <data_root>/<corpus dir>/tokenized/*.ds
 

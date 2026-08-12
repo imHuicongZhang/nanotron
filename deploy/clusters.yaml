@@ -46,17 +46,22 @@ sequence_length: 2048
 #
 #     <data_root>/<corpus subdir>/tokenized
 #
-# The setting -> subdir mapping lives INSIDE render_config.py and is not configurable, because
-# three different naming schemes are in play for the same six arms and they do not line up
-# (disagreement_aware -> signal-disagreement-lambda05, quality_base -> 10B-base-shuf42,
-# diversity_oriented -> diversity-first, rewire_inspired -> rewrite). A wrong-but-existing path does not crash — training
-# completes and the numbers are silently wrong — so the mapping is not left to be retyped.
+# The setting -> subdir mapping lives INSIDE render_config.py and is not configurable. It is an
+# identity map — one name per setting, used as the setting label, the corpus directory and the
+# HuggingFace config_name alike — but it is still the authoritative list of valid settings, and
+# a wrong-but-existing path does not crash: training completes and the numbers are silently
+# wrong. So the mapping is not left to be retyped.
 #
-# Expected layout under data_root:
-#     10B-base-shuf42/tokenized/           quality-first/tokenized/
-#     diversity-first/tokenized/           wrap/tokenized/
-#     rewrite/tokenized/                   signal-disagreement-lambda05/tokenized/
+# data_root is expected to be a snapshot of wytro/Know-Your-Sources-tokenized. Expected layout:
+#     quality_base/tokenized/              quality_first/tokenized/
+#     diversity_oriented/tokenized/        wrap_inspired/tokenized/
+#     rewire_inspired/tokenized/           disagreement_aware/tokenized/
 # each holding 16 *.ds plus matching *.ds.index and *.ds.metadata.
+#
+# NOTE: the original JHU /scratch tree uses the pre-upload directory names (10B-base-shuf42,
+# quality-first, diversity-first, wrap, rewrite, signal-disagreement-lambda05) and will NOT
+# resolve against these. See the remap table in tools/render_config.py; use symlinks or
+# re-download.
 #
 # tools/assert_invariants.py verifies every resolved path by token count before any GPU time.
 data_root: null               # <- FILL IN, e.g. /shared/scratch/kys/nanotron_tokenized
