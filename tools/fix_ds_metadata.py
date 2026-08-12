@@ -17,8 +17,12 @@ WHY (verified against nanotron 0.4):
 
 USAGE:
   python3 tools/fix_ds_metadata.py \
-      --output-folder /path/to/<block>/tokenized \
-      --tokenizer-dir /scratch/bvandur1/zhuicon1/tokenizers/llama2-unsloth-tokenizer
+      --output-folder <data_root>/<setting>/tokenized \
+      --tokenizer-dir <data_root>/tokenizer
+
+  This is a required step after downloading the published corpora — their metadata records the
+  path they were tokenized under, not yours. See HANDOVER.md §9.2, which loops this over all six
+  settings; assert_invariants.py fails the preflight until it has been run.
 
   Pass the SAME --tokenizer-dir to every block folder so the cross-folder assert holds.
   Idempotent: re-running on already-fixed files changes nothing. No third-party deps (stdlib only).
@@ -46,7 +50,7 @@ def main():
                     help="Tokenized output dir containing *.ds.metadata files (one block).")
     ap.add_argument("--tokenizer-dir", required=True,
                     help="FIXED tokenizer DIRECTORY string to write as the path part of line 1 "
-                         "(e.g. /scratch/.../llama2-unsloth-tokenizer). No trailing slash, not the .json.")
+                         "(e.g. <data_root>/tokenizer). No trailing slash, not the .json.")
     args = ap.parse_args()
 
     tok_dir = args.tokenizer_dir.rstrip("/")

@@ -33,8 +33,28 @@ Includes:
 - `tools/render_config.py` + `deploy/clusters.yaml` — per-cluster deployment stamping
 - `tools/hash_init_checkpoint.py` — init-checkpoint verification
 - `tools/assert_invariants.py` — preflight + step-200 batch-invariant assertion
+- `tools/fix_ds_metadata.py` — repoints `.ds.metadata` line 1 at your tokenizer. A **required**
+  step after downloading the corpora; the preflight fails until it has run — see §9.2
+- `tools/preprocess_data.py`, `tools/preprocess_data_parquet.py` — datatrove tokenization
+  entry points, actively used by `data_preprocessing_guide.md`
 - `SOP.md` — launch procedure, the mbs rationale, and the full wandb setup
 - `PATCH_NOTES.md`, `UPSTREAM_PIN.md`, `COMPATIBILITY.md`
+
+Reference documentation — background, not steps in this handover:
+
+- `data_preprocessing_guide.md` — how the corpora were tokenized at JHU, and the datatrove /
+  tokenizer pitfalls behind `tools/fix_ds_metadata.py`. The corpora are published (§9); this is the
+  record of how they were built, not a route to rebuild them.
+- `model_config_guide.md` — how the 1.5B model config was arrived at, including the 32000-vocab
+  and tokenizer-version findings.
+
+Also carried, but **not** a runnable part of this handover:
+
+- `tools/assemble_5B_shared_only.py` — a historical record of the corpus assembly, kept as the
+  only in-repo evidence of how `pp_io.bucketed_shuffle` was invoked for the six arms, i.e. what
+  substantiates "all six shuffled identically at document level with seed 42". Nothing calls it
+  and nothing should. Its hardcoded JHU `/scratch` paths are part of the record and must not be
+  parameterised or repointed — see the header in the file itself.
 
 ## 2. Configs — <2 MB
 

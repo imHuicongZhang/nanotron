@@ -1,6 +1,21 @@
 #!/usr/bin/env python
 """Assemble the 5B shared-only pretrain baseline (the "0B-specific" / 7th arm).
 
+    ┌─────────────────────────────────────────────────────────────────────────────────────┐
+    │ HISTORICAL RECORD — DO NOT RUN, DO NOT "FIX" THE PATHS.                              │
+    │                                                                                      │
+    │ Kept as the only in-repo evidence of how pp_io.bucketed_shuffle was invoked for the  │
+    │ six arms: it is what substantiates the claim that all six corpora were shuffled      │
+    │ identically at document level with seed 42, which the paper may need to defend.      │
+    │                                                                                      │
+    │ The absolute /scratch/bvandur1/zhuicon1/... paths below are PART OF THAT RECORD.     │
+    │ They name the JHU tree the corpora were actually built on. Parameterising them, or   │
+    │ repointing them at a download, would destroy the evidence and gain nothing — this    │
+    │ script plays no part in training, and nothing in the repo calls it.                  │
+    │                                                                                      │
+    │ To obtain the corpora, see HANDOVER.md §9. They are published; do not rebuild them.  │
+    └─────────────────────────────────────────────────────────────────────────────────────┘
+
 Train-data baseline = ONLY the shared-top-5B anchor (no strategy-specific 5B), so that
     marginal(setting) = setting_E1_Mean7 - shared_only_Final_Mean7
 isolates the contribution of each setting's strategy-specific data.
