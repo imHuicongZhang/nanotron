@@ -19,7 +19,15 @@ pull upstream deliberately and bump this file in the same commit.
 
 > Experiments use [nanotron](https://github.com/huggingface/nanotron) at commit
 > `2411b022a75fb7f7561a1bb4166706da5e1b76de` (2026-04-07), with the local patch
-> series in `patches/` (see `PATCH_NOTES.md`).
+> series in `patches/` (see `PATCH_NOTES.md`). Files unused by this grid were
+> subsequently deleted in `94cfde0e71966069f5d091877f4626513b1752ff`; the runs are
+> unaffected by that commit, but the working tree is the patch series **minus** it,
+> not the patch series alone.
+
+That last clause matters for anyone reproducing from the pin: applying `patches/0001–0006`
+to `2411b022` reconstructs `configs/legacy-arr/`, `smoke_test/`, three `scripts/*.py` and
+`test_timer_decorator.py`, none of which exist in the current tree. `94cfde0e` removed them
+and nothing in `tools/`, `deploy/` or `configs/know-your-sources/` referenced them.
 
 ## Why this commit
 

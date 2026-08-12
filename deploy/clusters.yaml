@@ -70,7 +70,13 @@ data_root: null               # <- FILL IN, e.g. /shared/scratch/kys/nanotron_to
 # plus wandb.dir are the complete set of locations a deployer supplies.
 #
 #   tokenizer_path  the llama2-unsloth tokenizer DIRECTORY (not tokenizer.json — nanotron
-#                   wants the dir, and .ds.metadata line 1 must name the same dir).
+#                   wants the dir). It ships inside the corpora repo, so this is normally
+#                   just <data_root>/tokenizer; see HANDOVER.md §9.
+#                   NOTE: config.py:521 asserts this string EQUALS line 1 of every
+#                   *.ds.metadata, and the published metadata still names the JHU path it
+#                   was tokenized under. Run tools/fix_ds_metadata.py once after
+#                   downloading — HANDOVER.md §9.2 — or this value cannot be made to
+#                   validate.
 #   ckpt_root       where checkpoints are written. render_config.py composes
 #                     <ckpt_root>/<setting>_seed<n>_trunk        (all 3 trunk segments share it)
 #                     <ckpt_root>/<setting>_seed<n>_<ep1|ep2|ep3>
@@ -81,7 +87,8 @@ data_root: null               # <- FILL IN, e.g. /shared/scratch/kys/nanotron_to
 # checkpoint found" at INFO and returns None, so nanotron starts from RANDOM INIT. A cooldown
 # branch would run its 476 steps and finish normally having annealed noise. Reserve
 # ~5.3 TB under ckpt_root (2.3 TB after pruning trunk restart points).
-tokenizer_path: null          # <- FILL IN, e.g. /shared/scratch/kys/llama2-unsloth-tokenizer
+tokenizer_path: null          # <- FILL IN, normally <data_root>/tokenizer
+                              #    e.g. /shared/scratch/kys/nanotron_tokenized/tokenizer
 ckpt_root: null               # <- FILL IN, e.g. /shared/scratch/kys/checkpoints
 
 # wandb. The grid runs OFFLINE and is synced afterwards by whoever should own the runs.

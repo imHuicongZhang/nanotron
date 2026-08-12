@@ -48,7 +48,10 @@ Templates deliberately do **not** parse on their own: `parallelism`, `micro_batc
 
 ## 3. Tokenizer — 3.6 MB
 
-`tokenizers/llama2-unsloth-tokenizer/` (llama-2 32000 vocab, token_size 2 bytes).
+llama-2 32000 vocab, token_size 2 bytes. Ships inside the corpora repo as `tokenizer/`, so
+`tokenizer_path` is normally `<data_root>/tokenizer` — see §9. (It was tokenized under the
+JHU path `…/tokenizers/llama2-unsloth-tokenizer`, which is still recorded in every
+`.ds.metadata`; §9.2 repoints those at your copy.)
 
 ## 4. Tokenized corpora — ~120.4 GB
 
@@ -65,7 +68,7 @@ Templates deliberately do **not** parse on their own: `parallelism`, `micro_batc
 so a `snapshot_download` (§9) gets them; if you ever copy a corpus by hand, **the
 `.ds.metadata` files must come with it** — nanotron's config validator reads `vocab_size` from
 them and refuses to start without it (`Model's vocab_size (32000) does not match dataset's
-(None)`). One shard of `quality_base` is legitimately zero bytes; see §9.3 before assuming a
+(None)`). One shard of `quality_base` is legitimately zero bytes; see §9.4 before assuming a
 bad transfer.
 
 `quality_base` is the re-shuffled corpus (seed 42, matching the other five). It replaced an
@@ -218,7 +221,42 @@ The setting directories are the six unified names, identical to `SETTING_CORPUS`
 legacy on-disk names were remapped at upload time, so there is nothing to reconcile. (If you
 are holding an old JHU `/scratch` tree instead of a download, see the note at the end of §4.)
 
-### 9.2 What goes in `deploy/clusters.yaml`
+`snapshot_download` also writes a **`.cache/huggingface/`** directory inside `local_dir`. That
+is expected, not a failed download: it holds the per-file etags that make a re-run resume
+instead of re-fetching. **Leave it.** Nothing reads `data_root` by listing it —
+`render_config.py` composes explicit `<data_root>/<setting>/tokenized` paths — so it is inert.
+Deleting it costs you a full 120 GB re-download next time.
+
+### 9.2 One required fixup: repoint the metadata at your tokenizer
+
+**Do this before rendering anything.** Line 1 of every `*.ds.metadata` records the tokenizer
+path the corpus was tokenized under, which is the original JHU path and does not exist on your
+machine. nanotron does not treat that as cosmetic:
+
+- `config.py:192` calls `AutoTokenizer.from_pretrained(<that string>)` to derive `vocab_size`;
+- `config.py:521` asserts your `tokenizer_path` **equals** that string exactly.
+
+So a freshly downloaded tree fails preflight no matter what you put in `tokenizer_path`.
+`tools/fix_ds_metadata.py` rewrites line 1 in place, preserving the `|<token_size>` suffix. It
+is stdlib-only and idempotent, so re-running it is harmless:
+
+```bash
+for s in quality_base quality_first diversity_oriented \
+         wrap_inspired rewire_inspired disagreement_aware; do
+    python tools/fix_ds_metadata.py \
+        --output-folder <data_root>/$s/tokenized \
+        --tokenizer-dir  <data_root>/tokenizer
+done
+```
+
+Pass the **same** `--tokenizer-dir` to all six — nanotron also asserts every metadata file
+across every dataset folder carries an identical tokenizer string (`config.py:194-199`).
+
+Verified end to end: before the rewrite, loading a rendered config raises
+`AssertionError: Tokenizer passed in config (…) does not match dataset's (…) tokenizer (…)`;
+after it, the same config loads and reports `vocab_size 32000`.
+
+### 9.3 What goes in `deploy/clusters.yaml`
 
 Three of the four paths come straight out of the two calls above:
 
@@ -233,7 +271,7 @@ wandb:
 `init_root` is not a `clusters.yaml` field — it is only used once, by the `cp -al` trunk-seeding
 command in `SOP.md` §3.
 
-### 9.3 Two things that look broken and are not
+### 9.4 Two things that look broken and are not
 
 **A zero-byte shard in `quality_base`.** `quality_base/tokenized/00015_unshuffled.ds` is
 **exactly 0 bytes**, and its `.ds.metadata` records `0` tokens. This is correct, not a failed
@@ -253,7 +291,7 @@ arms use that suffix. It is a datatrove output-filename default and says nothing
 contents — the shuffle happened upstream, at the parquet stage. **The directory name is the
 authority, not the filename.** Do not go looking for a `_shuffled` variant; there isn't one.
 
-### 9.4 Fetching one corpus instead of all six
+### 9.5 Fetching one corpus instead of all six
 
 `allow_patterns` takes glob patterns matched against repo-relative paths, so a single arm plus
 the tokenizer is 20.1 GB rather than 120 GB:
@@ -272,7 +310,7 @@ different arm added to the list tops the same `local_dir` up in place. Note that
 `data_root` renders and trains fine for the arms present, but only those — the other five
 settings will fail preflight on a missing directory.
 
-### 9.5 Verify after downloading
+### 9.6 Verify after downloading
 
 ```bash
 # corpus: shard count and exact token total, per rendered config
