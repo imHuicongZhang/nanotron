@@ -53,12 +53,41 @@ break both. `datatrove==0.5.0` is the newest release with the public `return_pos
 exactly that API. `numpy==2.0.2`: datatrove ≥0.4 needs numpy≥2, numba 0.60 needs <2.1.
 `pybind11` is needed because nanotron compiles a C++ index helper at runtime.
 
+> **`tokenizers` 0.20.3 is a FLOOR, not just one compatible choice. Do not go below it.**
+> Our `tokenizer.json` cannot be parsed by `tokenizers` 0.19.x at all — it raises
+>
+> ```
+> Exception: data did not match any variant of untagged enum ModelWrapper at line 277128 column 3
+> ```
+>
+> This is a hard parse failure in the Rust library, not a warning, and it is easy to walk into:
+> 0.19.1 is what an older `transformers` (4.44.x) pulls in, so reusing an existing environment
+> — or satisfying `huggingface_hub<1.0` some other way — reproduces it. It breaks **both**
+> entry points: datatrove's `Tokenizer.from_file` during preprocessing, and
+> `AutoTokenizer.from_pretrained` at `run_train.py:194`, which is the line before the
+> `len(tokenizer) == vocab_size` assert on :195-197. The assert is never reached.
+>
+> Measured on this tokenizer:
+>
+> | `tokenizers` | with | result |
+> |---|---|---|
+> | 0.19.1 | transformers 4.44.2, hub 0.36.2 | **fails** — `untagged enum ModelWrapper` |
+> | **0.20.3** | **transformers 4.46.3, hub 0.36.2** | **loads, `len(tokenizer) == 32000`** ← the pin |
+> | 0.22.2 | transformers 5.9.0, hub 1.17.0 | loads, `len(tokenizer) == 32000` |
+>
+> So the upper bound is not the constraint — 0.22.2 parses the file fine. But it was only
+> tested alongside hub ≥1.0 and transformers 5.x, which `datatrove==0.5.0` will not accept.
+> `==0.20.3` is pinned because it is the version tested inside *this* stack, not because
+> anything above it is known bad.
+
 The stale `torch>=1.13.1` / `numpy<2` / `flash-attn<2.7.0` pins in upstream's
 `pyproject.toml` are corrected in this fork (patch #7), so step 4 does not fight steps 1–3.
 
 ---
 
 ## 3. Smoke check
+
+### 3.1 GPU and flash-attn
 
 ```bash
 python - <<'PY'
@@ -76,11 +105,41 @@ torch.cuda.synchronize(); print("flash-attn OK", tuple(o.shape))
 PY
 ```
 
-Expect `(9, 0)` and `sm_90` in `arch_list`. Then verify the init checkpoints:
+Expect `(9, 0)` and `sm_90` in `arch_list`.
+
+### 3.2 Tokenizer — run this before you burn a SLURM allocation
+
+Do this as soon as the tokenizer exists on disk (it comes with the corpora download —
+`HANDOVER.md` §9). It takes a second and it is the exact call `run_train.py:194` makes, so a
+wrong `tokenizers` build fails here instead of after the job has been scheduled and the model
+built:
 
 ```bash
-python tools/hash_init_checkpoint.py <ckpt>/0 --check init_1.5B_seedNN.hash.json
+python - <<'PY'
+import tokenizers, transformers
+from transformers import AutoTokenizer
+TOK = "<data_root>/tokenizer"          # the DIRECTORY, not tokenizer.json
+print("tokenizers", tokenizers.__version__, "| transformers", transformers.__version__)
+t = AutoTokenizer.from_pretrained(TOK)
+print("len(tokenizer) =", len(t))
+assert len(t) == 32000, f"expected 32000, got {len(t)}"
+print("tokenizer OK")
+PY
 ```
+
+Expect `len(tokenizer) = 32000`. If instead you get
+`data did not match any variant of untagged enum ModelWrapper`, your `tokenizers` is older
+than 0.20.3 — see the pin note in §2.
+
+### 3.3 Init checkpoints
+
+```bash
+python tools/hash_init_checkpoint.py <init_root>/_init_1.5B_seedNN/0 \
+    --check <init_root>/init_1.5B_seedNN.hash.json
+```
+
+The `.hash.json` manifests ship at the root of the init repo, so there is no separate artifact
+to obtain; see `HANDOVER.md` §5 and §9.
 
 Please report back: **GPUs per node, how many nodes we can hold concurrently, and the SLURM
 wall-clock limit.** Those are the last blanks in `deploy/clusters.yaml`.
