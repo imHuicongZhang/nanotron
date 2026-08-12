@@ -164,11 +164,13 @@ def check_env(cfg_path: Path):
 def check_corpus(cfg_path: Path):
     """Verify the rendered dataset_folder points at the corpus it claims to.
 
-    Four ways this goes wrong, all caught here rather than 27 hours in:
+    Five ways this goes wrong, all caught here rather than 27 hours in:
       - data_root typo               -> folder missing
       - corpus not downloaded yet    -> folder present but no .ds
       - .ds.metadata not shipped     -> nanotron's own vocab_size assert would fire at startup
       - RIGHT path, WRONG corpus     -> token count disagrees. This is the silent one.
+      - metadata names a foreign     -> nanotron's config.py:521 assert would fire after SLURM
+        tokenizer path                  has allocated. See check_tokenizer_metadata().
     """
     import yaml
     cfg = yaml.safe_load(cfg_path.read_text())
@@ -180,6 +182,8 @@ def check_corpus(cfg_path: Path):
                 "did render_config.py fail to compose it from data_root?"]
     if len(folders) != 1:
         errs.append(f"expected exactly 1 dataset_folder, got {len(folders)}: {folders}")
+    cfg_tok = (cfg.get("tokenizer") or {}).get("tokenizer_name_or_path")
+    tok_by_folder = {}          # folder -> {tokenizer string: [shard filenames]}
     for f in folders:
         p = Path(f)
         corpus = p.parent.name                      # <data_root>/<corpus>/tokenized
@@ -196,13 +200,22 @@ def check_corpus(cfg_path: Path):
             errs.append(f"{p}: {len(ds)} *.ds but {len(meta)} *.ds.metadata — nanotron reads "
                         f"vocab_size from .ds.metadata and will refuse to start without it")
         total = 0
+        seen = tok_by_folder.setdefault(str(p), {})
         for m in meta:
             try:
                 with open(m) as fh:
-                    fh.readline()                    # line 1: <tokenizer dir>|<token size>
+                    line1 = fh.readline().strip()    # line 1: <tokenizer dir>|<token size>
                     total += int(fh.readline().strip())
             except Exception as e:
                 errs.append(f"{m}: unreadable ({e!r})")
+                continue
+            # Line 1 is what nanotron feeds to AutoTokenizer (config.py:192) and asserts
+            # against tokenizer_name_or_path (config.py:521). Split on the LAST '|' so a
+            # tokenizer path containing '|' survives — same rule fix_ds_metadata.py uses.
+            if "|" not in line1:
+                errs.append(f"{m}: metadata line 1 has no '|' separator: {line1!r}")
+                continue
+            seen.setdefault(line1.rsplit("|", 1)[0], []).append(m.name)
         exp = EXPECTED_CORPUS.get(corpus)
         if exp is None:
             errs.append(f"{corpus}: no expected token count on record — unknown corpus name")
@@ -215,6 +228,74 @@ def check_corpus(cfg_path: Path):
             errs.append(f"{corpus}: {total:,} tokens but this corpus should have "
                         f"{exp_tok:,} ({total - exp_tok:+,}). The path exists but does not hold "
                         f"the corpus it claims to — check data_root and the download.")
+    errs += check_tokenizer_metadata(tok_by_folder, cfg_tok)
+    return errs
+
+
+def check_tokenizer_metadata(tok_by_folder, cfg_tok):
+    """Replicate nanotron's tokenizer-vs-metadata asserts, at preflight instead of at torchrun.
+
+    Line 1 of every *.ds.metadata is `<tokenizer path>|<token size>`. nanotron:
+      - config.py:192 feeds that path straight to AutoTokenizer.from_pretrained to derive
+        vocab_size, so it must resolve ON THIS HOST;
+      - config.py:194-199 asserts it is identical across every metadata file in every
+        dataset folder;
+      - config.py:521 asserts it equals tokenizer.tokenizer_name_or_path EXACTLY.
+
+    A freshly downloaded corpus fails all three: the published metadata still names the
+    absolute path the corpus was tokenized under. Without this check that surfaces as an
+    AssertionError inside config parsing, after SLURM has allocated. tools/fix_ds_metadata.py
+    rewrites line 1 in place and is idempotent.
+    """
+    errs = []
+    if not tok_by_folder:
+        return errs
+    distinct = sorted({t for seen in tok_by_folder.values() for t in seen})
+    if not distinct:
+        return errs
+
+    # (1) shards must agree with each other — report the split, never average it away.
+    if len(distinct) > 1:
+        lines = []
+        for folder, seen in sorted(tok_by_folder.items()):
+            for tok, shards in sorted(seen.items()):
+                shown = ", ".join(shards[:3]) + (f", +{len(shards) - 3} more" if len(shards) > 3 else "")
+                lines.append(f"    {tok!r}  <- {folder}: {shown}")
+        errs.append("*.ds.metadata files disagree about the tokenizer path; nanotron asserts "
+                    "they are identical across all dataset folders (config.py:194-199):\n"
+                    + "\n".join(lines)
+                    + "\n  Re-run tools/fix_ds_metadata.py over EVERY corpus folder with the same "
+                      "--tokenizer-dir.")
+        return errs
+
+    meta_tok = distinct[0]
+    print(f"tokenizer: {meta_tok}  (from .ds.metadata line 1)")
+
+    # (2) it has to resolve on this host — config.py:192 loads it, and a non-local string
+    #     sends AutoTokenizer to the Hub, which compute nodes may not reach.
+    if not Path(meta_tok).is_dir():
+        errs.append(f"the tokenizer path recorded in *.ds.metadata does not exist on this host: "
+                    f"{meta_tok}\n  config.py:192 calls AutoTokenizer.from_pretrained() on that "
+                    f"string; a non-local value falls through to the HuggingFace Hub.")
+
+    # (3) and it has to equal the config's tokenizer_name_or_path — config.py:521.
+    if cfg_tok is None:
+        errs.append("rendered config sets no tokenizer.tokenizer_name_or_path, so nanotron will "
+                    f"adopt the metadata value ({meta_tok}) verbatim. Set tokenizer_path in "
+                    "deploy/clusters.yaml and re-render.")
+    elif str(cfg_tok) != meta_tok:
+        cmd = "\n".join(
+            f"    python tools/fix_ds_metadata.py --output-folder {folder} --tokenizer-dir {cfg_tok}"
+            for folder in sorted(tok_by_folder)
+        )
+        errs.append(
+            "tokenizer path mismatch — nanotron will refuse to start (config.py:521):\n"
+            f"    config tokenizer_name_or_path : {cfg_tok}\n"
+            f"    *.ds.metadata line 1          : {meta_tok}\n"
+            "  The published corpora record the path they were tokenized under, which is not "
+            "yours.\n  Fix (idempotent, no network, run once per corpus folder):\n" + cmd
+            + "\n  Pass the SAME --tokenizer-dir to every corpus folder. See HANDOVER.md §9.2."
+        )
     return errs
 
 
@@ -335,7 +416,7 @@ def main():
         errs += check_log(args.log, args.at_step, expect)
     if errs:
         fail(errs)
-    extra = [] if args.skip_corpus else ["corpus verified by token count"]
+    extra = [] if args.skip_corpus else ["corpus verified by token count", "tokenizer path matches metadata"]
     if args.check_resume:
         extra.append("resume path verified")
     print(f"OK: micro_batch_size={EXPECTED_MBS}, {EXPECTED_TOK_PER_STEP:,} tokens/step"

@@ -256,6 +256,13 @@ Verified end to end: before the rewrite, loading a rendered config raises
 `AssertionError: Tokenizer passed in config (…) does not match dataset's (…) tokenizer (…)`;
 after it, the same config loads and reports `vocab_size 32000`.
 
+**If you skip this step you will be told, not left to find out.** `assert_invariants.py`
+checks it as part of its normal run (§9.6) — no extra flag — and on mismatch prints the exact
+`fix_ds_metadata.py` command for your paths, ready to paste. It also catches the rarer case of
+individual shards disagreeing with each other, which nanotron asserts separately at
+`config.py:194-199`. Without that check the failure would surface inside nanotron's config
+parsing, after SLURM had already allocated the job.
+
 ### 9.3 What goes in `deploy/clusters.yaml`
 
 Three of the four paths come straight out of the two calls above:
