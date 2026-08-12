@@ -62,9 +62,9 @@ SETTINGS = [
     'quality_base',
     'quality_first',
     'diversity_oriented',
-    'wrap',
-    'rewire',
-    'disagreement_aware_0p5',
+    'wrap_inspired',
+    'rewire_inspired',
+    'disagreement_aware',
 ]
 
 # No path constants live here any more — ckpt_root / tokenizer_path / data_root are all

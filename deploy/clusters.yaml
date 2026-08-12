@@ -48,8 +48,8 @@ sequence_length: 2048
 #
 # The setting -> subdir mapping lives INSIDE render_config.py and is not configurable, because
 # three different naming schemes are in play for the same six arms and they do not line up
-# (disagreement_aware_0p5 -> signal-disagreement-lambda05, quality_base -> 10B-base-shuf42,
-# diversity_oriented -> diversity-first, rewire -> rewrite). A wrong-but-existing path does not crash — training
+# (disagreement_aware -> signal-disagreement-lambda05, quality_base -> 10B-base-shuf42,
+# diversity_oriented -> diversity-first, rewire_inspired -> rewrite). A wrong-but-existing path does not crash — training
 # completes and the numbers are silently wrong — so the mapping is not left to be retyped.
 #
 # Expected layout under data_root:

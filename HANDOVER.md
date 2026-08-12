@@ -53,9 +53,9 @@ Templates deliberately do **not** parse on their own: `parallelism`, `micro_batc
 | quality_base | `10B-base-shuf42/tokenized` | ~20.06 GB |
 | quality_first | `quality-first/tokenized` | 20.12 GB |
 | diversity_oriented | `diversity-first/tokenized` | 19.88 GB |
-| wrap | `wrap/tokenized` | 20.14 GB |
-| rewire | `rewrite/tokenized` | 20.13 GB |
-| disagreement_aware_0p5 | `signal-disagreement-lambda05/tokenized` | 20.10 GB |
+| wrap_inspired | `wrap/tokenized` | 20.14 GB |
+| rewire_inspired | `rewrite/tokenized` | 20.13 GB |
+| disagreement_aware | `signal-disagreement-lambda05/tokenized` | 20.10 GB |
 
 16 `.ds` shards each plus `.ds.index` / `.ds.metadata`. **Ship the `.ds.metadata` files** —
 nanotron's config validator reads `vocab_size` from them and refuses to start without it

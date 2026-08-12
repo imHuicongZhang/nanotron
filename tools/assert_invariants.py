@@ -54,11 +54,6 @@ EXPECTED_CORPUS = {
     'rewrite':                      (10_000_002_683, 16),
     'signal-disagreement-lambda05': (10_000_002_333, 16),
 }
-DEPRECATED_CORPUS = {
-    '10B-base': 'the UNSHUFFLED quality_base corpus. Its .ds stream is a 16-period sawtooth of '
-                'pure-upper / pure-lower quality strata, so every optimizer step draws its whole '
-                'batch from one stratum. Use 10B-base-shuf42.',
-}
 
 # nanotron/trainer.py logs this banner once at startup:
 #   mbs: 16 | grad_accum: 8 | cp: 1 | sequence_length: 2048 | global_batch_size: 1024 | ...
@@ -182,8 +177,6 @@ def check_corpus(cfg_path: Path):
         p = Path(f)
         corpus = p.parent.name                      # <data_root>/<corpus>/tokenized
         print(f"corpus  : {corpus}  ({p})")
-        if corpus in DEPRECATED_CORPUS:
-            errs.append(f"{corpus} is deprecated: {DEPRECATED_CORPUS[corpus]}")
         if not p.is_dir():
             errs.append(f"{p} does not exist or is not a directory")
             continue

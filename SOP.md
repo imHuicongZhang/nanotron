@@ -104,9 +104,9 @@ It lives hardcoded in `render_config.py` because three naming schemes are in pla
 | QUALITY-BASE | `quality_base` | `quality_base` | **`10B-base-shuf42`** |
 | QUALITY-FIRST | `quality_first` | `quality_first` | `quality-first` |
 | DIVERSITY-ORIENTED | `diversity_oriented` | `diversity_oriented` | **`diversity-first`** |
-| WRAP-INSPIRED | `wrap_inspired` | `wrap` | `wrap` |
-| REWIRE-INSPIRED | `rewire_inspired` | `rewire` | **`rewrite`** |
-| DISAGREEMENT-AWARE | `disagreement_aware` | `disagreement_aware_0p5` | **`signal-disagreement-lambda05`** |
+| WRAP-INSPIRED | `wrap_inspired` | `wrap_inspired` | `wrap` |
+| REWIRE-INSPIRED | `rewire_inspired` | `rewire_inspired` | **`rewrite`** |
+| DISAGREEMENT-AWARE | `disagreement_aware` | `disagreement_aware` | **`signal-disagreement-lambda05`** |
 
 Wiring these by hand gets at least one wrong, and **a wrong-but-existing path does not crash**: nanotron reads whatever corpus is there, trains to completion, and the numbers are meaningless. So nobody retypes them — `data_root` is set once and the table does the rest.
 
@@ -281,8 +281,8 @@ Run names (patch #8 makes these exact, no timestamp prefix):
 {setting}_seed{n}_ep1      {setting}_seed{n}_ep2      {setting}_seed{n}_ep3
 ```
 
-`{setting}` ∈ `quality_base, quality_first, diversity_oriented, wrap, rewire,
-disagreement_aware_0p5`. Config filename == wandb run name == checkpoint dir stem.
+`{setting}` ∈ `quality_base, quality_first, diversity_oriented, wrap_inspired, rewire_inspired,
+disagreement_aware`. Config filename == wandb run name == checkpoint dir stem.
 
 Tags (auto-generated into the `.env`):
 
@@ -378,8 +378,8 @@ import wandb
 runs = list(wandb.Api().runs("<YOUR_ENTITY>/zhc-1p5b-10b-wsd"))
 print(f"{len(runs)} runs in project (expected 108)")
 missing = {f"{s}_seed{d}_{k}"
-           for s in ["quality_base","quality_first","diversity_oriented","wrap","rewire",
-                     "disagreement_aware_0p5"]
+           for s in ["quality_base","quality_first","diversity_oriented","wrap_inspired","rewire_inspired",
+                     "disagreement_aware"]
            for d in (42,43,44)
            for k in ("trunk1","trunk2","trunk3","ep1","ep2","ep3")} - {r.name for r in runs}
 print(f"missing ({len(missing)}):", sorted(missing)[:10])
