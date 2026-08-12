@@ -3,6 +3,10 @@
 Everything needed to run the 72-run per-epoch-WSD grid on a fresh cluster. Sizes measured
 2026-08-09.
 
+**The data, tokenizer and init checkpoints are all on HuggingFace — see §9 for how to get
+them.** §2–§7 describe what those artifacts are and how much disk they need; §9 is the
+procedure.
+
 ## 1. Code — ~32 MB
 
 | item | size | note |
@@ -57,12 +61,16 @@ Templates deliberately do **not** parse on their own: `parallelism`, `micro_batc
 | rewire_inspired | `rewire_inspired/tokenized` | 20.13 GB |
 | disagreement_aware | `disagreement_aware/tokenized` | 20.10 GB |
 
-16 `.ds` shards each plus `.ds.index` / `.ds.metadata`. **Ship the `.ds.metadata` files** —
-nanotron's config validator reads `vocab_size` from them and refuses to start without it
-(`Model's vocab_size (32000) does not match dataset's (None)`).
+16 `.ds` shards each plus `.ds.index` / `.ds.metadata`. All three are in the published repo,
+so a `snapshot_download` (§9) gets them; if you ever copy a corpus by hand, **the
+`.ds.metadata` files must come with it** — nanotron's config validator reads `vocab_size` from
+them and refuses to start without it (`Model's vocab_size (32000) does not match dataset's
+(None)`). One shard of `quality_base` is legitimately zero bytes; see §9.3 before assuming a
+bad transfer.
 
-`quality_base` is the re-shuffled corpus (seed 42, matching the other five); it replaces the
-old unshuffled one. Do not ship the old one.
+`quality_base` is the re-shuffled corpus (seed 42, matching the other five). It replaced an
+earlier unshuffled build, which was never published — the only `quality_base` you can download
+is the correct one. `assert_invariants.py` rejects the old directory name outright.
 
 Directory names above are the unified names, as published in
 `wytro/Know-Your-Sources-tokenized`. The original JHU `/scratch` tree used the pre-upload names
@@ -76,11 +84,14 @@ against the current `SETTING_CORPUS`.
 its seed's init as step 0 plus a `latest.txt` containing `0`, so the trunk's latest.txt
 auto-resume works for both first launch and crash-restart.
 
-Verify after transfer **and** after nanotron loads them:
+Verify after downloading **and** after nanotron loads them. The `.hash.json` manifests ship at
+the root of the init repo, so `--check` needs no separate artifact:
 
 ```bash
-python tools/hash_init_checkpoint.py <ckpt>/0 --check init_1.5B_seedNN.hash.json
-python tools/hash_init_checkpoint.py <ckpt>/0 --check init_1.5B_seedNN.hash.json --mode loaded
+python tools/hash_init_checkpoint.py <init_root>/_init_1.5B_seedNN/0 \
+    --check <init_root>/init_1.5B_seedNN.hash.json
+python tools/hash_init_checkpoint.py <init_root>/_init_1.5B_seedNN/0 \
+    --check <init_root>/init_1.5B_seedNN.hash.json --mode loaded
 ```
 
 | checkpoint | parameters | rolling sha256 |
@@ -99,19 +110,19 @@ at dp=4 resumes at any dp.
 The init optimizer state is empty (`state_dict["state"] == {}` — Adam has never stepped), so
 `load_optimizer: true` on the first trunk segment is equivalent to a fresh optimizer.
 
-## 6. Total
+## 6. Total to download
 
 | | |
 |---|---:|
-| code + configs + tokenizer | ~36 MB |
-| tokenized corpora | ~120.4 GB |
-| init checkpoints | 27.1 GB |
+| code + configs (git) | ~36 MB |
+| tokenized corpora + tokenizer (`…-tokenized`) | ~120.4 GB |
+| init checkpoints (`…-init`) | 27.1 GB |
 | **total** | **~148 GB** |
 
-Unchanged by the stack move — the Blackwell upgrade adds no shipped bytes, only different
-pip pins.
+Excludes the 104 GB parquet repo, which training does not need (§9). Unchanged by the stack
+move — the Blackwell upgrade adds no bytes, only different pip pins.
 
-## 7. Disk to reserve on the receiving side
+## 7. Disk to reserve for checkpoints
 
 | | per (setting,seed) | grid (×18) |
 |---|---:|---:|
@@ -163,65 +174,117 @@ so a grid spanning both must run mbs=4 on both sides.
 
 ---
 
-## 9. BLOCKING — the HF dataset is not what `data_root` expects
+## 9. Obtaining the artifacts — three HuggingFace repos
 
-Checked 2026-08-09 against the upload staging tree at `tmp/kys/repo/`. **Three separate
-mismatches**, only one of which is the stale-corpus problem:
+Everything above is published. Nothing has to be shipped by hand. Listings below verified
+against the live repos 2026-08-12.
 
-### (a) Format: HF holds raw `.parquet`, not tokenized `.ds`
+| repo | type | size | what it is |
+|---|---|---:|---|
+| `wytro/Know-Your-Sources` | dataset | 104 GB | raw parquet, six configs. The paper artifact — **not needed to train** |
+| `wytro/Know-Your-Sources-tokenized` | dataset | 120 GB | the `.ds` corpora (§4) **and** the tokenizer (§3). This is `data_root` |
+| `wytro/Know-Your-Sources-init` | model | 27 GB | the three init checkpoints (§5) plus their hash manifests. This is `init_root` |
 
-| | HF repo | what `data_root` must contain |
-|---|---|---|
-| files | `part_*.parquet` (raw text + score columns) | `*.ds`, `*.ds.index`, `*.ds.metadata` |
-| layout | `<arm>/part_*.parquet` | `<corpus>/tokenized/*.ds` |
-| size | 97 GB total | 120.4 GB total |
+### 9.1 The two downloads training needs
 
-nanotron's `TokenizedBytes` path reads `.ds` only. Pointing `data_root` at a downloaded HF
-snapshot resolves to nothing, for **all six arms**, not just quality_base.
+```python
+from huggingface_hub import snapshot_download
 
-### (b) Names: the HF folders are the *repo* naming scheme
+# data_root AND tokenizer_path come from this one repo — 120 GB
+data_root = snapshot_download(
+    repo_id="wytro/Know-Your-Sources-tokenized",
+    repo_type="dataset",
+    local_dir="/shared/scratch/kys/nanotron_tokenized",
+)
 
-HF has `quality_base / quality_first / diversity_oriented / wrap_inspired / rewire_inspired /
-disagreement_aware`. `SETTING_CORPUS` maps to `10B-base-shuf42 / quality-first /
-diversity-first / wrap / rewrite / signal-disagreement-lambda05`. **Zero overlap** — this is
-exactly the three-naming-scheme collision §2 of `SOP.md` warns about.
-
-### (c) Content: `quality_base` is pre-shuffle, and its metadata says otherwise
-
-`quality_base/` holds **400 parquet files** — the unshuffled `part_00000..199` (anchor) +
-`qbase_00000..199` (strategy) two-block layout. The other five hold 25–35 shards, the
-post-shuffle 500k-row layout. But `quality_base/metadata.json` currently states:
-
-```json
-"note": "... already merged and shuffled.",
-"shuffle_seed": 42,
-"layout_note": "part_*.parquet are the shared anchor shards; qbase_*.parquet are this setting's 5B raw component."
+# init_root — 27 GB. A model repo, so no repo_type argument.
+init_root = snapshot_download(
+    repo_id="wytro/Know-Your-Sources-init",
+    local_dir="/shared/scratch/kys/init",
+)
 ```
 
-The first two claims are **false for the data actually in the folder**. This is a published
-correctness problem independent of Tianjian's run.
+**`local_dir` *is* the root.** Nothing is moved or renamed afterwards. The remote layout is
+already what the renderer expects:
 
-### Resolution
+```
+<data_root>/<setting>/tokenized/*.ds        <- exactly SETTING_CORPUS[setting] + CORPUS_LEAF
+<data_root>/tokenizer/                      <- tokenizer_path (the DIRECTORY, per §3)
+<init_root>/_init_1.5B_seed<S>/0/           <- exactly the `cp -al` source in SOP.md §3
+<init_root>/init_1.5B_seed<S>.hash.json     <- the --check manifest §5 asks for
+```
 
-**For the training handover:** ship the tokenized `.ds` corpora directly (§4, 120.4 GB). That
-is already the plan and needs no HF change. HF is the public paper artifact, not the
-transfer channel. If you *want* HF to be the transfer channel, the `.ds` files have to be
-uploaded as their own repo/revision under the corpus-dir names — a separate 120.4 GB upload.
+The setting directories are the six unified names, identical to `SETTING_CORPUS` keys — the
+legacy on-disk names were remapped at upload time, so there is nothing to reconcile. (If you
+are holding an old JHU `/scratch` tree instead of a download, see the note at the end of §4.)
 
-**For the HF repo itself (do before the paper is public):**
+### 9.2 What goes in `deploy/clusters.yaml`
 
-1. Replace `quality_base/*.parquet` — 400 files out, ~15 in (7,253,187 docs ÷ 500k rows/shard),
-   ~18 GB either way. A folder swap, not a repo rebuild; the other five arms are untouched.
-2. Fix `quality_base/metadata.json` twice: `shuffle_seed`/`note` become true only after the
-   swap, and `layout_note` becomes **wrong** — the shuffled output is uniform
-   `part_NNNNN.parquet` with no anchor/strategy split, so that sentence must go.
-3. Update `tmp/kys/manifest/provenance.tsv`: `tokenized_folder` moves from
-   `…/10B-base/tokenized` to `…/10B-base-shuf42/tokenized`. The doc *set* is unchanged (the
-   shuffle is a permutation, verified by doc_id multiset equality), so a set-based
-   `docid_digest` is stable, but any order-sensitive digest and `gates.md` Gate 6/9 need
-   re-running.
-4. Re-upload time: 18 GB. The original 97 GB upload's HF cache-state files were written across
-   ~2m18s, which would imply ~700 MB/s — but those mtimes may record post-transfer bookkeeping
-   rather than the transfer itself, so treat that as unverified. Size is the reliable number.
+Three of the four paths come straight out of the two calls above:
 
-**Gate:** none of this can start until Task A (`10B-base-shuf42`) exists.
+```yaml
+data_root:      /shared/scratch/kys/nanotron_tokenized            # local_dir of the tokenized repo
+tokenizer_path: /shared/scratch/kys/nanotron_tokenized/tokenizer  # its tokenizer/ subdirectory
+ckpt_root:      /shared/scratch/kys/checkpoints                   # you choose; reserve ~5.3 TB (§7)
+wandb:
+  dir:          /shared/scratch/kys/wandb                         # shared storage, see SOP.md §4.2
+```
+
+`init_root` is not a `clusters.yaml` field — it is only used once, by the `cp -al` trunk-seeding
+command in `SOP.md` §3.
+
+### 9.3 Two things that look broken and are not
+
+**A zero-byte shard in `quality_base`.** `quality_base/tokenized/00015_unshuffled.ds` is
+**exactly 0 bytes**, and its `.ds.metadata` records `0` tokens. This is correct, not a failed
+upload: datatrove ran with 16 ranks and rank 15 received no input documents. It survives the
+round trip intact and must be kept —
+
+- `assert_invariants.py` expects **16** shards and would fail on 15;
+- the loader indexes with `bisect` over cumulative shard lengths
+  (`data/tokenized_bytes.py:289`), and a zero-length file adds a duplicate boundary that
+  `bisect_right` steps past, so no sample can ever land in it.
+
+The token counts still add up exactly: the sixteen `.ds.metadata` files sum to
+**10,000,003,137**, matching `EXPECTED_CORPUS['quality_base']`.
+
+**Every `.ds` is named `000NN_unshuffled.ds`, including in the shuffled corpora.** All six
+arms use that suffix. It is a datatrove output-filename default and says nothing about the
+contents — the shuffle happened upstream, at the parquet stage. **The directory name is the
+authority, not the filename.** Do not go looking for a `_shuffled` variant; there isn't one.
+
+### 9.4 Fetching one corpus instead of all six
+
+`allow_patterns` takes glob patterns matched against repo-relative paths, so a single arm plus
+the tokenizer is 20.1 GB rather than 120 GB:
+
+```python
+snapshot_download(
+    repo_id="wytro/Know-Your-Sources-tokenized",
+    repo_type="dataset",
+    local_dir="/shared/scratch/kys/nanotron_tokenized",
+    allow_patterns=["quality_base/*", "tokenizer/*"],
+)
+```
+
+That pattern selects 51 of the repo's 293 files (48 corpus + 3 tokenizer). Re-running with a
+different arm added to the list tops the same `local_dir` up in place. Note that a partial
+`data_root` renders and trains fine for the arms present, but only those — the other five
+settings will fail preflight on a missing directory.
+
+### 9.5 Verify after downloading
+
+```bash
+# corpus: shard count and exact token total, per rendered config
+python tools/assert_invariants.py --config rendered/<name>.yaml
+
+# init checkpoints: on-disk bytes, then again as nanotron actually loads them
+python tools/hash_init_checkpoint.py <init_root>/_init_1.5B_seed42/0 \
+    --check <init_root>/init_1.5B_seed42.hash.json
+python tools/hash_init_checkpoint.py <init_root>/_init_1.5B_seed42/0 \
+    --check <init_root>/init_1.5B_seed42.hash.json --mode loaded
+```
+
+The corpus check is the one that matters: a `data_root` that exists but holds the wrong data
+is the failure this whole package is built to prevent, and it is caught here rather than 27
+hours into a run. An unknown corpus directory name is rejected outright.

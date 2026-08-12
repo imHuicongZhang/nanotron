@@ -346,7 +346,7 @@ values in `deploy/clusters.yaml` and nothing else:
 
 | field | value |
 |---|---|
-| `data_root` | where the six tokenized corpora were unpacked |
+| `data_root` | where the six tokenized corpora were downloaded (`HANDOVER.md` §9) |
 | `tokenizer_path` | the tokenizer **directory** |
 | `ckpt_root` | checkpoint destination (~5.3 TB) |
 | `wandb.dir` | shared storage for offline runs (§4.2) |

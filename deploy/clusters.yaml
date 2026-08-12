@@ -40,8 +40,8 @@
 global_batch_seq: 1024        # 1024 sequences x 2048 tokens = 2,097,152 tokens/step. INVARIANT.
 sequence_length: 2048
 
-# THE ONE PATH A DEPLOYER SETS. Directory containing the six tokenized corpora, i.e. the place
-# the .ds data was downloaded/unpacked to. Each arm's dataset_folder is composed by
+# THE ONE PATH A DEPLOYER SETS. Directory containing the six tokenized corpora — the local_dir
+# of the snapshot_download in HANDOVER.md §9. Each arm's dataset_folder is composed by
 # tools/render_config.py as:
 #
 #     <data_root>/<corpus subdir>/tokenized
