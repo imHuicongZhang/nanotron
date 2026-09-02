@@ -1,0 +1,80 @@
+# diversity_oriented / seed 44 / trunk2   [7B grid]
+#
+# EXPERIMENT template — no `parallelism:`, no micro_batch_size / batch_accumulation_per_replica,
+# no zero_stage, no sequence_length. Those are DEPLOYMENT and are stamped by
+#   tools/kys7b/render_config.py --template <this file> --cluster <c> --seed 44
+# which derives accum = 1024 / (mbs * dp) so the 2,097,152-token global batch is invariant.
+# This file will NOT parse on its own; that is intentional.
+#
+# steps        : 21459 -> 42916
+# LR schedule  : warmup 0->2000 linear to 0.00018; constant; decay from step 64373 over 7153 steps -> 0
+# resume       : trunk folder <ckpt_root>/{setting}_seed{seed}_trunk: latest.txt auto-resume. Pre-seed step 0 from _init_7B_seed<S>/0.
+general:
+  project: zhc-7b-50b-wsd
+  run: diversity_oriented_seed44_trunk2
+  seed: 44
+model:
+  ddp_bucket_cap_mb: 25
+  dtype: bfloat16
+  init_method:
+    std: 0.02
+  make_vocab_size_divisible_by: 1
+  model_config:
+    is_llama_config: true
+    hidden_size: 4096
+    num_hidden_layers: 32
+    num_attention_heads: 32
+    num_key_value_heads: 32
+    intermediate_size: 11008
+    vocab_size: 32000
+    tie_word_embeddings: false
+    hidden_act: silu
+    max_position_embeddings: 2048
+    rope_theta: 10000.0
+    rope_interleaved: false
+    rms_norm_eps: 1.0e-05
+    attention_bias: false
+    bos_token_id: 1
+    eos_token_id: 2
+    pad_token_id: null
+    pretraining_tp: 1
+    use_cache: false
+tokenizer: {}
+tokens:
+  train_steps: 42916
+  val_check_interval: -1
+  limit_val_batches: 0
+  limit_test_batches: 0
+data_stages:
+- name: S0_top50B
+  start_training_step: 1
+  data:
+    dataset: {}
+    num_loading_workers: 1
+    seed: 44
+checkpoints:
+  load_optimizer: true
+  load_lr_scheduler: true
+  checkpoint_interval: 5000
+  save_initial_state: false
+  save_final_state: true
+optimizer:
+  weight_decay: 0.1
+  clip_grad: 1.0
+  accumulate_grad_in_fp32: true
+  learning_rate_scheduler:
+    learning_rate: 0.00018
+    lr_warmup_steps: 2000
+    lr_warmup_style: linear
+    lr_decay_starting_step: 64373
+    lr_decay_style: linear
+    lr_decay_steps: 7153
+    min_decay_lr: 0.0
+  optimizer_factory:
+    adam_beta1: 0.9
+    adam_beta2: 0.95
+    adam_eps: 1.0e-08
+    name: adamW
+    torch_adam_is_fused: true
+logging:
+  iteration_step_info_interval: 1

@@ -1,0 +1,233 @@
+# Per-cluster DEPLOYMENT profile — 7B GRID. This is the only place parallelism is written down.
+#
+# 7B fork of deploy/clusters.yaml. Used by tools/kys7b/render_config.py against the templates
+# in configs/know-your-sources-7b/. The 1.5B profile (deploy/clusters.yaml) is untouched and
+# still describes the 1.5B grid.
+#
+# The experiment templates under configs/know-your-sources-7b/ carry no `parallelism:` block, no
+# `micro_batch_size` / `batch_accumulation_per_replica`, no `zero_stage`, no `sequence_length`.
+# `tools/kys7b/render_config.py` stamps them in and DERIVES the accumulation so that
+#
+#     micro_batch_size x batch_accumulation_per_replica x dp == global_batch_seq  (1024)
+#
+# holds by construction for every run on every cluster.
+#
+# ---------------------------------------------------------------------------------------
+# TWO DIFFERENT KINDS OF KNOB — do not confuse them (measured 2026-08-09, see §5 of HANDOVER)
+#
+#   dp   is mathematically FREE. MegatronPretrainingSampler fills a batch of
+#        `micro_batch_size * dp` consecutive samples and gives rank d the slice
+#        [d*mbs : (d+1)*mbs], so the PARTITION of the 1024-sequence global batch into
+#        micro-batches is consecutive blocks of size mbs regardless of dp. The accumulated
+#        gradient is (1/dp)(1/accum) * sum_j loss_j = the mean over all 1024/mbs
+#        micro-batches — independent of dp. Verified numerically: identical per-token
+#        weights for (mbs=4,dp=4,accum=64) vs (mbs=4,dp=8,accum=32), max diff 0.000e+00.
+#        Only floating-point rounding (all-reduce tree) differs.
+#
+#   mbs  is NOT free. `Loss.forward` does `masked_mean(loss, label_mask)`, and label_mask
+#        drops the token before every document boundary — measured mean 2.8 masked tokens
+#        per 2048-token sequence, range 0-10. So masked_mean's denominator n_j VARIES per
+#        micro-batch (rel-std 6.2e-4 at mbs=4, 3.9e-4 at mbs=16), and the effective
+#        per-token weight is 1/(n_micro * n_j). Regrouping the batch into different-sized
+#        micro-batches changes those weights: measured max relative difference
+#        mbs=4 vs mbs=8  -> 1.04e-3
+#        mbs=4 vs mbs=16 -> 1.43e-3
+#        mbs=8 vs mbs=16 -> 7.04e-4
+#        That is a real difference in the optimization objective, ~4 orders of magnitude
+#        above fp32 rounding — not a rounding artefact.
+#
+#   => micro_batch_size MUST be identical across every run in the grid.
+#      render_config.py refuses to render if the clusters named in `seed_assignment`
+#      disagree about it.
+# ---------------------------------------------------------------------------------------
+
+global_batch_seq: 1024        # 1024 sequences x 2048 tokens = 2,097,152 tokens/step. INVARIANT.
+sequence_length: 2048
+
+# THE ONE PATH A DEPLOYER SETS. Directory containing the six tokenized corpora — the local_dir
+# of the snapshot_download in HANDOVER.md §9. Each arm's dataset_folder is composed by
+# tools/kys7b/render_config.py as:
+#
+#     <data_root>/<corpus subdir>/tokenized
+#
+# The setting -> subdir mapping lives INSIDE render_config.py and is not configurable. It is an
+# identity map — one name per setting, used as the setting label, the corpus directory and the
+# HuggingFace config_name alike — but it is still the authoritative list of valid settings, and
+# a wrong-but-existing path does not crash: training completes and the numbers are silently
+# wrong. So the mapping is not left to be retyped.
+#
+# For the 7B grid data_root is expected to be a snapshot of
+# wytro/Know-Your-Sources-7B-tokenized   # PLACEHOLDER — this repo does not exist yet. The 50B
+#                                        # corpora have not been tokenized or uploaded; the name
+#                                        # is the intended one, not a verified one.
+# Expected layout, unchanged from the 1.5B repo:
+#     quality_base/tokenized/              quality_first/tokenized/
+#     diversity_oriented/tokenized/        wrap_inspired/tokenized/
+#     rewire_inspired/tokenized/           disagreement_aware/tokenized/
+# each holding the arm's *.ds plus matching *.ds.index and *.ds.metadata.
+#
+# NOTE: the original JHU /scratch tree uses the pre-upload directory names (10B-base-shuf42,
+# quality-first, diversity-first, wrap, rewrite, signal-disagreement-lambda05) and will NOT
+# resolve against these. See the remap table in tools/kys7b/render_config.py; use symlinks or
+# re-download.
+#
+# tools/kys7b/assert_invariants.py verifies every resolved path by token count before any GPU
+# time — but its EXPECTED_CORPUS table is all-null until the 50B corpora exist, and it refuses
+# to pass while that is so.
+data_root: null               # <- FILL IN, e.g. /shared/scratch/kys7b/nanotron_tokenized
+
+# The other two path roots. Templates contain NO absolute paths at all, so these three fields
+# plus wandb.dir are the complete set of locations a deployer supplies.
+#
+#   tokenizer_path  the llama2-unsloth tokenizer DIRECTORY (not tokenizer.json — nanotron
+#                   wants the dir). It ships inside the corpora repo, so this is normally
+#                   just <data_root>/tokenizer; see HANDOVER.md §9.
+#                   NOTE: config.py:521 asserts this string EQUALS line 1 of every
+#                   *.ds.metadata, and published metadata names the path it was tokenized
+#                   under. Run tools/fix_ds_metadata.py once after downloading —
+#                   HANDOVER.md §9.2 — or this value cannot be made to validate.
+#   ckpt_root       where checkpoints are written. render_config.py composes
+#                     <ckpt_root>/<setting>_seed<n>_trunk        (all 3 trunk segments share it)
+#                     <ckpt_root>/<setting>_seed<n>_<ep1|ep2|ep3>
+#                   and points each branch's resume at <trunk>/<lr_decay_starting_step>.
+#
+# Why these are not baked into the templates either: a wrong resume_checkpoint_path is the
+# worst silent failure in the whole pipeline. serialize/main.py:231 logs "No previous
+# checkpoint found" at INFO and returns None, so nanotron starts from RANDOM INIT. A cooldown
+# branch would run its 2384/4768/7153 steps and finish normally having annealed noise.
+# Reserve ~30.6 TB under ckpt_root (10.2 TB after pruning trunk restart points) — the 7B
+# checkpoints are 94.34 GB each against 21.06 GB at 1.5B. See configs/know-your-sources-7b/README.md.
+tokenizer_path: null          # <- FILL IN, normally <data_root>/tokenizer
+ckpt_root: null               # <- FILL IN, e.g. /shared/scratch/kys7b/checkpoints
+
+# wandb. The grid runs OFFLINE and is synced afterwards by whoever should own the runs.
+#
+# Why offline rather than a team invite: an offline run carries NO ownership until it is
+# synced — verified, `run.entity` is the empty string when WANDB_ENTITY is unset at init. The
+# entity is decided entirely at sync time by `wandb sync --entity`. So the person who syncs
+# owns the runs, the API key never leaves their machine, the collaborator needs no wandb
+# account at all, and it does not matter whether his compute nodes have outbound internet.
+#
+# CONSEQUENCE: `entity` is deliberately absent here and is NEVER written into the rendered
+# .env. Setting it at init would bake a destination into every run directory, which is exactly
+# what we are avoiding. render_config.py refuses to render if `entity` is set while
+# mode: offline.
+wandb:
+  project: zhc-7b-50b-wsd     # must match general.project in the templates
+  mode: offline               # offline | online
+  entity: null                # offline: leave null (set with `wandb sync --entity` instead)
+  # Where offline run directories are written (becomes WANDB_DIR). MUST be on storage that
+  # survives the job AND is readable from wherever the sync eventually happens. Node-local
+  # /tmp is the classic way to lose an entire grid's logs — the renderer refuses a null value
+  # for offline mode rather than letting wandb default to the cwd.
+  dir: null                   # <- collaborator fills in, e.g. /shared/scratch/kys7b/wandb
+
+# ---------------------------------------------------------------------------------------
+# Peak HBM model. BOTH NUMBERS ARE ESTIMATES, NOT MEASUREMENTS — no 7B run has been profiled.
+# They are here to refuse an obviously-impossible mbs, not to certify a tight fit. Measure a
+# real 7B step on the B300 and replace them before trusting the margin.
+#
+# Assumes zero_stage 0 and recompute_layer false, which is what the b300 entry below sets.
+# Changing either of those invalidates both figures.
+#
+#   static_gib 121   = 6.738e9 params at 18 bytes/param — bf16 weights (2) + fp32 grads (4)
+#                      + fp32 master weights (4) + Adam m (4) + Adam v (4). ESTIMATE.
+#                      (6.738e9 x 18 = 1.213e11 bytes; quoted here in decimal GB, which is
+#                      conservative against a GiB budget.)
+#   per_micro_batch_seq_gib 11.7
+#                    = the measured 1.5B H100 value 5.10 scaled by (32 * 4096) / (28 * 2048)
+#                      = 5.10 x 2.2857 = 11.66, i.e. activations scaled by layers x hidden at
+#                      fixed sequence length. ESTIMATE — the 5.10 is measured, the scaling is not.
+#
+# Fit at the configured layout (dp 4, budget 268.0 x 0.90 = 241.2 GiB):
+#     mbs  8 : 121 + 8 x 11.7  = 214.6 GiB  -> 80% of 268 GiB, inside the 241 GiB budget. CHOSEN.
+#     mbs 16 : 121 + 16 x 11.7 = 308.2 GiB  -> does not fit at zero_stage 0.
+#              Even with ZeRO-1 sharding the optimizer state over dp 4 (18 -> 9 bytes/param,
+#              since nanotron keeps the fp32 grad buffer FULL under ZeRO-1 —
+#              gradient_accumulator.py, "keep grad buffers for all parameters even when Zero 1
+#              is used") the estimate is ~244 GiB, still over budget. mbs 16 would additionally
+#              require activation recompute (parallelism.recompute_layer), which costs
+#              throughput on a 71,526-step trunk. Not adopted.
+# ---------------------------------------------------------------------------------------
+memory_model:
+  static_gib: 121             # ESTIMATE, see above
+  per_micro_batch_seq_gib: 11.7   # ESTIMATE, see above
+  reserve_frac: 0.90          # refuse above 90% of card HBM (allocator fragmentation headroom)
+
+clusters:
+
+  # EXACTLY ONE ACTIVE CLUSTER, BY DESIGN. The h100 and h200 entries from deploy/clusters.yaml
+  # are deliberately absent: Blackwell (sm_100/sm_103) cannot be mixed with sm_90 in one grid,
+  # and a profile that contains no other cluster cannot be misconfigured into mixing them.
+  b300:
+    # arch: sm_100 or sm_103 — see INSTALL.md appendix A, run tools/probe_blackwell.py.
+    #
+    # arch and the slurm fields below are ALREADY KNOWN from the 1.5B B300 runs. Copy them
+    # from Tianjian's existing launch setup rather than re-deriving them. Phase 0 (2026-09-02)
+    # searched the published 1.5B checkpoint tree at
+    #   /home/jhu/zhuicon1/bvandur1-project/zhuicon1/checkpoints/rewrite-1p5b/
+    # and found no Slurm script, launcher or .env there to copy from — it is an HF snapshot
+    # holding only README.md, .gitattributes and the three step directories — so these stay
+    # null rather than being guessed.
+    arch: null                # PLACEHOLDER — copy from the 1.5B B300 launch setup
+    hbm_gib: 268.0            # 288 GB
+    gpus_per_node: 4
+    dp: 4
+    tp: 1
+    pp: 1
+    # ---------------------------------------------------------------------------------
+    # DO NOT CHANGE micro_batch_size TO "USE THE HEADROOM" OR TO MATCH THE 1.5B GRID.
+    # Within THIS grid mbs is pinned for NUMERICAL COMPARABILITY across all 72 runs, not
+    # tuned for throughput. Every guard that enforces that is still in place.
+    #
+    # `Loss.forward` computes masked_mean(loss, label_mask) = (loss*mask).sum()/mask.sum(),
+    # and label_mask drops the token before every document boundary (measured: 2.8 masked
+    # tokens per 2048-token sequence, range 0-10). So masked_mean's denominator differs per
+    # micro-batch and the effective per-token weight is 1/(n_micro * n_j). Regrouping the
+    # same 1024 sequences into a different micro-batch size changes those weights by
+    # ~1e-3 relative — ~4 orders of magnitude above fp32 rounding. It changes the objective,
+    # not the speed, and nothing in the loss curves will look wrong.
+    #
+    # (dp, by contrast, IS free: the micro-batch partition is consecutive blocks of size mbs
+    # regardless of dp — measured difference exactly 0.000e+00. Scale dp, never mbs.)
+    #
+    # WHY 8 HERE AND NOT 16 — the one place the 7B grid knowingly differs from the 1.5B grid.
+    # The 1.5B grid was actually run on B300 at dp 4 with mbs 16 and accum 16. That is
+    # verified, not assumed: read from tokens.micro_batch_size in the config.yaml of the
+    # published 1.5B checkpoints (Phase 0, 2026-09-02, all three step directories agree) —
+    #   /home/jhu/zhuicon1/bvandur1-project/zhuicon1/checkpoints/rewrite-1p5b/seed42/quality_base
+    # The 7B grid runs at mbs 8 because 16 does not fit a 7B model on a B300 at zero_stage 0
+    # (308 GiB estimated against a 241 GiB budget; see memory_model above).
+    #
+    # CONSEQUENCE, stated plainly: the masked_mean per-token weighting differs between the
+    # 1.5B grid and the 7B grid by up to ~7.04e-4 relative (the measured mbs=8 vs mbs=16
+    # figure). This affects NO comparison the experiment actually makes. Every six-way
+    # between-setting comparison is within ONE grid at ONE mbs, and the two grids already
+    # differ in learning rate (5e-4 vs 1.8e-4), warmup (500 vs 2000), token budget (30B vs
+    # 150B), embedding tying (tied vs untied) and parameter count (1.5B vs 6.7B). mbs is not
+    # the term that makes them non-comparable; nothing makes them numerically comparable at
+    # the objective level, and they were never intended to be.
+    #
+    # Also note: the mbs 16 figure in deploy/clusters.yaml, SOP.md §1 and
+    # tools/assert_invariants.py describes the H200 HANDOVER PLAN (dp 8, accum 8). It happens
+    # to coincide with the mbs the 1.5B runs really used, but the dp 8 / accum 8 layout it
+    # describes was never executed — the real 1.5B runs were dp 4 / accum 16 on B300.
+    # ---------------------------------------------------------------------------------
+    micro_batch_size: 8       # 121 + 8*11.7 = 214.6 GiB (80% of 268) -> accum = 1024/(8*4) = 32
+    zero_stage: 0
+    slurm:
+      partition: null         # PLACEHOLDER — copy from the 1.5B B300 launch setup
+      nodes: 1
+      gres: null              # PLACEHOLDER — copy from the 1.5B B300 launch setup
+      time: null              # PLACEHOLDER — copy from the 1.5B B300 launch setup
+
+# Seed -> cluster assignment. The grid may be SPLIT ONLY BY SEED: all six settings of a given
+# seed must land on the same cluster, so any six-way (between-setting) comparison is always
+# within one kernel/hardware generation. render_config.py enforces this — rendering
+# (seed, cluster) aborts unless `seed_assignment[seed] == cluster`.
+#
+# All three seeds on b300; it is the only cluster in this profile.
+seed_assignment:
+  42: b300
+  43: b300
+  44: b300
