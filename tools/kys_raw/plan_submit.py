@@ -70,9 +70,9 @@ def main():
         trunk_cfg = yaml.safe_load((cfg_dir / f'{setting}_seed{args.seed}_trunk1.yaml').read_text())
         trunk = Path(trunk_cfg['checkpoints']['checkpoints_path'])
         init = Path(init_root or '<init_root>') / f'_init_1.5B_seed{args.seed}' / '0'
-        # The init hash check (tools/hash_init_checkpoint.py) covers model weights only. A seed directory
-        # missing its optimizer or scheduler state passes it and then fails at load, after allocation —
-        # so refuse to seed from an incomplete init (180 files, including the ~6 GB optimizer state).
+        # The init hash check (tools/hash_init_checkpoint.py) covers model weights only, so also refuse to
+        # seed from an incomplete download (180 files). trunk1 loads the init as weights only
+        # (load_optimizer/load_lr_scheduler false), but a partial copy is a sign of a broken transfer.
         lines += [f'# ---- {setting} seed {args.seed}',
                   f'I={shlex.quote(str(init))}',
                   f'T={shlex.quote(str(trunk))}',

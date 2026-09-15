@@ -55,8 +55,8 @@ data_stages:
     num_loading_workers: 1
     seed: 42
 checkpoints:
-  load_optimizer: true
-  load_lr_scheduler: true
+  load_optimizer: false
+  load_lr_scheduler: false
   checkpoint_interval: 1500
   save_initial_state: false
   save_final_state: true

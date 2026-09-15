@@ -130,8 +130,15 @@ with `tp=1, pp=1, zero_stage=0` the `model/`, `optimizer/` and `lr_scheduler/` p
 no `dp` in their filenames and `load_random_states()` is never called, so a checkpoint written
 at dp=4 resumes at any dp.
 
-The init optimizer state is empty (`state_dict["state"] == {}` — Adam has never stepped), so
-`load_optimizer: true` on the first trunk segment is equivalent to a fresh optimizer.
+The init optimizer state is empty (`state_dict["state"] == {}`, `names == {}` — Adam has never
+stepped); the ~6 GB optimizer file is only `gradient_accumulator`, fp32 copies of the weights that
+are bit-identical to the bf16 model weights cast to fp32 (checked 2026-09-15, max |diff| 0). A fresh
+optimizer builds exactly those copies, so the first trunk segment must load **weights only**:
+`load_optimizer: false`, `load_lr_scheduler: false`, as `tools/generate_configs.py` now emits for
+trunk1 and as the canonical grid configs did. With `load_optimizer: true`, nanotron's
+`NamedOptimizer.load_state_dict` refuses the empty state at startup (`AssertionError: Elements don't
+match` / `Loading empty state dict`). (Corrected: this section previously said `load_optimizer: true`
+was equivalent to a fresh optimizer.)
 
 ## 6. Total to download
 

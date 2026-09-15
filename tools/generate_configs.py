@@ -168,8 +168,14 @@ def build(setting, seed, kind):
             },
         }],
         'checkpoints': {
-            'load_optimizer': True,
-            'load_lr_scheduler': True,
+            # trunk1 starts from the init checkpoint, whose optimizer file holds no Adam state
+            # (`state == {}`, `names == {}`) and only fp32 copies of the bf16 weights — bit-identical
+            # to what a fresh optimizer builds (verified 2026-09-15). nanotron's
+            # NamedOptimizer.load_state_dict refuses an empty state ("Elements don't match" /
+            # "Loading empty state dict"), so trunk1 loads weights only, exactly as the canonical
+            # grid configs did ("shared init (weights only)"). Every later segment resumes real state.
+            'load_optimizer': kind != 'trunk1',
+            'load_lr_scheduler': kind != 'trunk1',
             'checkpoint_interval': interval,
             'save_initial_state': False,
             'save_final_state': True,
