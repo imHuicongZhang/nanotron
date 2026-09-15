@@ -70,10 +70,19 @@ def main():
         trunk_cfg = yaml.safe_load((cfg_dir / f'{setting}_seed{args.seed}_trunk1.yaml').read_text())
         trunk = Path(trunk_cfg['checkpoints']['checkpoints_path'])
         init = Path(init_root or '<init_root>') / f'_init_1.5B_seed{args.seed}' / '0'
+        # The init hash check (tools/hash_init_checkpoint.py) covers model weights only. A seed directory
+        # missing its optimizer or scheduler state passes it and then fails at load, after allocation —
+        # so refuse to seed from an incomplete init (180 files, including the ~6 GB optimizer state).
         lines += [f'# ---- {setting} seed {args.seed}',
+                  f'I={shlex.quote(str(init))}',
                   f'T={shlex.quote(str(trunk))}',
                   'if [[ ! -f "$T/latest.txt" ]]; then',
-                  f'  mkdir -p "$T" && cp -a {shlex.quote(str(init))} "$T/0" && echo 0 > "$T/latest.txt"',
+                  '  for f in model_config.json optimizer/optimizer_pp-0-of-1_tp-0-of-1_exp-0-of-1.pt '
+                  'lr_scheduler/lr_scheduler_pp-0-of-1_tp-0-of-1_exp-0-of-1.pt; do',
+                  '    [[ -s "$I/$f" ]] || { echo "init $I is incomplete: missing $f"; exit 1; }',
+                  '  done',
+                  '  n=$(find "$I" -type f | wc -l); [[ $n -eq 180 ]] || { echo "init $I has $n files, expected 180"; exit 1; }',
+                  '  mkdir -p "$T" && cp -a "$I" "$T/0" && echo 0 > "$T/latest.txt"',
                   'fi']
         for kind in KINDS:
             name = f'{setting}_seed{args.seed}_{kind}'

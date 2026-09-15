@@ -150,8 +150,71 @@ def main():
         done.write_text(json.dumps(rec, indent=2))
         print(f'{s}: exported {exp_docs:,} rows into {len(paths)} files')
 
-    # --- manifest ----------------------------------------------------------------------------------
+    # --- data upload (per setting; independent of other settings) -----------------------------------
+    if not args.dry_run:
+        api.upload_folder(repo_id=REPO_ID, repo_type='dataset', folder_path=str(out), path_in_repo=f'raw_text/{s}',
+                          allow_patterns=['part-*.parquet'], commit_message=f'raw_text/{s}: 16 parquet files')
+        print(f'{s}: uploaded raw_text/{s}/')
+
+    # --- manifest: read-modify-write-upload under a lock shared by jobs on every node --------------
     mpath = stage / 'manifest.json'
+    lock = ManifestLock(stage / '.manifest.lockdir')
+    lock.acquire()
+    try:
+        _update_and_upload_manifest(api, args, K, s, stage, mpath, src, a, st, exp_docs, exp_tokens, init, rec, v)
+    finally:
+        lock.release()
+    if args.dry_run:
+        print('dry run: not uploading')
+        return
+
+    # --- round trip ----------------------------------------------------------------------------------
+    name = 'part-00000.parquet'
+    with tempfile.TemporaryDirectory(dir=K) as dl:
+        got = sha256(Path(hf_hub_download(REPO_ID, f'raw_text/{s}/{name}', repo_type='dataset', local_dir=dl)))
+    want = rec['files'][name]['sha256']
+    ok = got == want
+    (stage / f'published_{s}.json').write_text(json.dumps({'setting': s, 'hf_path': f'https://huggingface.co/datasets/{REPO_ID}/tree/main/raw_text/{s}',
+                                                           'roundtrip_file': name, 'sha256_local': want, 'sha256_hub': got,
+                                                           'roundtrip_ok': ok, 'code_commit': args.code_commit}, indent=2))
+    print(f'{s}: round-trip raw_text/{s}/{name}: {"OK" if ok else "MISMATCH"} ({got})')
+    if not ok:
+        sys.exit(1)
+
+
+class ManifestLock:
+    """mkdir-based lock: atomic on the shared filesystem across nodes, unlike flock on some network FS."""
+
+    def __init__(self, path: Path, stale_s: int = 1800):
+        self.path, self.stale_s = path, stale_s
+
+    def acquire(self):
+        import os
+        import time
+        while True:
+            try:
+                os.mkdir(self.path)
+                (self.path / 'owner').write_text(f'{os.uname().nodename} pid {os.getpid()} {time.ctime()}\n')
+                return
+            except FileExistsError:
+                try:
+                    if time.time() - self.path.stat().st_mtime > self.stale_s:
+                        print(f'breaking stale manifest lock {self.path}')
+                        for f in self.path.iterdir():
+                            f.unlink()
+                        self.path.rmdir()
+                        continue
+                except FileNotFoundError:
+                    continue
+                time.sleep(5)
+
+    def release(self):
+        for f in self.path.glob('*'):
+            f.unlink()
+        self.path.rmdir()
+
+
+def _update_and_upload_manifest(api, args, K, s, stage, mpath, src, a, st, exp_docs, exp_tokens, init, rec, v):
     tok_rev = api.repo_info(TOKENIZER_REPO, repo_type='dataset').sha
     manifest = json.loads(mpath.read_text()) if mpath.is_file() else {}
     manifest.update({
@@ -199,31 +262,19 @@ def main():
                                               f"{c3['match_rewritten']} equal a rewrite"},
         'files': rec['files'],
     }
-    mpath.write_text(json.dumps(manifest, indent=2) + '\n')
+    tmp = mpath.with_name('.manifest.json.tmp')
+    tmp.write_text(json.dumps(manifest, indent=2) + '\n')
+    import os
+    os.replace(tmp, mpath)
     (stage / 'README.md').write_text(args.readme.read_text())
     print(f'{s}: manifest updated ({mpath})')
     if args.dry_run:
-        print('dry run: not uploading')
         return
-
-    # --- upload + round trip -----------------------------------------------------------------------
-    api.upload_folder(repo_id=REPO_ID, repo_type='dataset', folder_path=str(out), path_in_repo=f'raw_text/{s}',
-                      allow_patterns=['part-*.parquet'], commit_message=f'raw_text/{s}: 16 parquet files')
     api.upload_file(repo_id=REPO_ID, repo_type='dataset', path_or_fileobj=str(mpath), path_in_repo='manifest.json',
                     commit_message=f'manifest.json: add {s}')
     api.upload_file(repo_id=REPO_ID, repo_type='dataset', path_or_fileobj=str(stage / 'README.md'), path_in_repo='README.md',
                     commit_message='README.md')
-    name = 'part-00000.parquet'
-    with tempfile.TemporaryDirectory(dir=K) as dl:
-        got = sha256(Path(hf_hub_download(REPO_ID, f'raw_text/{s}/{name}', repo_type='dataset', local_dir=dl)))
-    want = rec['files'][name]['sha256']
-    ok = got == want
-    (stage / f'published_{s}.json').write_text(json.dumps({'setting': s, 'hf_path': f'https://huggingface.co/datasets/{REPO_ID}/tree/main/raw_text/{s}',
-                                                           'roundtrip_file': name, 'sha256_local': want, 'sha256_hub': got,
-                                                           'roundtrip_ok': ok, 'code_commit': args.code_commit}, indent=2))
-    print(f'{s}: round-trip raw_text/{s}/{name}: {"OK" if ok else "MISMATCH"} ({got})')
-    if not ok:
-        sys.exit(1)
+    print(f'{s}: manifest.json and README.md uploaded')
 
 
 if __name__ == '__main__':

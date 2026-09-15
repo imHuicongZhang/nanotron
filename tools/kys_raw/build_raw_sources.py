@@ -150,8 +150,14 @@ def main():
     manifest['anchor'] = {'docs': n_anchor, 'tokens': anchor_total,
                           'matches_recorded': n_anchor == ANCHOR_DOCS and anchor_total == ANCHOR_TOKENS,
                           'identical_across': checked}
-    np.save(args.out / 'anchor_doc_ids.npy', anchor_ref['anchor_ids'])
-    np.save(args.out / 'anchor_train_tokens_plus1.npy', anchor_ref['anchor_tok'])
+    # Written once. Later runs only compare against it, and never rewrite a file that jobs on other
+    # nodes may be reading at the same moment.
+    for name, arr in (('anchor_doc_ids.npy', anchor_ref['anchor_ids']),
+                      ('anchor_train_tokens_plus1.npy', anchor_ref['anchor_tok'])):
+        if not (args.out / name).exists():
+            tmp = args.out / f'.{name}.tmp.npy'
+            np.save(tmp, arr)
+            os.replace(tmp, args.out / name)
 
     union = np.unique(np.concatenate([a['source_ids'] for a in arms.values()]))
     if np.intersect1d(union, anchor_ref['anchor_ids']).size:
@@ -198,7 +204,10 @@ def main():
             'overshoot_after': after - BUDGET if subsampled else None,
         }
         log(f'{raw}: {ids.size:,} source docs, {total:,} raw tokens -> {keep.size:,} docs, {after:,} tokens')
-    mpath.write_text(json.dumps(manifest, indent=2))
+    # atomic: jobs on other nodes read this file while a count may be finishing
+    tmp = mpath.with_name('.manifest.json.tmp')
+    tmp.write_text(json.dumps(manifest, indent=2))
+    os.replace(tmp, mpath)
     log(f'wrote {mpath}')
 
 
