@@ -1,5 +1,7 @@
 # Know-Your-Sources raw-selected baselines: runbook
 
+**Full workflow:** [`WORKFLOW_RAW_BASELINES.md`](WORKFLOW_RAW_BASELINES.md) is the single entry point for executing this grid end to end on an external cluster — what to do, in what order, and who does it. This runbook is one of its detailed references.
+
 ## Purpose
 Train no-rewrite controls for four source-selection strategies so the rewriting effect can be separated from the selection effect. Each control uses the same 5B anchor and the same selected source documents as its rewritten counterpart, but keeps the documents in their original unrewritten form, subsampled at the document level to the same 5B budget. raw_random is the no-selection reference and the control for wrap_inspired. raw_rewire_inspired uses the source documents of the 5B kept by REWIRE's post-rewrite filter.
 
