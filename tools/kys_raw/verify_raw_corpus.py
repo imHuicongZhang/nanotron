@@ -98,24 +98,28 @@ def check_provenance():
 
 # ------------------------------------------------------------------------------ check 2
 def anchor_rows(corpus):
-    """(orig_doc_id, text) of every anchor row in the assembled corpus, grouped for pool reads."""
-    ids, texts = [], []
+    """(orig_doc_id, sha256(text)) of every anchor row in the assembled corpus.
+
+    Hashed file by file: holding all 4.12M anchor texts at once is ~20 GB of Python strings, which
+    on a 64 GiB allocation risks the OOM killer. Only the digests are kept.
+    """
+    ids, hashes = [], []
     for f in corpus_files(corpus):
         t = pq.read_table(f, columns=['orig_doc_id', 'text', 'source'])
         m = np.asarray(t.column('source').to_pylist(), dtype=object) == 'anchor'
         ids.append(t.column('orig_doc_id').to_numpy()[m])
-        texts += t.column('text').filter(m).to_pylist()
-    ids = np.concatenate(ids)
-    return ids, texts
+        col = t.column('text').filter(m)
+        hashes += [sha(col[i].as_py()) for i in range(len(col))]
+        del t, col
+    return np.concatenate(ids), hashes
 
 
 def check_anchor(corpus, pool, parquet_root, arm, sources, tokenizer, anchor_ref):
     errs, out = [], {}
-    ids, texts = anchor_rows(corpus)
+    ids, hashes = anchor_rows(corpus)
     order = np.argsort(ids)
     ids = ids[order]
-    hashes = [sha(texts[i]) for i in order]
-    del texts
+    hashes = [hashes[i] for i in order]
     digest = hashlib.sha256()
     for o, h in zip(ids, hashes):
         digest.update(f'{int(o)}:{h}\n'.encode())
