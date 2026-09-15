@@ -66,6 +66,16 @@ SETTINGS = [
     'rewire_inspired',
     'disagreement_aware',
 ]
+# Raw-selected baselines (configs/1.5B-baseline-seed42): the shared 5B anchor plus the ORIGINAL,
+# unrewritten source documents of a rewritten arm, subsampled with seed 42 to 5B tokens. Same
+# schedule, segments and batch as the grid; only the corpus differs. Not part of the default
+# 108 — emit with `--settings` / `--seeds`.
+RAW_SETTINGS = [
+    'raw_diversity_oriented',     # counterpart: diversity_oriented
+    'raw_disagreement_aware',     # counterpart: disagreement_aware
+    'raw_random',                 # counterpart: wrap_inspired (the random sample WRAP rewrote)
+    'raw_rewire_inspired',        # counterpart: rewire_inspired (sources of the 5B REWIRE's filter kept)
+]
 
 # No path constants live here any more — ckpt_root / tokenizer_path / data_root are all
 # supplied per cluster in deploy/clusters.yaml and composed by tools/render_config.py.
@@ -118,8 +128,8 @@ def build(setting, seed, kind):
         # decay branch is only ever entered at offset 0 -> lr == initial_lr (see module docstring)
         decay_start, decay_steps = BRANCHES['ep3'][0], BRANCHES['ep3'][1]
         interval = TRUNK_CKPT_INTERVAL
-        resume_note = ('trunk folder <ckpt_root>/{setting}_seed{seed}_trunk: latest.txt '
-                       'auto-resume. Pre-seed step 0 from _init_1.5B_seed<S>/0.')
+        resume_note = ('trunk folder <ckpt_root>/seed<S>/<setting>/trunk/<setting>/seed<S>: '
+                       'latest.txt auto-resume. Pre-seed step 0 from _init_1.5B_seed<S>/0.')
     else:
         decay_start, decay_steps, train_steps = BRANCHES[kind]
         interval = BRANCH_CKPT_INTERVAL
@@ -202,10 +212,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', type=Path, required=True)
     ap.add_argument('--only', help='setting:seed:kind, e.g. quality-base:42:ep3')
+    ap.add_argument('--settings', help=f'comma-separated; default = the six grid settings. '
+                                       f'Raw baselines: {",".join(RAW_SETTINGS)}')
+    ap.add_argument('--seeds', help='comma-separated; default = 42,43,44')
     args = ap.parse_args()
 
+    settings = args.settings.split(',') if args.settings else SETTINGS
+    unknown = sorted(set(settings) - set(SETTINGS) - set(RAW_SETTINGS))
+    if unknown:
+        ap.error(f'unknown settings {unknown}')
+    seeds = [int(s) for s in args.seeds.split(',')] if args.seeds else SEEDS
+
     kinds = ['trunk1', 'trunk2', 'trunk3', 'ep1', 'ep2', 'ep3']
-    todo = [(s, sd, k) for s in SETTINGS for sd in SEEDS for k in kinds]
+    todo = [(s, sd, k) for s in settings for sd in seeds for k in kinds]
     if args.only:
         s, sd, k = args.only.split(':')
         todo = [(s, int(sd), k)]

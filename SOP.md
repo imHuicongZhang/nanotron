@@ -156,11 +156,13 @@ may start as soon as its trunk segment has written its final checkpoint (4292 / 
 Before the first trunk segment of each chain, seed the trunk directory:
 
 ```bash
-T=<ckpt_root>/<setting>_seed<S>_trunk          # note underscores: dir stem == run name
+T=<ckpt_root>/seed<S>/<setting>/trunk/<setting>/seed<S>   # the layout the released checkpoints use
 mkdir -p $T && cp -al <init_root>/_init_1.5B_seed<S>/0 $T/0 && echo 0 > $T/latest.txt
 ```
 
-`cp -al` hardlinks, so seeding all 18 trunks costs no extra disk. Verify afterwards with
+`cp -al` hardlinks, so seeding all 18 trunks costs no extra disk — when `<init_root>` and
+`<ckpt_root>` are on the same filesystem. Across filesystems (e.g. an init on scratch and
+checkpoints on project storage) `cp -al` fails; use `cp -a`, ~9 GB per trunk. Verify afterwards with
 `tools/hash_init_checkpoint.py $T/0 --check init_1.5B_seed<S>.hash.json`.
 
 ---

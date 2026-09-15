@@ -102,7 +102,17 @@ SETTING_CORPUS = {
     'wrap_inspired':      'wrap_inspired',
     'rewire_inspired':    'rewire_inspired',
     'disagreement_aware': 'disagreement_aware',
+    # Raw-selected baselines (configs/1.5B-baseline-seed42). Not in the HF repo: built locally
+    # from the shared anchor + the original text of each arm's source documents (README there).
+    'raw_diversity_oriented': 'raw_diversity_oriented',
+    'raw_disagreement_aware': 'raw_disagreement_aware',
+    'raw_random':             'raw_random',
+    'raw_rewire_inspired':    'raw_rewire_inspired',
 }
+# The raw baselines run on a different cluster from their rewritten counterparts, so they are
+# assigned by `baseline_seed_assignment` instead of `seed_assignment`, and their mbs uniformity
+# is checked among themselves (see clusters.yaml).
+RAW_SETTINGS = {'raw_diversity_oriented', 'raw_disagreement_aware', 'raw_random', 'raw_rewire_inspired'}
 CORPUS_LEAF = 'tokenized'   # <data_root>/<corpus dir>/tokenized/*.ds
 
 
@@ -126,13 +136,21 @@ def main():
         die(f'unknown cluster {args.cluster!r}; have {sorted(prof["clusters"])}')
     c = prof['clusters'][args.cluster]
 
+    cfg = yaml.safe_load(args.template.read_text())
+    run_name = cfg['general']['run']
+    setting = run_name.rsplit('_', 2)[0]
+    raw = setting in RAW_SETTINGS
+
     # --- split rule: by seed, never by setting -------------------------------------------
-    assign = prof.get('seed_assignment', {})
+    # The raw baselines are the one sanctioned exception: they run on their own cluster, so
+    # they are assigned by `baseline_seed_assignment` and never share a split with the grid.
+    assign_key = 'baseline_seed_assignment' if raw else 'seed_assignment'
+    assign = prof.get(assign_key, {})
     if args.seed not in assign:
-        die(f'seed {args.seed} has no entry in seed_assignment')
+        die(f'seed {args.seed} has no entry in {assign_key}')
     if assign[args.seed] != args.cluster:
-        die(f'seed {args.seed} is assigned to cluster {assign[args.seed]!r}, refusing to '
-            f'render it for {args.cluster!r}. The grid splits by SEED only — all six '
+        die(f'seed {args.seed} is assigned to cluster {assign[args.seed]!r} in {assign_key}, '
+            f'refusing to render it for {args.cluster!r}. The grid splits by SEED only — all '
             f'settings of a seed must run on one cluster.')
 
     # --- the profile must actually be filled in ------------------------------------------
@@ -161,13 +179,18 @@ def main():
             used.setdefault(int(m), []).append(f'seed {sd} -> {cl}')
     if len(used) > 1:
         lines = '; '.join(f'mbs={m}: {", ".join(v)}' for m, v in sorted(used.items()))
-        die(f'the clusters in seed_assignment disagree about micro_batch_size ({lines}). '
+        die(f'the clusters in {assign_key} disagree about micro_batch_size ({lines}). '
             f'mbs changes the objective, not just rounding — every run in the grid must use '
             f'the same value. Pick one that fits the smallest card in use and set it on all '
             f'of them.')
 
     # --- will this mbs actually fit the cards? ----------------------------------------------
-    mm, hbm = prof.get('memory_model'), c.get('hbm_gib')
+    recompute = bool(c.get('recompute_layer', False))
+    mm = prof.get('memory_model_recompute' if recompute else 'memory_model')
+    hbm = c.get('hbm_gib')
+    if recompute and not mm:
+        die(f'cluster {args.cluster!r} sets recompute_layer but memory_model_recompute is not '
+            f'filled in; measure it before rendering.')
     if mm and hbm:
         peak = mm['static_gib'] + mm['per_micro_batch_seq_gib'] * mbs
         budget = float(hbm) * mm['reserve_frac']
@@ -183,8 +206,6 @@ def main():
         print(f'render_config: NOTE dp*tp*pp = {dp*int(c["tp"])*int(c["pp"])} does not fill '
               f'whole {c["gpus_per_node"]}-GPU nodes', file=sys.stderr)
 
-    cfg = yaml.safe_load(args.template.read_text())
-
     for section, keys in OWNED.items():
         present = [k for k in keys if isinstance(cfg.get(section), dict) and k in cfg[section]]
         if present:
@@ -197,6 +218,7 @@ def main():
         'dp': dp, 'tp': int(c['tp']), 'pp': int(c['pp']),
         'expert_parallel_size': 1, 'pp_engine': '1f1b',
         'tp_mode': 'REDUCE_SCATTER', 'tp_linear_async_communication': True,
+        'recompute_layer': recompute,
     }
     cfg['tokens']['micro_batch_size'] = mbs
     cfg['tokens']['batch_accumulation_per_replica'] = accum
@@ -216,7 +238,8 @@ def main():
     # so entity/tags can only come from the environment. If WANDB_ENTITY is unset, wandb falls
     # back to whichever account holds the cached credential on that machine — which is exactly
     # how a run silently lands in a personal default project. Hence: refuse without it.
-    wb = prof.get('wandb') or {}
+    # A cluster may override the top-level wandb block (skipjack_h100 logs online to the owner).
+    wb = {**(prof.get('wandb') or {}), **(c.get('wandb') or {})}
     mode = wb.get('mode', 'offline')
     if mode not in ('online', 'offline'):
         die(f'wandb.mode must be online|offline, got {mode!r}')
@@ -246,8 +269,7 @@ def main():
                 f'explicit entity, wandb logs to whatever cached credential exists on the '
                 f'machine.')
 
-    run_name = cfg['general']['run']
-    setting, seedpart, kind = run_name.rsplit('_', 2)[0], f'seed{args.seed}', run_name.rsplit('_', 1)[1]
+    seedpart, kind = f'seed{args.seed}', run_name.rsplit('_', 1)[1]
 
     # --- dataset_folder: composed, never copied ---------------------------------------------
     data_root = prof.get('data_root')
@@ -278,7 +300,14 @@ def main():
         die('template already sets checkpoints.checkpoints_path — composed from ckpt_root.')
     cfg.setdefault('tokenizer', {})['tokenizer_name_or_path'] = str(tok_path)
 
-    trunk_dir = Path(ckpt_root) / f'{setting}_{seedpart}_trunk'
+    # Layout of the checkpoints the grid actually produced (rewrite-1p5b on /projects):
+    #     <ckpt_root>/seed<S>/<setting>/<trunk|ep1|ep2|ep3>/<setting>/seed<S>/<step>/
+    # nanotron writes <step>/ directly under checkpoints_path, so checkpoints_path is the
+    # .../<setting>/seed<S> leaf.
+    def chain_dir(k):
+        return Path(ckpt_root) / seedpart / setting / k / setting / seedpart
+
+    trunk_dir = chain_dir('trunk')
     if kind.startswith('trunk'):
         # All three segments share ONE directory and resume via latest.txt, so a segment
         # boundary and a mid-segment crash-restart use the same mechanism. Pre-seed step 0.
@@ -289,7 +318,7 @@ def main():
         # latest step (12875) instead of its own branch point. The step is the branch's own
         # lr_decay_starting_step by construction, so the two cannot drift apart.
         branch_step = cfg['optimizer']['learning_rate_scheduler']['lr_decay_starting_step']
-        ckpt_path = Path(ckpt_root) / f'{setting}_{seedpart}_{kind}'
+        ckpt_path = chain_dir(kind)
         resume = trunk_dir / str(branch_step)
     cfg.setdefault('checkpoints', {})['checkpoints_path'] = str(ckpt_path)
     cfg['checkpoints']['resume_checkpoint_path'] = str(resume)
@@ -314,6 +343,9 @@ def main():
         ]
     else:
         env_lines += [f'export WANDB_ENTITY={wb["entity"]}']
+        if wb.get('dir'):
+            # online runs still write run files locally; keep them off the compute node's cwd
+            env_lines += [f'export WANDB_DIR={wb["dir"]}']
     env_lines += [
         f'export WANDB_RUN_GROUP={setting}_{seedpart}',   # one group per (setting,seed) chain
         f'export WANDB_JOB_TYPE={kind}',
@@ -325,7 +357,8 @@ def main():
     banner = (f'# RENDERED by tools/render_config.py — do not edit.\n'
               f'# template : {args.template}\n'
               f'# cluster  : {args.cluster}  (dp={dp} tp={c["tp"]} pp={c["pp"]} '
-              f'mbs={mbs} accum={accum}, {c["gpus_per_node"]} GPU/node)\n'
+              f'mbs={mbs} accum={accum} recompute_layer={recompute}, '
+              f'{c["gpus_per_node"]} GPU/node)\n'
               f'# seed     : {args.seed}  -> assigned cluster {assign[args.seed]}\n'
               f'# global batch: {mbs} x {accum} x {dp} = {seq_per_step} seq '
               f'= {tok_per_step:,} tokens/step  [INVARIANT]\n'

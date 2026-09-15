@@ -64,7 +64,7 @@ sequence_length: 2048
 # re-download.
 #
 # tools/assert_invariants.py verifies every resolved path by token count before any GPU time.
-data_root: null               # <- FILL IN, e.g. /shared/scratch/kys/nanotron_tokenized
+data_root: /projects/bvandur1/zhuicon1/kys/nanotron_tokenized   # skipjack (JHU); HF snapshot + locally built raw_* corpora
 
 # The other two path roots. Templates contain NO absolute paths at all, so these three fields
 # plus wandb.dir are the complete set of locations a deployer supplies.
@@ -77,9 +77,10 @@ data_root: null               # <- FILL IN, e.g. /shared/scratch/kys/nanotron_to
 #                   was tokenized under. Run tools/fix_ds_metadata.py once after
 #                   downloading — HANDOVER.md §9.2 — or this value cannot be made to
 #                   validate.
-#   ckpt_root       where checkpoints are written. render_config.py composes
-#                     <ckpt_root>/<setting>_seed<n>_trunk        (all 3 trunk segments share it)
-#                     <ckpt_root>/<setting>_seed<n>_<ep1|ep2|ep3>
+#   ckpt_root       where checkpoints are written. render_config.py composes the layout the
+#                   grid's checkpoints actually live in (rewrite-1p5b on /projects):
+#                     <ckpt_root>/seed<n>/<setting>/trunk/<setting>/seed<n>        (all 3 trunk segments share it)
+#                     <ckpt_root>/seed<n>/<setting>/<ep1|ep2|ep3>/<setting>/seed<n>
 #                   and points each branch's resume at <trunk>/<lr_decay_starting_step>.
 #
 # Why these are not baked into the templates either: a wrong resume_checkpoint_path is the
@@ -87,9 +88,8 @@ data_root: null               # <- FILL IN, e.g. /shared/scratch/kys/nanotron_to
 # checkpoint found" at INFO and returns None, so nanotron starts from RANDOM INIT. A cooldown
 # branch would run its 476 steps and finish normally having annealed noise. Reserve
 # ~5.3 TB under ckpt_root (2.3 TB after pruning trunk restart points).
-tokenizer_path: null          # <- FILL IN, normally <data_root>/tokenizer
-                              #    e.g. /shared/scratch/kys/nanotron_tokenized/tokenizer
-ckpt_root: null               # <- FILL IN, e.g. /shared/scratch/kys/checkpoints
+tokenizer_path: /projects/bvandur1/zhuicon1/kys/nanotron_tokenized/tokenizer
+ckpt_root: /projects/bvandur1/zhuicon1/checkpoints/rewrite-1p5b
 
 # wandb. The grid runs OFFLINE and is synced afterwards by whoever should own the runs.
 #
@@ -111,7 +111,7 @@ wandb:
   # survives the job AND is readable from wherever the sync eventually happens. Node-local
   # /tmp is the classic way to lose an entire grid's logs — the renderer refuses a null value
   # for offline mode rather than letting wandb default to the cwd.
-  dir: null                   # <- collaborator fills in, e.g. /shared/scratch/kys/wandb
+  dir: /projects/bvandur1/zhuicon1/kys/wandb
 
 # Peak HBM model fitted to the measured H100 run (mbs=4: 28.1 GiB steady, 48.5 GiB peak
 # allocated, 51.6 GiB peak reserved of 80 GB). render_config.py uses this to refuse an
@@ -121,7 +121,124 @@ memory_model:
   per_micro_batch_seq_gib: 5.10
   reserve_frac: 0.90          # refuse above 90% of card HBM (allocator fragmentation headroom)
 
+# Same shape, for clusters with recompute_layer: true. Fitted to the one-H100 probe, skipjack
+# job 424229 (2026-09-15, zero_stage 0, seq 2048): peak allocated 37.7 GiB at mbs 16 and
+# 49.6 GiB at mbs 32 with full layer recomputation -> 0.744 GiB per micro-batch sequence on top
+# of ~25.8 GiB static (25.9 GiB steady-state "Memory usage" in the same log).
+memory_model_recompute:
+  static_gib: 25.8
+  per_micro_batch_seq_gib: 0.744
+  reserve_frac: 0.90
+
 clusters:
+
+  kys_grid_1p5b:
+    # What the 1.5B grid ACTUALLY ran with, read from the config.yaml inside every one of the
+    # 54 released checkpoints under <ckpt_root> (2026-09-15): dp 4 / tp 1 / pp 1,
+    # micro_batch_size 32, batch_accumulation_per_replica 8, zero_stage 0 — in 53 of 54.
+    # The exception is seed42/quality_base (ep1..ep3): micro_batch_size 16, accum 16.
+    # The GPU type is not recorded in the checkpoints (hbm_gib left null, so no memory check),
+    # and neither the h200 dp 8 layout below nor mbs 16 is what produced the released models.
+    arch: null
+    hbm_gib: null
+    gpus_per_node: 4          # dp 4 on one node; node size itself not recorded
+    dp: 4
+    tp: 1
+    pp: 1
+    micro_batch_size: 32
+    zero_stage: 0
+    slurm:
+      partition: null
+      nodes: 1
+      gres: null
+      time: null
+
+  skipjack_h100:
+    # THIS machine (JHU skipjack). VERIFIED 2026-09-15:
+    #   sinfo / scontrol show partition h100 : gh[101-132], gpu:h100:4, 128 CPU, MaxTime 3-00:00:00,
+    #     MaxCPUsPerNode 124, DefMemPerCPU=MaxMemPerCPU 12000M, PreemptMode REQUEUE, AllowAccounts jhu
+    #   sacctmgr show assoc user=zhuicon1 : bvandur1_blabscify / qos jhu2 (gres/gpu=32)
+    #   sbatch --test-only -p h100 -A bvandur1_blabscify -q jhu2 --gres=gpu:h100:4 --time=3-00:00:00 : accepted
+    # micro_batch_size 32 + full layer recomputation, chosen from the one-H100 probe (job 424229,
+    # 64 seq/step, steady state steps 2-12):
+    #     mbs 4,  no recompute : 3.26 s/it, 46.8 GiB peak allocated
+    #     mbs 16, recompute    : 4.02 s/it, 37.7 GiB
+    #     mbs 32, recompute    : 4.02 s/it, 49.6 GiB  (55.3 GiB reserved of 80)
+    # mbs 32 matches the grid (kys_grid_1p5b) exactly, so the raw baselines share the counterparts'
+    # masked_mean weighting; recompute costs +23% time over mbs 4 and changes no math.
+    # mbs 32 WITHOUT recompute needs ~191 GiB (memory_model above) and cannot run here.
+    arch: sm_90
+    hbm_gib: 74.5             # 80 GB
+    gpus_per_node: 4
+    dp: 4
+    tp: 1
+    pp: 1
+    micro_batch_size: 32      # -> accum = 1024 / (32 * 4) = 8, identical to the grid
+    recompute_layer: true
+    zero_stage: 0
+    slurm:
+      partition: h100
+      account: bvandur1_blabscify
+      qos: jhu2
+      nodes: 1
+      gres: "gpu:h100:4"
+      cpus_per_task: 32
+      time: "3-00:00:00"
+    # Per-cluster wandb override (merged over the top-level `wandb:` block by render_config.py).
+    # The raw baselines log ONLINE, directly to the owner's entity — the owner runs them here with
+    # their own login (verified 2026-09-15: wandb.Api() authenticates as imwytro, default entity
+    # imwytro-johns-hopkins-university), so the offline-then-sync handoff does not apply.
+    wandb:
+      mode: online
+      entity: imwytro-johns-hopkins-university
+
+  marc-cluster:
+    # TEMPLATE for the external cluster that trains the raw-selected baselines. Every field is
+    # null on purpose: the operator there fills them, then runs
+    #     python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed <S>
+    # which re-renders configs/1.5B-baseline-seed<S>/templates/ with these values (all renderer
+    # guards apply: global batch, memory fit, seed assignment) into configs/1.5B-baseline-seed<S>/filled/.
+    # See configs/1.5B-baseline/RUNBOOK.md. Nothing here may be left null except where marked optional.
+    #
+    # --- paths on that cluster ---
+    data_root: null           # local_dir of snapshot_download("blab-jhu/KYS-Pre-Rewritten", repo_type="dataset");
+                              #   must contain raw_diversity_oriented/tokenized/, raw_disagreement_aware/tokenized/,
+                              #   raw_random/tokenized/, raw_rewire_inspired/tokenized/ (16 x .ds/.ds.index/.ds.metadata each)
+    tokenizer_path: null      # the llama2 tokenizer DIRECTORY (tokenizer/ of wytro/Know-Your-Sources-tokenized);
+                              #   run tools/fix_ds_metadata.py on every tokenized/ folder with this exact path
+    ckpt_root: null           # checkpoint root; runs write <ckpt_root>/seed<S>/<setting>/<trunk|epN>/<setting>/seed<S>/<step>/
+    init_root: null           # local_dir of snapshot_download("wytro/Know-Your-Sources-init"); holds _init_1.5B_seed<S>/0/
+    repo_dir: null            # absolute path of this nanotron checkout (branch huicong-dev) on the cluster
+    env_activate: null        # file sourced to activate the training env built per INSTALL.md, e.g. /path/env/bin/activate
+    python_include: null      # OPTIONAL: a Python 3.11 include dir containing Python.h, only if compute nodes lack
+                              #   Python headers (Triton and nanotron's dataset helper compile against it; INSTALL.md)
+    # --- hardware and parallelism ---
+    arch: null                # GPU compute capability tag, e.g. sm_90 (H100/H200), sm_100 (B200/B300)
+    hbm_gib: null             # usable GPU memory in GiB (enables the renderer's memory-fit check)
+    gpus_per_node: null       # GPUs on one node
+    dp: null                  # data-parallel ranks (the grid used 4); tp and pp stay 1
+    tp: null                  # 1
+    pp: null                  # 1
+    micro_batch_size: null    # 32 if it fits (the grid's value; mbs changes the objective, SOP.md §1). Otherwise
+                              #   the largest that fits; accum is derived as 1024 / (mbs * dp). Record deviations.
+    recompute_layer: null     # true or false. mbs 32 needs true on 80 GB cards (probe: 49.6 GiB peak with it,
+                              #   ~191 GiB estimated without); recompute changes speed, not the math
+    zero_stage: null          # 0 (the grid's value)
+    # --- logging ---
+    wandb:
+      mode: null              # online | offline
+      project: null           # zhc-1p5b-10b-wsd (must match general.project in the templates)
+      entity: null            # online only: imwytro-johns-hopkins-university if you were given a key, else your entity
+      dir: null               # shared storage for wandb run files (offline runs are synced from here)
+    # --- SLURM (read by tools/kys_raw/plan_submit.py) ---
+    slurm:
+      partition: null
+      account: null           # optional if the cluster has a default account
+      qos: null               # optional
+      nodes: 1
+      gres: null              # e.g. "gpu:4" or "gpu:h100:4"; must provide dp * tp * pp GPUs on one node
+      cpus_per_task: null
+      time: null              # partition wall limit, e.g. "3-00:00:00"; segments requeue and resume if they hit it
 
   h200:
     # Collaborator's cluster. H200 SXM = same GH100 die as H100 (sm_90, 132 SM), 141 GB HBM3e.
@@ -161,7 +278,8 @@ clusters:
       time: null
 
   h100:
-    # Our DSAI nodes. VERIFIED 2026-08-09 via `sinfo -N -o "%P %N %c %m %G"`:
+    # The OLD DSAI cluster (partitions h100/nvl, nodes h01-h16/n01-n16) — not skipjack; see
+    # skipjack_h100 above for this machine. VERIFIED 2026-08-09 via `sinfo -N -o "%P %N %c %m %G"`:
     #   nvl  n01-n16 : gpu:h100:4, 128 CPU, 1547000 MB   <- 4 GPUs/node, NOT 8
     #   h100 h01-h16 : gpu:h100:4, 128 CPU, 1547000 MB
     # 32 nodes / 128 H100. dp=4 is exactly one whole node.
@@ -212,6 +330,16 @@ clusters:
 #   43: h200
 #   44: h200
 seed_assignment:
-  42: h200
-  43: h200
-  44: h200
+  42: kys_grid_1p5b
+  43: kys_grid_1p5b
+  44: kys_grid_1p5b
+
+# Raw-selected baselines (4 settings, configs/1.5B-baseline-seed{42,43,44}) only. They cannot share a cluster
+# with their rewritten counterparts, which ran on kys_grid_1p5b, so render_config.py assigns them
+# here instead and checks mbs uniformity among these clusters alone. Training runs on
+# marc-cluster (configs/1.5B-baseline/RUNBOOK.md); skipjack_h100 was used for the local probe,
+# sanity runs and the reference renders in configs/1.5B-baseline-seed42/rendered-skipjack_h100/.
+baseline_seed_assignment:
+  42: marc-cluster
+  43: marc-cluster
+  44: marc-cluster

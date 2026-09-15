@@ -8,7 +8,7 @@
 #
 # steps        : 8584 -> 12875
 # LR schedule  : warmup 0->500 linear to 0.0005; constant; decay from step 12875 over 1430 steps -> 0
-# resume       : trunk folder <ckpt_root>/{setting}_seed{seed}_trunk: latest.txt auto-resume. Pre-seed step 0 from _init_1.5B_seed<S>/0.
+# resume       : trunk folder <ckpt_root>/seed<S>/<setting>/trunk/<setting>/seed<S>: latest.txt auto-resume. Pre-seed step 0 from _init_1.5B_seed<S>/0.
 general:
   project: zhc-1p5b-10b-wsd
   run: quality_first_seed44_trunk3

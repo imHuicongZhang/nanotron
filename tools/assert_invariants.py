@@ -4,7 +4,8 @@
 Two invariants hold across all 72 runs of the grid, and both must be true or the runs are
 not comparable to each other:
 
-    micro_batch_size == 16                  (pinned for NUMERICAL comparability, not speed)
+    micro_batch_size == 32                  (pinned for NUMERICAL comparability, not speed;
+                                             the value in 53 of the 54 released checkpoints)
     mbs * accum * dp * seq_len == 2,097,152 tokens/step
 
 The second is what most people check. The first is the one that actually gets broken,
@@ -34,8 +35,40 @@ from pathlib import Path
 
 import yaml
 
-EXPECTED_MBS = 16
+# What the grid actually ran with, from the config.yaml of all 54 released checkpoints
+# (2026-09-15): mbs 32 in 53 of 54 (seed42/quality_base ran mbs 16). The 16 previously pinned
+# here was never the grid's value. See deploy/clusters.yaml `kys_grid_1p5b`.
+EXPECTED_MBS = 32
+# Raw-selected baselines (configs/1.5B-baseline-seed*) use the grid's mbs too; on 80 GB cards that
+# needs full layer recomputation (probe job 424229, configs/1.5B-baseline/README.md). A cluster that
+# cannot fit mbs 32 passes --expected-mbs N and must report the deviation (RUNBOOK.md).
+RAW_SETTINGS = {'raw_diversity_oriented', 'raw_disagreement_aware', 'raw_random', 'raw_rewire_inspired'}
+EXPECTED_MBS_RAW = 32
 EXPECTED_TOK_PER_STEP = 2_097_152
+MBS_OVERRIDE = None     # set by --expected-mbs
+
+# Site-specific values in the shipped configs are {{NAME}} markers (tools/kys_raw/render_placeholders.py).
+PLACEHOLDER = re.compile(r"\{\{[A-Z][A-Z0-9_]*\}\}")
+
+
+def expected_mbs(cfg):
+    if MBS_OVERRIDE is not None:
+        return MBS_OVERRIDE
+    setting = cfg.get("general", {}).get("run", "").rsplit("_", 2)[0]
+    return EXPECTED_MBS_RAW if setting in RAW_SETTINGS else EXPECTED_MBS
+
+
+def check_placeholders(path: Path):
+    """Refuse any config (or its companion .env) that still carries an unfilled {{MARKER}}."""
+    errs = []
+    for p in (path, path.with_suffix(".env")):
+        if not p.is_file():
+            continue
+        for i, line in enumerate(p.read_text().splitlines(), 1):
+            for m in PLACEHOLDER.findall(line):
+                errs.append(f"{p.name}:{i} still contains placeholder {m}")
+    print(f"placeholders: {'none' if not errs else f'{len(errs)} remaining'}")
+    return errs
 
 # Corpus identity, keyed by the corpus subdirectory name — the unified names, which are what
 # `data_root` holds when it is a snapshot of wytro/Know-Your-Sources-tokenized. See the
@@ -60,6 +93,11 @@ EXPECTED_CORPUS = {
     'wrap_inspired':      (10_000_002_419, 16),
     'rewire_inspired':    (10_000_002_683, 16),
     'disagreement_aware': (10_000_002_333, 16),
+    # Raw-selected baselines, built locally. None until tokenized and counted: refuses to pass.
+    'raw_diversity_oriented': None,
+    'raw_disagreement_aware': None,
+    'raw_random':             None,
+    'raw_rewire_inspired':    None,
 }
 
 # nanotron/trainer.py logs this banner once at startup:
@@ -96,8 +134,12 @@ def check_config(path: Path):
     tok = mbs * accum * dp * seq
     print(f"config  : {path}")
     print(f"          mbs={mbs} accum={accum} dp={dp} seq={seq} -> {tok:,} tokens/step")
-    if mbs != EXPECTED_MBS:
-        errs.append(f"micro_batch_size is {mbs}, expected {EXPECTED_MBS}")
+    want_mbs = expected_mbs(cfg)
+    if want_mbs is None:
+        errs.append("micro_batch_size for the raw baselines has not been chosen yet "
+                    "(EXPECTED_MBS_RAW is None)")
+    elif mbs != want_mbs:
+        errs.append(f"micro_batch_size is {mbs}, expected {want_mbs}")
     if tok != EXPECTED_TOK_PER_STEP:
         errs.append(f"tokens/step is {tok:,}, expected {EXPECTED_TOK_PER_STEP:,}")
     if mbs * accum * dp != cfg["tokens"].get("_gbs", mbs * accum * dp):
@@ -216,10 +258,22 @@ def check_corpus(cfg_path: Path):
                 errs.append(f"{m}: metadata line 1 has no '|' separator: {line1!r}")
                 continue
             seen.setdefault(line1.rsplit("|", 1)[0], []).append(m.name)
-        exp = EXPECTED_CORPUS.get(corpus)
-        if exp is None:
+        if corpus not in EXPECTED_CORPUS:
             errs.append(f"{corpus}: no expected token count on record — unknown corpus name")
             continue
+        exp = EXPECTED_CORPUS[corpus]
+        if exp is None:
+            # Raw-selected corpora are tokenized by the consumer from blab-jhu/KYS-Pre-Rewritten; the
+            # expected total ships in that repo's manifest.json, at <data_root>/manifest.json.
+            man = p.parent.parent / "manifest.json"
+            try:
+                rec = __import__("json").loads(man.read_text())["settings"][corpus]
+                exp = (int(rec["expected_total_tokens"]), int(rec["shards_after_tokenization"]))
+                print(f"          expected token total from {man}")
+            except Exception:
+                errs.append(f"{corpus}: no recorded token count — expected {man} (blab-jhu/KYS-Pre-Rewritten "
+                            f"manifest.json) with settings.{corpus}.expected_total_tokens")
+                continue
         exp_tok, exp_shards = exp
         print(f"          {len(ds)} shards, {total:,} tokens (expected {exp_tok:,})")
         if len(ds) != exp_shards:
@@ -353,7 +407,7 @@ def check_resume(cfg_path: Path):
     return errs
 
 
-def check_log(path: Path, at_step: int, expect):
+def check_log(path: Path, at_step: int, expect, want_mbs):
     mbs, accum, dp, seq = expect
     errs = []
     banner = None
@@ -370,8 +424,8 @@ def check_log(path: Path, at_step: int, expect):
     else:
         b_mbs, b_accum, b_cp, b_seq, b_gbs = banner
         print(f"log     : mbs={b_mbs} grad_accum={b_accum} cp={b_cp} seq={b_seq} gbs={b_gbs}")
-        if b_mbs != EXPECTED_MBS:
-            errs.append(f"log reports micro_batch_size {b_mbs}, expected {EXPECTED_MBS}")
+        if b_mbs != want_mbs:
+            errs.append(f"log reports micro_batch_size {b_mbs}, expected {want_mbs}")
         if (b_mbs, b_accum, b_seq) != (mbs, accum, seq):
             errs.append(f"log banner {(b_mbs, b_accum, b_seq)} disagrees with config {(mbs, accum, seq)}")
         if b_gbs * b_seq != EXPECTED_TOK_PER_STEP:
@@ -403,7 +457,21 @@ def main():
     ap.add_argument("--skip-env", action="store_true",
                     help="skip the wandb/environment preflight (use when rendering on a host "
                          "that will not run the training)")
+    ap.add_argument("--expected-mbs", type=int,
+                    help="accept this micro_batch_size instead of the grid's 32 — only for a cluster "
+                         "that cannot fit 32; the deviation changes masked_mean weighting and must "
+                         "be reported")
     args = ap.parse_args()
+
+    placeholder_errs = check_placeholders(args.config)
+    if placeholder_errs:
+        fail(placeholder_errs + ["fill them with tools/kys_raw/fill_placeholders.py (RUNBOOK.md) before running"])
+    global MBS_OVERRIDE
+    if args.expected_mbs is not None:
+        MBS_OVERRIDE = args.expected_mbs
+        if args.expected_mbs != EXPECTED_MBS:
+            print(f"WARNING : --expected-mbs {args.expected_mbs} deviates from the grid's micro_batch_size "
+                  f"{EXPECTED_MBS}; this changes masked_mean per-token weighting (SOP.md §1). Report it.")
 
     errs, expect = check_config(args.config)
     if not args.skip_env:
@@ -412,14 +480,15 @@ def main():
         errs += check_corpus(args.config)
     if args.check_resume:
         errs += check_resume(args.config)
+    want_mbs = expected_mbs(yaml.safe_load(args.config.read_text()))
     if args.log:
-        errs += check_log(args.log, args.at_step, expect)
+        errs += check_log(args.log, args.at_step, expect, want_mbs)
     if errs:
         fail(errs)
     extra = [] if args.skip_corpus else ["corpus verified by token count", "tokenizer path matches metadata"]
     if args.check_resume:
         extra.append("resume path verified")
-    print(f"OK: micro_batch_size={EXPECTED_MBS}, {EXPECTED_TOK_PER_STEP:,} tokens/step"
+    print(f"OK: micro_batch_size={want_mbs}, {EXPECTED_TOK_PER_STEP:,} tokens/step"
           + (", " + ", ".join(extra) if extra else ""))
 
 

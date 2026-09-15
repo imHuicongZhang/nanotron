@@ -44,7 +44,53 @@ pip install "datatrove[io]==0.5.0" "numpy==2.0.2" "huggingface_hub<1.0" \
 
 # 4. nanotron FROM THIS FORK (NOT huggingface/nanotron — see §4)
 pip install -e /path/to/nanotron-kys
+
+# 5. grouped_gemm — required even for the dense Llama grid (see note below)
+mkdir -p "$PWD/.tmp"
+TMPDIR="$PWD/.tmp" TORCH_CUDA_ARCH_LIST=9.0 pip install --no-cache-dir --no-build-isolation \
+    "git+https://github.com/fanshiqing/grouped_gemm@efe8c40eaf4c8ef57191e0ea9aa4117aa5b1a8f2"
 ```
+
+**Why grouped_gemm.** `src/nanotron/nn/moe.py:19` imports `grouped_gemm.ops` unconditionally
+(upstream SmolLM3 code, present at the pin), and it is reached from `run_train.py`'s import
+chain, so a missing package kills every run at import — before the GPU is touched — with
+`RuntimeError: Grouped GEMM is not available`. Found 2026-09-15 on skipjack. The pinned commit
+resolves to `nv_grouped_gemm 1.1.4.post8`, whose `setup.py` downloads the prebuilt
+`cu12torch2.8cxx11abiTRUE-cp311` release wheel rather than compiling. It then renames that
+wheel into the pip cache, which fails with `Invalid cross-device link` when `TMPDIR` and the
+cache are on different filesystems — hence `--no-cache-dir` and a same-filesystem `TMPDIR`.
+
+**Python headers on compute nodes.** Two things compile C against `Python.h` at run time, and
+skipjack's H100 nodes ship no `/usr/include/python3.11`: nanotron's dataset index helper (below)
+and Triton 3.4, which JIT-builds its CUDA driver stub `cuda_utils.c` with gcc the first time a
+Triton kernel runs. Triton passes `-I<sysconfig include>` (the missing system dir) and offers no
+override, so point gcc at any Python 3.11 include directory through the environment in every
+GPU job — the launcher `deploy/slurm/kys_segment.sbatch` does this:
+
+```bash
+export C_INCLUDE_PATH=<python3.11 include dir containing Python.h>${C_INCLUDE_PATH:+:$C_INCLUDE_PATH}
+```
+
+Without it the run builds the model, loads data, and dies at the first training step with
+`cuda_utils.c: fatal error: Python.h: No such file or directory`.
+
+**Prebuild the dataset index helper where compute nodes lack Python headers.** At startup
+`TokenizedBytes` calls `compile_helper()` (`src/nanotron/data/nemo_dataset/dataset_utils.py`),
+which runs `make` in `src/nanotron/data/nemo_dataset/` to build `helpers$(python3-config
+--extension-suffix)` with pybind11. On a node without the interpreter's development headers
+(no `/usr/include/python3.11/Python.h`, as on skipjack's H100 nodes) that compile fails and every
+run dies after model build with `fatal error: Python.h: No such file or directory`. `make` only
+rebuilds when `helpers.cpp` is newer than the `.so`, so build it once on shared storage with any
+matching-minor-version headers, and the per-rank `make` becomes a no-op:
+
+```bash
+cd src/nanotron/data/nemo_dataset
+make -B CPPFLAGS="-I<python3.11 include dir containing Python.h> $(python -m pybind11 --includes | tr ' ' '\n' | grep pybind11)"
+make -n    # must print "make: Nothing to be done for 'default'."
+```
+
+The `.so` is gitignored. A fresh checkout can give `helpers.cpp` and a copied `.so` the same
+second but different sub-second mtimes, which is enough for `make` to try (and fail) again.
 
 **Why those pins.** `transformers==4.46.3` and `tokenizers==0.20.3` both require
 `huggingface_hub<1.0`; datatrove `main` (0.9.0) requires `huggingface-hub>=1.5.0` and would
@@ -140,6 +186,33 @@ python tools/hash_init_checkpoint.py <init_root>/_init_1.5B_seedNN/0 \
 
 The `.hash.json` manifests ship at the root of the init repo, so there is no separate artifact
 to obtain; see `HANDOVER.md` §5 and §9.
+
+### 3.4 20-step smoke test (raw-selected baselines)
+
+Run this once per new cluster before submitting any segment. It uses the real data, the seed-42
+init, the filled config and the global batch, so it fails on anything a real segment would fail
+on (missing `grouped_gemm`, Triton or dataset-helper compiles without Python headers, a tokenizer
+path that disagrees with `.ds.metadata`, an mbs that does not fit).
+
+```bash
+python tools/kys_raw/smoke_20steps.py \
+    --config configs/1.5B-baseline-seed42/filled/raw_diversity_oriented_seed42_trunk1.yaml \
+    --init <init_root>/_init_1.5B_seed42/0 --workdir <scratch dir>
+# then run the torchrun command it prints, on one node with dp x tp x pp GPUs
+```
+
+It must reach step 20 without error. Reference `lm_loss` on skipjack (4 x H100, dp 4, mbs 32,
+accum 8, full recomputation):
+
+| step | lm_loss |
+|---:|---:|
+| 1 | TBD |
+| 10 | TBD |
+| 20 | TBD |
+
+Matching to about 0.01 confirms the stack reproduces ours (different dp, GPU generation or
+kernels move the last digit; a different mbs moves it a little more). Record the steady-state
+`time_per_iteration_ms` — it is the basis for your segment wall-time estimates.
 
 Please report back: **GPUs per node, how many nodes we can hold concurrently, and the SLURM
 wall-clock limit.** Those are the last blanks in `deploy/clusters.yaml`.

@@ -1,0 +1,94 @@
+# RENDERED by tools/render_config.py — do not edit.
+# template : /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys/configs/1.5B-baseline-seed43/templates/raw_random_seed43_trunk2.yaml
+# cluster  : {{CLUSTER}}  (dp=4 tp=1 pp=1 mbs=32 accum=8 recompute_layer={{RECOMPUTE_LAYER}}, 4 GPU/node)
+# seed     : 43  -> assigned cluster {{CLUSTER}}
+# global batch: 32 x 8 x 4 = 1024 seq = 2,097,152 tokens/step  [INVARIANT]
+# corpus   : setting raw_random -> raw_random/tokenized
+#            composed from data_root={{DATA_ROOT}}
+general:
+  project: zhc-1p5b-10b-wsd
+  run: raw_random_seed43_trunk2
+  seed: 43
+model:
+  ddp_bucket_cap_mb: 25
+  dtype: bfloat16
+  init_method:
+    std: 0.02
+  make_vocab_size_divisible_by: 1
+  model_config:
+    is_llama_config: true
+    hidden_size: 2048
+    num_hidden_layers: 28
+    num_attention_heads: 16
+    num_key_value_heads: 16
+    intermediate_size: 5632
+    vocab_size: 32000
+    tie_word_embeddings: true
+    hidden_act: silu
+    max_position_embeddings: 2048
+    rope_theta: 10000.0
+    rope_interleaved: false
+    rms_norm_eps: 1.0e-05
+    attention_bias: false
+    bos_token_id: 1
+    eos_token_id: 2
+    pad_token_id: null
+    pretraining_tp: 1
+    use_cache: false
+tokenizer:
+  tokenizer_name_or_path: '{{TOKENIZER_PATH}}'
+tokens:
+  train_steps: 8583
+  val_check_interval: -1
+  limit_val_batches: 0
+  limit_test_batches: 0
+  micro_batch_size: 32
+  batch_accumulation_per_replica: 8
+  sequence_length: 2048
+data_stages:
+- name: S0_top10B
+  start_training_step: 1
+  data:
+    dataset:
+      dataset_folder:
+      - '{{DATA_ROOT}}/raw_random/tokenized'
+    num_loading_workers: 1
+    seed: 43
+checkpoints:
+  load_optimizer: true
+  load_lr_scheduler: true
+  checkpoint_interval: 1500
+  save_initial_state: false
+  save_final_state: true
+  checkpoints_path: '{{CKPT_ROOT}}/seed43/raw_random/trunk/raw_random/seed43'
+  resume_checkpoint_path: '{{CKPT_ROOT}}/seed43/raw_random/trunk/raw_random/seed43'
+optimizer:
+  weight_decay: 0.1
+  clip_grad: 1.0
+  accumulate_grad_in_fp32: true
+  learning_rate_scheduler:
+    learning_rate: 0.0005
+    lr_warmup_steps: 500
+    lr_warmup_style: linear
+    lr_decay_starting_step: 12875
+    lr_decay_style: linear
+    lr_decay_steps: 1430
+    min_decay_lr: 0.0
+  optimizer_factory:
+    adam_beta1: 0.9
+    adam_beta2: 0.95
+    adam_eps: 1.0e-08
+    name: adamW
+    torch_adam_is_fused: true
+  zero_stage: 0
+logging:
+  iteration_step_info_interval: 1
+parallelism:
+  dp: 4
+  tp: 1
+  pp: 1
+  expert_parallel_size: 1
+  pp_engine: 1f1b
+  tp_mode: REDUCE_SCATTER
+  tp_linear_async_communication: true
+  recompute_layer: '{{RECOMPUTE_LAYER}}'
