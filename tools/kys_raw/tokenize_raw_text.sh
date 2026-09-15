@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Tokenize one raw-selected corpus from the Hub's raw_text/ layout into nanotron's format.
 #
-#   tools/kys_raw/tokenize_raw_text.sh <data_root> <setting> <tokenizer_dir>
+#   tools/kys_raw/tokenize_raw_text.sh <data_root> <setting> [tokenizer_dir]
 #
 #   <data_root>       local_dir of snapshot_download("blab-jhu/KYS-Pre-Rewritten", repo_type="dataset");
-#                     holds manifest.json and raw_text/<setting>/part-000NN.parquet (16 files)
+#                     holds manifest.json, tokenizer/ and raw_text/<setting>/part-000NN.parquet (16 files)
 #   <setting>         raw_diversity_oriented | raw_disagreement_aware | raw_random | raw_rewire_inspired
-#   <tokenizer_dir>   the tokenizer DIRECTORY (tokenizer/ of wytro/Know-Your-Sources-tokenized)
+#   [tokenizer_dir]   the tokenizer DIRECTORY; default <data_root>/tokenizer (shipped in the same repo)
 #   -> <data_root>/<setting>/tokenized/000NN_unshuffled.ds{,.index,.metadata}   (16 shards)
 #
 # The parquet files are already the final corpus: anchor merged in, shuffled at the document level
@@ -15,10 +15,10 @@
 # 00000..00015 concatenate to the file order. Same recipe as the published arms: datatrove 0.5.0
 # DocumentTokenizer, llama-2 tokenizer, one </s> appended per document, no BOS.
 #
-# Steps: check the 16 files against manifest.json sha256 -> tokenize -> tools/fix_ds_metadata.py ->
-# assert 16 shards and the exact token total (manifest settings.<setting>.expected_total_tokens).
+# Steps: check the tokenizer files and the 16 parquet files against manifest.json sha256 -> tokenize ->
+# tools/fix_ds_metadata.py -> assert 16 shards and the exact token total (settings.<setting>.expected_total_tokens).
 set -euo pipefail
-ROOT="${1:?data_root}"; SETTING="${2:?setting}"; TOK="${3:?tokenizer dir}"
+ROOT="${1:?data_root}"; SETTING="${2:?setting}"; TOK="${3:-$1/tokenizer}"
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 PY="${PY:-python}"
 IN="$ROOT/raw_text/$SETTING"
@@ -26,20 +26,28 @@ OUT="$ROOT/$SETTING/tokenized"
 LOG="$ROOT/$SETTING/tokenize_logs"
 [[ -f "$TOK/tokenizer.json" ]] || { echo "no tokenizer.json in $TOK"; exit 1; }
 
-"$PY" - "$ROOT/manifest.json" "$SETTING" "$IN" <<'PY'
+"$PY" - "$ROOT/manifest.json" "$SETTING" "$IN" "$TOK" <<'PY'
 import hashlib, json, sys
 from pathlib import Path
-man, setting, d = json.load(open(sys.argv[1])), sys.argv[2], Path(sys.argv[3])
+man, setting, d, tok = json.load(open(sys.argv[1])), sys.argv[2], Path(sys.argv[3]), Path(sys.argv[4])
+
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(16 << 20):
+            h.update(chunk)
+    return h.hexdigest()
+
+for name, want in sorted(man["tokenizer"]["sha256"].items()):
+    if not (tok / name).is_file() or sha256(tok / name) != want:
+        sys.exit(f"{tok / name}: missing or sha256 mismatch with manifest.json tokenizer.sha256")
+print(f"[tok] tokenizer {tok}: {len(man['tokenizer']['sha256'])} files match manifest.json sha256")
 files = man["settings"][setting]["files"]
 have = sorted(p.name for p in d.glob("part-*.parquet"))
 if have != sorted(files) or len(have) != 16:
     sys.exit(f"{d}: expected the 16 files listed in manifest.json, found {len(have)}")
 for name, rec in sorted(files.items()):
-    h = hashlib.sha256()
-    with open(d / name, "rb") as f:
-        while chunk := f.read(16 << 20):
-            h.update(chunk)
-    if h.hexdigest() != rec["sha256"]:
+    if sha256(d / name) != rec["sha256"]:
         sys.exit(f"{d / name}: sha256 mismatch with manifest.json")
 print(f"[tok] {setting}: 16 parquet files match manifest.json sha256")
 PY

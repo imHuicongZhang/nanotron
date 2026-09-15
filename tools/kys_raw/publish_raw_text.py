@@ -57,7 +57,7 @@ INIT_REPO = 'wytro/Know-Your-Sources-init'
 INIT_ROLLING = {42: '2ede6612b2e48d7529f867f0e74ca0a7d9ba79cd635d4f803f8022d9b0113aba',
                 43: '78ab44e2b2ac954ee441ea340e35969c82cf78bf3f2266f3c8cd0590ce3b8aa3',
                 44: 'a967df1cae0538c63bf1be412d6e3db0082e75936680f98b11b9a84d49642247'}
-TOKENIZER_REPO = 'wytro/Know-Your-Sources-tokenized'
+TOKENIZER_FILES = ('tokenizer.json', 'tokenizer_config.json', 'tokenizer_report.json')
 
 
 def sha256(path: Path, buf=16 << 20) -> str:
@@ -135,6 +135,10 @@ def main():
         if not any(f.startswith(d) for f in files) or h not in files:
             sys.exit(f'init checkpoint for seed {seed} missing on {INIT_REPO} ({d}, {h}); stopping')
         init[str(seed)] = {'path': d, 'hash_manifest': h, 'parameters': 1_504_299_008, 'rolling_sha256': rolling}
+    hub = set(api.list_repo_files(REPO_ID, repo_type='dataset'))
+    missing_tok = [f for f in TOKENIZER_FILES if f'tokenizer/{f}' not in hub]
+    if missing_tok and not args.dry_run:
+        sys.exit(f'tokenizer/ incomplete on {REPO_ID} (missing {missing_tok}); upload the grid tokenizer directory first')
 
     # --- export ------------------------------------------------------------------------------------
     stage = K / 'hf_stage'
@@ -215,8 +219,8 @@ class ManifestLock:
 
 
 def _update_and_upload_manifest(api, args, K, s, stage, mpath, src, a, st, exp_docs, exp_tokens, init, rec, v):
-    tok_rev = api.repo_info(TOKENIZER_REPO, repo_type='dataset').sha
-    manifest = json.loads(mpath.read_text()) if mpath.is_file() else {}
+    tok = K / 'nanotron_tokenized' / 'tokenizer'
+    manifest =json.loads(mpath.read_text()) if mpath.is_file() else {}
     manifest.update({
         'repo': REPO_ID,
         'description': 'Raw text of the four raw-selected (unrewritten) baseline corpora for the Know-Your-Sources 1.5B grid.',
@@ -235,9 +239,11 @@ def _update_and_upload_manifest(api, args, K, s, stage, mpath, src, a, st, exp_d
                    'identical_across_arms': a['identical_across']},
         'shuffle': {'function': 'pp_io.bucketed_shuffle (projects/rewrite/10_postprocess/pp_io.py), the shuffle every published arm used',
                     'seed': 42, 'scope': 'anchor + strategy documents together'},
-        'tokenizer': {'name': 'llama-2 (llama2-unsloth), vocab 32000, 2-byte tokens', 'repo': TOKENIZER_REPO, 'repo_type': 'dataset',
-                      'revision': tok_rev, 'path': 'tokenizer/',
-                      'tokenizer.json_sha256': sha256(K / 'nanotron_tokenized' / 'tokenizer' / 'tokenizer.json')},
+        'tokenizer': {'name': 'llama-2 (llama2-unsloth), vocab 32000, 2-byte tokens', 'repo': REPO_ID, 'repo_type': 'dataset',
+                      'path': 'tokenizer/',
+                      'origin': 'tokenizer/ of wytro/Know-Your-Sources-tokenized, copied unchanged: the directory the grid was tokenized with',
+                      'sha256': {f: sha256(tok / f) for f in TOKENIZER_FILES},
+                      'tokenizer.json_sha256': sha256(tok / 'tokenizer.json')},
         'tokenization': ('done by the consumer: tools/kys_raw/tokenize_raw_text.sh (datatrove 0.5.0, </s> per document, '
                          '16 tasks, no shuffling) -> 16 shards whose concatenation is the file order; see RUNBOOK.md'),
         'init_checkpoints': {'repo': INIT_REPO, 'repo_type': 'model', 'seeds': init,

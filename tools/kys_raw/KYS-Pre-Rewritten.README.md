@@ -77,6 +77,6 @@ Code: `tools/kys_raw/` (`build_raw_sources.py`, `assemble_raw_corpus.py`, `verif
 
 ## Related
 
-- Tokenizer: `tokenizer/` of [`wytro/Know-Your-Sources-tokenized`](https://huggingface.co/datasets/wytro/Know-Your-Sources-tokenized) (revision in `manifest.json`).
+- Tokenizer: [`tokenizer/`](tokenizer) in this repo, the exact llama-2 tokenizer directory the grid was tokenized with (sha256 of each file in `manifest.json`, `tokenizer.sha256`). `tokenize_raw_text.sh` uses `<data_root>/tokenizer` by default.
 - Init checkpoints: [`wytro/Know-Your-Sources-init`](https://huggingface.co/wytro/Know-Your-Sources-init), `_init_1.5B_seed{42,43,44}/0/`, with hash manifests.
 - Training configs: `configs/1.5B-baseline-seed{42,43,44}/` and `configs/1.5B-baseline/RUNBOOK.md` in the code repo.

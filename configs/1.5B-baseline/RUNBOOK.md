@@ -14,7 +14,7 @@ Train no-rewrite controls for four source-selection strategies so the rewriting 
 - Repo: https://github.com/imHuicongZhang/nanotron, branch huicong-dev, commit: the commit recorded as `code.commit` in the data repo's manifest.json (the commit that added this runbook; a runbook cannot contain its own hash). Any later huicong-dev commit that only fills pending values in this file is equivalent.
 - Data: https://huggingface.co/datasets/blab-jhu/KYS-Pre-Rewritten, folders raw_text/raw_diversity_oriented, raw_text/raw_disagreement_aware, raw_text/raw_random, raw_text/raw_rewire_inspired, each about 10B tokens, 16 parquet files. See manifest.json for token counts and checksums.
   - The data is published as **raw text**; you tokenize it (section "Tokenizing from raw_text"). Each folder is the final corpus in training order: anchor merged in, shuffled, rows in order.
-  - Tokenizer: `tokenizer/` of https://huggingface.co/datasets/wytro/Know-Your-Sources-tokenized, at the revision in manifest.json (`tokenizer.revision`; sha256 of `tokenizer.json` alongside).
+  - Tokenizer: `tokenizer/` in the same dataset repo, the exact llama-2 tokenizer directory the grid was tokenized with (sha256 of each file in manifest.json, `tokenizer.sha256`). It downloads with the data; no other repo is needed.
 - Init checkpoints: https://huggingface.co/wytro/Know-Your-Sources-init (model repo)
   - seed 42: `_init_1.5B_seed42/0/`, hash manifest `init_1.5B_seed42.hash.json`, rolling sha256 `2ede6612b2e48d7529f867f0e74ca0a7d9ba79cd635d4f803f8022d9b0113aba`
   - seed 43: `_init_1.5B_seed43/0/`, hash manifest `init_1.5B_seed43.hash.json`, rolling sha256 `78ab44e2b2ac954ee441ea340e35969c82cf78bf3f2266f3c8cd0590ce3b8aa3`
@@ -32,27 +32,25 @@ Train no-rewrite controls for four source-selection strategies so the rewriting 
 ## Tokenizing from raw_text
 Do this once per setting, before filling configs. It needs the environment from INSTALL.md (datatrove 0.5.0) and CPU only.
 
-1. Download the data and the tokenizer:
+1. Download the data; the tokenizer comes with it, in `<data_root>/tokenizer/`:
    ```python
    from huggingface_hub import snapshot_download
    data_root = snapshot_download("blab-jhu/KYS-Pre-Rewritten", repo_type="dataset", local_dir="<data_root>")
-   snapshot_download("wytro/Know-Your-Sources-tokenized", repo_type="dataset", revision="<tokenizer.revision from manifest.json>",
-                     allow_patterns=["tokenizer/*"], local_dir="<tok_root>")
    ```
-2. Tokenize each of the four settings into 16 shards, preserving document order:
+2. Tokenize each of the four settings into 16 shards, preserving document order. The tokenizer directory defaults to `<data_root>/tokenizer`; pass it as a third argument only if you keep it elsewhere.
    ```bash
-   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_diversity_oriented <tok_root>/tokenizer
-   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_disagreement_aware <tok_root>/tokenizer
-   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_random             <tok_root>/tokenizer
-   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_rewire_inspired    <tok_root>/tokenizer
+   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_diversity_oriented
+   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_disagreement_aware
+   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_random
+   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_rewire_inspired
    ```
    For each setting the script:
-   - checks the 16 `raw_text/<setting>/part-000NN.parquet` files against the sha256 in manifest.json;
-   - runs `python tools/preprocess_data_parquet.py --tokenizer-name-or-path <tok_root>/tokenizer/tokenizer.json --eos-token "</s>" --output-folder <data_root>/<setting>/tokenized --logging-dir <data_root>/<setting>/tokenize_logs --n-tasks 16 parquet --dataset <data_root>/raw_text/<setting> --column text --glob-pattern "part-*.parquet"`. With 16 files and 16 tasks, task i reads exactly file i and nothing is shuffled, so shards `00000`…`00015` concatenate to the file order;
-   - runs `python tools/fix_ds_metadata.py --output-folder <data_root>/<setting>/tokenized --tokenizer-dir <tok_root>/tokenizer`;
+   - checks the tokenizer files against `tokenizer.sha256` and the 16 `raw_text/<setting>/part-000NN.parquet` files against the sha256 in manifest.json;
+   - runs `python tools/preprocess_data_parquet.py --tokenizer-name-or-path <data_root>/tokenizer/tokenizer.json --eos-token "</s>" --output-folder <data_root>/<setting>/tokenized --logging-dir <data_root>/<setting>/tokenize_logs --n-tasks 16 parquet --dataset <data_root>/raw_text/<setting> --column text --glob-pattern "part-*.parquet"`. With 16 files and 16 tasks, task i reads exactly file i and nothing is shuffled, so shards `00000`…`00015` concatenate to the file order;
+   - runs `python tools/fix_ds_metadata.py --output-folder <data_root>/<setting>/tokenized --tokenizer-dir <data_root>/tokenizer`;
    - verifies 16 shards and that the summed `.ds.metadata` token count equals `settings.<setting>.expected_total_tokens` in manifest.json, exactly.
 3. **No merge or shuffle is needed on your side.** The anchor is already merged into every folder and the documents are already shuffled (seed 42). Do not pass `--shuffle`, change `--n-tasks`, or re-split the parquet files: any of these changes the data order.
-4. Use `<data_root>` as `data_root` and `<tok_root>/tokenizer` as `tokenizer_path` in the cluster entry. `tools/assert_invariants.py` reads the expected totals from `<data_root>/manifest.json`.
+4. Use `<data_root>` as `data_root` and `<data_root>/tokenizer` as `tokenizer_path` in the cluster entry. `tools/assert_invariants.py` reads the expected totals from `<data_root>/manifest.json`.
 
 ## Setup steps
 1. Download the four data folders and the init checkpoints. Verify sha256 against manifest.json.

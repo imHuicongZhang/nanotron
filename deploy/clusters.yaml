@@ -204,7 +204,7 @@ clusters:
     data_root: null           # local_dir of snapshot_download("blab-jhu/KYS-Pre-Rewritten", repo_type="dataset");
                               #   must contain raw_diversity_oriented/tokenized/, raw_disagreement_aware/tokenized/,
                               #   raw_random/tokenized/, raw_rewire_inspired/tokenized/ (16 x .ds/.ds.index/.ds.metadata each)
-    tokenizer_path: null      # the llama2 tokenizer DIRECTORY (tokenizer/ of wytro/Know-Your-Sources-tokenized);
+    tokenizer_path: null      # the llama2 tokenizer DIRECTORY: <data_root>/tokenizer (shipped in blab-jhu/KYS-Pre-Rewritten);
                               #   run tools/fix_ds_metadata.py on every tokenized/ folder with this exact path
     ckpt_root: null           # checkpoint root; runs write <ckpt_root>/seed<S>/<setting>/<trunk|epN>/<setting>/seed<S>/<step>/
     init_root: null           # local_dir of snapshot_download("wytro/Know-Your-Sources-init"); holds _init_1.5B_seed<S>/0/
