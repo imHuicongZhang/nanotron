@@ -120,8 +120,19 @@ Decision: mbs 32 with full layer recomputation, accum 8 (49.6 GiB peak on one H1
 mbs 4). Without recomputation mbs 32 needs ~191 GiB. Recomputation changes no math, so the raw
 baselines keep the counterparts' `masked_mean` weighting exactly. 4 x H100 s/it: pending.
 
-**Sanity check** (seed-42 init, rewritten `diversity_oriented`, 20 steps, 1024 x 2048): mbs 32 / accum 8
-with recompute vs mbs 4 / accum 64 without — pending (jobs queued on skipjack).
+**Sanity check** (seed-42 init, rewritten `diversity_oriented`, 20 steps, full 1024 x 2048 batch, one
+H100 each with dp 1 and accum scaled to match; skipjack jobs 426597 / 426598):
+
+| | mbs 32 + recompute | mbs 4, no recompute |
+|---|---:|---:|
+| s/it (full 1024-seq step) | **63.9** | 72.2 |
+| peak GPU memory | 57.9 GiB | 50.3 GiB |
+| lm_loss at steps 1 / 10 / 20 | 10.8 / 8.83 / 8.18 | 10.8 / 8.83 / 8.18 |
+
+The loss curves agree at every step (a single step differs by 0.01 at three significant figures),
+which is what dp-freedom and recomputation predict. At the full step mbs 32 is ~11% **faster** than
+mbs 4 — the opposite of the 64-sequence probe — because mbs 4 needs 256 micro-batches per step
+against 32. Measured 4 x H100 s/it: pending (job queued); ~16 s/it scaled from one GPU.
 
 ## Environment notes (skipjack; see INSTALL.md)
 

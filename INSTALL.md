@@ -201,14 +201,20 @@ python tools/kys_raw/smoke_20steps.py \
 # then run the torchrun command it prints, on one node with dp x tp x pp GPUs
 ```
 
-It must reach step 20 without error. Reference `lm_loss` on skipjack (4 x H100, dp 4, mbs 32,
-accum 8, full recomputation):
+It must reach step 20 without error. Reference `lm_loss` measured on skipjack from the seed-42 init
+over the full 1024 x 2048 batch — on the **rewritten** `diversity_oriented` corpus, at mbs 32 with
+full recomputation and, identically, at mbs 4 without it:
 
 | step | lm_loss |
 |---:|---:|
-| 1 | TBD |
-| 10 | TBD |
-| 20 | TBD |
+| 1 | 10.8 |
+| 10 | 8.83 |
+| 20 | 8.18 |
+
+Your smoke test runs on a **raw** corpus, so its losses will differ a little from these; what should
+match is the shape (about 10.8 at step 1, falling into the low 8s by step 20) and that nothing
+crashes. Steady-state `time_per_iteration_ms` on one H100 was 63.9 s at mbs 32 + recompute and
+72.2 s at mbs 4 (peak GPU memory 57.9 GiB and 50.3 GiB).
 
 Matching to about 0.01 confirms the stack reproduces ours (different dp, GPU generation or
 kernels move the last digit; a different mbs moves it a little more). Record the steady-state
