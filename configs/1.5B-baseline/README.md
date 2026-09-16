@@ -25,8 +25,13 @@ sources are only those whose rewrites passed REWIRE's post-rewrite quality filte
     configs/1.5B-baseline/README.md, RUNBOOK.md
     configs/1.5B-baseline-seed<S>/                  S = 42, 43, 44
         templates/<setting>_seed<S>_<kind>.yaml       24 experiment templates (tools/generate_configs.py)
-        <setting>_seed<S>_<kind>.yaml + .env          24 rendered configs with {{PLACEHOLDERS}} (render_placeholders.py)
+        <setting>_seed<S>_<kind>.yaml                 24 rendered configs with {{PLACEHOLDERS}} (render_placeholders.py)
         filled/                                        produced on the training cluster (fill_placeholders.py)
+
+A clone contains the `.yaml` configs and templates but **no `.env` files**: `.gitignore` excludes
+`*.env`, and `render_config.py` writes each config's companion `.env` next to it. `fill_placeholders.py`
+regenerates both into `filled/`, so the launcher has the `.env` it sources. Nothing is missing from the
+clone — the `.env` files carry only wandb metadata and are rebuilt from your `clusters.yaml` entry.
 
 `<kind>` is `trunk1`, `trunk2`, `trunk3` (stable phase, ending at steps 4292 / 8583 / 12875) and
 `ep1`, `ep2`, `ep3` (decay branches from those trunk steps, ending at 4768 / 9537 / 14305).
