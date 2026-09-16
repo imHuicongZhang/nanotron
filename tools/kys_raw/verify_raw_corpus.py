@@ -133,7 +133,7 @@ def check_anchor(corpus, pool, parquet_root, arm, sources, tokenizer, anchor_ref
 
     if anchor_ref:
         ref = json.loads(Path(anchor_ref).read_text())['check2_anchor']
-        out['compared_to'] = anchor_ref
+        out['compared_to'] = str(anchor_ref)   # a Path here would make the whole report unserializable
         if ref['anchor_id_hash_digest'] != out['anchor_id_hash_digest']:
             errs.append('anchor (id, sha256) digest differs from the fully verified reference corpus')
         out.update({k: ref[k] for k in ('pool_mismatches', 'published_text_mismatches', 'anchor_tokens_plus1')})
@@ -314,7 +314,8 @@ def main():
 
     report['failed'] = failed
     args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / f'verify_{args.setting}.json').write_text(json.dumps(report, indent=2))
+    # default=str: never lose a completed check run to a stray non-serializable value
+    (args.out / f'verify_{args.setting}.json').write_text(json.dumps(report, indent=2, default=str))
     print(json.dumps(report, indent=2))
     sys.exit(1 if failed else 0)
 
