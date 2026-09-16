@@ -106,6 +106,25 @@ source; (4) markdown-heading, list-marker and no-URL/boilerplate rates sit close
 than to the rewritten arm; (5) strategy documents are longer than the rewrites. Results per setting
 are recorded in manifest.json.
 
+**All four settings passed all five checks** (`failed: []`), and every setting was uploaded only
+after its own report came back clean:
+
+| setting | anchor mismatches (pool / published) | 200-doc spot check | style L1 to pool / to rewritten | mean tokens raw vs rewritten |
+|---|---:|---|---:|---:|
+| `raw_diversity_oriented` | 0 / 0 | 200 == pool, 0 == a rewrite | 0.105 / 0.300 | 1,656 vs 586 |
+| `raw_disagreement_aware` | 0 / 0 | 200 == pool, 0 == a rewrite | 0.150 / 0.255 | 1,725 vs 592 |
+| `raw_random` | 0 / 0 | 200 == pool, 0 == a rewrite | 0.020 / 0.355 | 900 vs 384 |
+| `raw_rewire_inspired` | 0 / 0 | 200 == pool, 0 == a rewrite | 0.080 / 0.365 | 1,291 vs 407 |
+
+Every setting's anchor hashes to the same digest, `c15a67acee32157b53dedfa6a6bb93a85ac5e20a613d5432017ed6824fd625a7`
+over (`orig_doc_id`, sha256 of text) — the shared 5B anchor is bit-identical across all four corpora,
+checked against the pool document by document for the first setting and by digest for the rest.
+
+`raw_random` sits closest to the pool (L1 0.020) because its sources *are* a uniform random sample;
+the selected settings sit slightly further out, which is selection, not rewriting. Every setting is
+far closer to the pool than to its rewritten arm, and raw documents run 2-3x longer than the rewrites
+that replaced them — rewriting compresses, so length alone separates raw text from rewritten text.
+
 Build path: `tools/kys_raw/build_raw_sources.py` → `assemble_raw_corpus.py` → `verify_raw_corpus.py`
 → `publish_raw_text.py` (driven per setting by `run_pipeline.sh`).
 
