@@ -59,6 +59,15 @@ def main():
     cfg_dir = args.configs or REPO / 'configs' / f'1.5B-baseline-seed{args.seed}' / 'filled'
     init_root = c.get('init_root')
     log_dir = Path((c.get('wandb') or {}).get('dir') or cfg_dir).parent / 'slurm_logs'
+    # The generated script runs SBATCH — this repo's copy, resolved from __file__ — while exporting
+    # KYS_REPO=repo_dir for the job to use. Normally the same clone, because you generate on the
+    # cluster you run on. When they differ, every job launches one clone's kys_segment.sbatch against
+    # another clone's code, which is silent: SLURM accepts it, the jobs start, and the two trees can
+    # be at different commits. Refuse instead of generating a script that mixes them.
+    if c.get('repo_dir') and Path(c['repo_dir']).resolve() != REPO:
+        sys.exit(f'{args.cluster}.repo_dir is {c["repo_dir"]}, but this plan_submit.py lives in {REPO}.\n'
+                 f'The generated script would run {SBATCH} while exporting KYS_REPO={c["repo_dir"]}.\n'
+                 f'Generate from the clone at repo_dir, or set repo_dir to {REPO}.')
     exports = {'KYS_REPO': c.get('repo_dir'), 'KYS_ENV_ACTIVATE': c.get('env_activate'),
                'KYS_PYTHON_INCLUDE': c.get('python_include')}
     export_arg = ','.join(['ALL'] + [f'{k}={v}' for k, v in exports.items() if v])
