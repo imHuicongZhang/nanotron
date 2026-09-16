@@ -80,13 +80,23 @@ identical ids and counts in all four published arms; text read from the pool by 
 | setting | rewrite rows | source docs (dedup) | raw tokens before | docs after | tokens after |
 |---|---:|---:|---:|---:|---:|
 | `raw_diversity_oriented` | 8,336,411 | 5,867,876 | 9,728,111,104 | 3,018,451 | 5,000,000,553 |
-| `raw_disagreement_aware` | 8,442,273 | 5,592,424 | pending | pending | pending |
-| `raw_random` | 13,022,091 | 10,573,523 | pending | pending | pending |
-| `raw_rewire_inspired` | 12,290,444 | pending | pending | pending | pending |
+| `raw_disagreement_aware` | 8,442,273 | 5,592,424 | 9,647,286,028 | 2,898,764 | 5,000,002,737 |
+| `raw_random` | 13,022,091 | 10,573,523 | 9,520,542,699 | 5,554,525 | 5,000,001,419 |
+| `raw_rewire_inspired` | 12,290,444 | 8,445,785 | 10,899,228,624 | 3,872,986 | 5,000,000,799 |
 
-Merged corpus per setting = anchor + subsampled strategy documents (e.g. `raw_diversity_oriented`:
-7,138,615 documents, 10,000,002,885 tokens), shuffled together at the document level with seed 42 by
-`pp_io.bucketed_shuffle` (the function every published arm used).
+Every source set exceeded 5B, so all four were subsampled; each overshoots the budget by less than
+one document (553 / 2,737 / 1,419 / 799 tokens), which is the rule working as specified.
+
+Merged corpus per setting = anchor + subsampled strategy documents, shuffled together at the document
+level with seed 42 by `pp_io.bucketed_shuffle` (the function every published arm used). This is the
+`expected_total_tokens` the consumer's tokenization must reproduce exactly:
+
+| setting | documents | tokens |
+|---|---:|---:|
+| `raw_diversity_oriented` | 7,138,615 | 10,000,002,885 |
+| `raw_disagreement_aware` | 7,018,928 | 10,000,005,069 |
+| `raw_random` | 9,674,689 | 10,000,003,751 |
+| `raw_rewire_inspired` | 7,993,150 | 10,000,003,131 |
 
 **Leakage checks** (`tools/kys_raw/verify_raw_corpus.py`; a setting is uploaded only after all pass):
 (1) every parquet read in the build code classified by line — text only from the pool; (2) all
