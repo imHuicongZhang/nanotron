@@ -49,22 +49,32 @@ for i in "${!SETTINGS[@]}"; do
         --pool "$POOL" --tokenizer "$K/nanotron_tokenized/tokenizer" --out "$K/raw_corpus" --workers "$WORKERS"
   fi
 
-  ref=()
-  [[ $i -gt 0 ]] && ref=(--anchor-ref "$K/verify/verify_${SETTINGS[0]}.json")
-  log "$s: leakage checks"
-  if ! "$PY" tools/kys_raw/verify_raw_corpus.py --setting "$s" --corpus "$K/raw_corpus/$s" --sources "$K/raw_sources" \
-        --parquet-root "$K/hf_parquet" --pool "$POOL" --tokenizer "$K/nanotron_tokenized/tokenizer" \
-        "${ref[@]}" --out "$K/verify" > "$K/verify/verify_$s.log" 2>&1; then
-    log "$s: CHECKS FAILED — see $K/verify/verify_$s.json; stopping (nothing further is published)"
-    exit 1
+  V=$K/verify/verify_$s.json
+  if [[ -f $V ]] && "$PY" -c "import json,sys; sys.exit(0 if json.load(open('$V'))['failed'] == [] else 1)"; then
+    log "$s: leakage checks already passed (recorded in $V)"
+  else
+    ref=()
+    [[ $i -gt 0 ]] && ref=(--anchor-ref "$K/verify/verify_${SETTINGS[0]}.json")
+    log "$s: leakage checks"
+    if ! "$PY" tools/kys_raw/verify_raw_corpus.py --setting "$s" --corpus "$K/raw_corpus/$s" --sources "$K/raw_sources" \
+          --parquet-root "$K/hf_parquet" --pool "$POOL" --tokenizer "$K/nanotron_tokenized/tokenizer" \
+          "${ref[@]}" --out "$K/verify" > "$K/verify/verify_$s.log" 2>&1; then
+      log "$s: verify exited non-zero — a check failed, or it wrote no report; see $V and $K/verify/verify_$s.log; stopping (nothing further is published)"
+      exit 1
+    fi
+    log "$s: all five checks passed"
   fi
-  log "$s: all five checks passed"
 
   until [[ -s "$K/code_commit.txt" ]]; do
     log "$s: waiting for $K/code_commit.txt (pushed commit hash for manifest.json)"; sleep 300
   done
-  log "$s: publish raw_text/$s"
-  "$PY" tools/kys_raw/publish_raw_text.py --kys-root "$K" --setting "$s" --code-commit "$(cat "$K/code_commit.txt")"
-  log "$s: published"
+  P=$K/hf_stage/published_$s.json
+  if [[ -f $P ]] && "$PY" -c "import json,sys; sys.exit(0 if json.load(open('$P'))['roundtrip_ok'] else 1)"; then
+    log "$s: already published (round-trip recorded in $P)"
+  else
+    log "$s: publish raw_text/$s"
+    "$PY" tools/kys_raw/publish_raw_text.py --kys-root "$K" --setting "$s" --code-commit "$(cat "$K/code_commit.txt")"
+    log "$s: published"
+  fi
 done
 log "done: all four settings checked and published"
