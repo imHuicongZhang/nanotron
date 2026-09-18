@@ -214,7 +214,12 @@ full recomputation and, identically, at mbs 4 without it:
 Your smoke test runs on a **raw** corpus, so its losses will differ a little from these; what should
 match is the shape (about 10.8 at step 1, falling into the low 8s by step 20) and that nothing
 crashes. Steady-state `time_per_iteration_ms` on one H100 was 63.9 s at mbs 32 + recompute and
-72.2 s at mbs 4 (peak GPU memory 57.9 GiB and 50.3 GiB).
+72.2 s at mbs 4 (peak GPU memory 57.9 GiB and 50.3 GiB). On **4 x H100 (dp 4, the grid's real
+configuration; skipjack job 424271)** the same 20 steps ran at **22.8 s/it** at mbs 32 + recompute
+and **17.9 s/it** at mbs 4 without it (peak 59.4 GiB and 53.7 GiB), reproducing the losses above at
+every step. The ordering flips against the one-GPU case: at dp 4 each replica runs 64 micro-batches
+at mbs 4 instead of 256, so recomputation's cost is no longer masked by per-micro-batch overhead.
+Base wall-time estimates on the dp-4 figure; RUNBOOK.md §3 carries the per-segment budget it implies.
 
 Matching to about 0.01 confirms the stack reproduces ours (different dp, GPU generation or
 kernels move the last digit; a different mbs moves it a little more). Record the steady-state
