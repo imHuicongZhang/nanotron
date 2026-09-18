@@ -1,8 +1,8 @@
 # 1.5B raw-selected baselines
 
 > Operators on an external cluster: start with [RUNBOOK.md](RUNBOOK.md). Data counts live in the
-> data repo's `manifest.json` (blab-jhu/KYS-Pre-Rewritten); values below marked pending are filled
-> by follow-up commits.
+> data repo's `manifest.json` (blab-jhu/KYS-Pre-Rewritten) and are repeated here. Every number on
+> this page is measured; none is an estimate or a placeholder.
 
 No-rewrite controls for the Know-Your-Sources 1.5B grid. Each trains on the shared 5B anchor plus
 the **original, unrewritten** text of the documents one rewritten arm rewrote, subsampled at the
@@ -152,7 +152,7 @@ mbs 16 / accum 16. The mbs 16 previously pinned in `deploy/clusters.yaml`, `SOP.
 
 Decision: mbs 32 with full layer recomputation, accum 8 (49.6 GiB peak on one H100, 23% slower than
 mbs 4). Without recomputation mbs 32 needs ~191 GiB. Recomputation changes no math, so the raw
-baselines keep the counterparts' `masked_mean` weighting exactly. 4 x H100 s/it: pending.
+baselines keep the counterparts' `masked_mean` weighting exactly. On 4 x H100: **22.8 s/it**.
 
 **Sanity check** (seed-42 init, rewritten `diversity_oriented`, 20 steps, full 1024 x 2048 batch, one
 H100 each with dp 1 and accum scaled to match; skipjack jobs 426597 / 426598):
@@ -166,7 +166,32 @@ H100 each with dp 1 and accum scaled to match; skipjack jobs 426597 / 426598):
 The loss curves agree at every step (a single step differs by 0.01 at three significant figures),
 which is what dp-freedom and recomputation predict. At the full step mbs 32 is ~11% **faster** than
 mbs 4 — the opposite of the 64-sequence probe — because mbs 4 needs 256 micro-batches per step
-against 32. Measured 4 x H100 s/it: pending (job queued); ~16 s/it scaled from one GPU.
+against 32.
+
+**On 4 x H100** (dp 4, the configuration the grid actually runs; skipjack job 424271, gh125, same
+seed-42 init and rewritten `diversity_oriented` corpus, 20 full 1024 x 2048 steps):
+
+| | mbs 32 + recompute, accum 8 | mbs 4, no recompute, accum 64 |
+|---|---:|---:|
+| s/it (full 1024-seq step, steps 2-20) | **22.8** | 17.9 |
+| peak GPU memory (nvidia-smi, any GPU) | 59.4 GiB | 53.7 GiB |
+| lm_loss at steps 1 / 10 / 20 | 10.8 / 8.83 / 8.19 | 10.8 / 8.83 / 8.18 |
+
+The losses again agree at every step, now across a change of both dp and micro batch. **The speed
+ordering flips from the one-GPU case**: on 1 GPU mbs 32 was ~11% faster, on 4 GPUs it is 27% slower.
+At dp 4 each replica takes 64 micro-batches at mbs 4 rather than 256, so per-micro-batch overhead no
+longer dominates and what remains is recomputation's own ~25% cost. mbs 32 is still the right choice
+— it is the grid's value and keeps `masked_mean` weighting identical — but the cost is real and is
+what the wall-times below are built from.
+
+4 x H100 scaling is 2.80x, not 4x (63.9 -> 22.8 s/it), the balance going to all-reduce and fixed
+per-step overhead.
+
+**Wall time at 22.8 s/it**, per setting per seed: 27.2 h for each of the three trunk segments (the
+longest single job, comfortably inside a 3-day limit), 3.0 / 6.0 / 9.1 h for ep1 / ep2 / ep3 —
+15,735 steps, **99.7 h ~= 4.15 days**. All 24 runs of one seed-set of the grid: **~2,392 node-hours**
+on 4 x H100. Pass the measured value to the planner with
+`plan_submit.py --s-per-it 22.8` to get this table for your own cluster.
 
 ## Environment notes (skipjack; see INSTALL.md)
 
