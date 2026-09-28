@@ -257,7 +257,7 @@ def main():
         L += ['', '- At assembly every document was re-tokenized and its length matched `tokens-llama2` exactly (0 mismatches).', '']
     if a.tokenized_dir:
         L += ['## 8. Tokenization check (consumer script, the three new settings)', '',
-              '`tools/kys_raw/tokenize_raw_text.sh` was run unchanged on a local data root holding the published manifest, '
+              '`tools/kys_raw/tokenize_raw_text.sh` was run unchanged on a local data root holding the manifest.json that was then uploaded, '
               'the tokenizer files and the 16 parquet files per setting. The script first checks every sha256. It then runs '
               'datatrove 0.5.0 with 16 tasks, `</s>` per document and no shuffling, applies `fix_ds_metadata.py`, and '
               'requires the total to equal `expected_total_tokens`.', '',

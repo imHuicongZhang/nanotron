@@ -15,9 +15,9 @@
 # 00000..00015 concatenate to the file order. Same recipe as the published arms: datatrove 0.5.0
 # DocumentTokenizer, llama-2 tokenizer, one </s> appended per document, no BOS.
 #
-# Memory: the 16 tasks run at once by default. Measured on a ~10B-token setting: up to ~9.3 GiB RSS per task
-# (so ~150 GiB for 16 at once). On a node with less memory set KYS_TOKENIZE_WORKERS=<n> to run n at a time
-# (n x 9.5 GiB must fit); the 16 tasks, their files and their shards are unchanged. If a task is OOM-killed the
+# Memory: the 16 tasks run at once by default. Measured on a ~10B-token setting: up to ~10.2 GiB RSS per task
+# (so ~165 GiB for 16 at once). On a node with less memory set KYS_TOKENIZE_WORKERS=<n> to run n at a time
+# (n x 10.5 GiB must fit; 4 workers took 16-18 min per setting on 17 cores, sha256 checks included); the 16 tasks, their files and their shards are unchanged. If a task is OOM-killed the
 # run cannot complete: delete <data_root>/<setting>/ and rerun with a smaller n.
 # KYS_TOKENIZE_STALL_MIN (default 30): minutes without any write under the output folder before the watchdog
 # stops the whole tokenizer process group and exits 1.
