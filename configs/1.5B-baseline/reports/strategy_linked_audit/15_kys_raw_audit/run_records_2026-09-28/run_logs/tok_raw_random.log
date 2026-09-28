@@ -1,0 +1,132 @@
+[tok] tokenizer /projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer: 3 files match manifest.json sha256
+[tok] raw_random: 16 parquet files match manifest.json sha256
+2026-09-28 17:09:35.374 | INFO     | datatrove.utils.logging:add_task_logger:58 - Launching pipeline for rank=1
+2026-09-28 17:09:35.375 | INFO     | datatrove.utils.logging:log_pipeline:90 - 
+--- 🛠️ PIPELINE 🛠
+📖 - READER: 📒 Parquet
+🔢 - TOKENIZER: ✍️ Writer
+2026-09-28 17:09:35.375 | INFO     | datatrove.pipeline.tokens.tokenizer:run:431 - Tokenizing in "00001_unshuffled.ds"...
+2026-09-28 17:09:35.474 | INFO     | datatrove.pipeline.readers.base:read_files_shard:201 - Reading input file part-00001.parquet, 1/1
+2026-09-28 17:13:21.107 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 1/16 tasks completed.
+2026-09-28 17:13:21.108 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 2/16 tasks completed.
+2026-09-28 17:13:21.347 | SUCCESS  | datatrove.executor.base:_run_for_rank:98 - Processing done for rank=1
+2026-09-28 17:13:21.350 | INFO     | datatrove.executor.base:_run_for_rank:104 - 
+
+📉📉📉 Stats: Task 1 📉📉📉
+
+Total Runtime: 3 minutes and 38.45 seconds
+
+📖 - READER: 📒 Parquet
+    Runtime: (2.36%) 5.16 seconds [8.53 milliseconds±7.08 milliseconds/batch]
+    Stats: {input_files: 1, doc_len: 2341146609 [min=50, max=516609, 3871.78±7584/doc], documents: 604669 [604669.00/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (97.64%) 3 minutes and 33.29 seconds [3 seconds and 496.50 milliseconds±551.55 milliseconds/batch]
+    Stats: {tokens: 626406882 [min=18, max=158261, 1035.95±2037/doc]}
+2026-09-28 17:13:21.357 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 3/16 tasks completed.
+2026-09-28 17:13:21.380 | INFO     | datatrove.utils.logging:add_task_logger:58 - Launching pipeline for rank=6
+2026-09-28 17:13:21.380 | INFO     | datatrove.utils.logging:log_pipeline:90 - 
+--- 🛠️ PIPELINE 🛠
+📖 - READER: 📒 Parquet
+🔢 - TOKENIZER: ✍️ Writer
+2026-09-28 17:13:21.380 | INFO     | datatrove.pipeline.tokens.tokenizer:run:431 - Tokenizing in "00006_unshuffled.ds"...
+2026-09-28 17:13:21.468 | INFO     | datatrove.pipeline.readers.base:read_files_shard:201 - Reading input file part-00006.parquet, 1/1
+2026-09-28 17:13:28.533 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 4/16 tasks completed.
+2026-09-28 17:17:01.105 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 5/16 tasks completed.
+2026-09-28 17:17:07.836 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 6/16 tasks completed.
+2026-09-28 17:17:08.495 | SUCCESS  | datatrove.executor.base:_run_for_rank:98 - Processing done for rank=6
+2026-09-28 17:17:08.510 | INFO     | datatrove.executor.base:_run_for_rank:104 - 
+
+📉📉📉 Stats: Task 6 📉📉📉
+
+Total Runtime: 3 minutes and 40.64 seconds
+
+📖 - READER: 📒 Parquet
+    Runtime: (2.13%) 4.70 seconds [7.77 milliseconds±6.08 milliseconds/batch]
+    Stats: {input_files: 1, doc_len: 2324878546 [min=43, max=572764, 3844.88±7470/doc], documents: 604669 [604669.00/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (97.87%) 3 minutes and 35.93 seconds [3 seconds and 539.87 milliseconds±490.65 milliseconds/batch]
+    Stats: {tokens: 622021584 [min=18, max=173782, 1028.70±2010/doc]}
+2026-09-28 17:17:08.525 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 7/16 tasks completed.
+2026-09-28 17:17:08.601 | INFO     | datatrove.utils.logging:add_task_logger:58 - Launching pipeline for rank=10
+2026-09-28 17:17:08.601 | INFO     | datatrove.utils.logging:log_pipeline:90 - 
+--- 🛠️ PIPELINE 🛠
+📖 - READER: 📒 Parquet
+🔢 - TOKENIZER: ✍️ Writer
+2026-09-28 17:17:08.601 | INFO     | datatrove.pipeline.tokens.tokenizer:run:431 - Tokenizing in "00010_unshuffled.ds"...
+2026-09-28 17:17:08.838 | INFO     | datatrove.pipeline.readers.base:read_files_shard:201 - Reading input file part-00010.parquet, 1/1
+2026-09-28 17:17:14.774 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 8/16 tasks completed.
+2026-09-28 17:20:45.045 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 9/16 tasks completed.
+2026-09-28 17:20:49.766 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 10/16 tasks completed.
+2026-09-28 17:20:51.034 | SUCCESS  | datatrove.executor.base:_run_for_rank:98 - Processing done for rank=10
+2026-09-28 17:20:51.041 | INFO     | datatrove.executor.base:_run_for_rank:104 - 
+
+📉📉📉 Stats: Task 10 📉📉📉
+
+Total Runtime: 3 minutes and 35.46 seconds
+
+📖 - READER: 📒 Parquet
+    Runtime: (2.21%) 4.77 seconds [7.88 milliseconds±7.96 milliseconds/batch]
+    Stats: {input_files: 1, doc_len: 2333553877 [min=47, max=678695, 3859.23±7623/doc], documents: 604669 [604669.00/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (97.79%) 3 minutes and 30.70 seconds [3 seconds and 454.05 milliseconds±512.02 milliseconds/batch]
+    Stats: {tokens: 623915294 [min=20, max=199552, 1031.83±2033/doc]}
+2026-09-28 17:20:51.058 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 11/16 tasks completed.
+2026-09-28 17:20:51.100 | INFO     | datatrove.utils.logging:add_task_logger:58 - Launching pipeline for rank=14
+2026-09-28 17:20:51.100 | INFO     | datatrove.utils.logging:log_pipeline:90 - 
+--- 🛠️ PIPELINE 🛠
+📖 - READER: 📒 Parquet
+🔢 - TOKENIZER: ✍️ Writer
+2026-09-28 17:20:51.101 | INFO     | datatrove.pipeline.tokens.tokenizer:run:431 - Tokenizing in "00014_unshuffled.ds"...
+2026-09-28 17:20:51.229 | INFO     | datatrove.pipeline.readers.base:read_files_shard:201 - Reading input file part-00014.parquet, 1/1
+2026-09-28 17:21:01.512 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 12/16 tasks completed.
+2026-09-28 17:24:30.743 | SUCCESS  | datatrove.executor.base:_run_for_rank:98 - Processing done for rank=14
+2026-09-28 17:24:30.755 | INFO     | datatrove.executor.base:_run_for_rank:104 - 
+
+📉📉📉 Stats: Task 14 📉📉📉
+
+Total Runtime: 3 minutes and 32.92 seconds
+
+📖 - READER: 📒 Parquet
+    Runtime: (2.25%) 4.80 seconds [7.93 milliseconds±6.77 milliseconds/batch]
+    Stats: {input_files: 1, doc_len: 2335202214 [min=53, max=962052, 3861.95±7419/doc], documents: 604669 [604669.00/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (97.75%) 3 minutes and 28.13 seconds [3 seconds and 411.91 milliseconds±505.41 milliseconds/batch]
+    Stats: {tokens: 625038457 [min=23, max=353367, 1033.69±2014/doc]}
+2026-09-28 17:24:30.769 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 13/16 tasks completed.
+2026-09-28 17:24:31.589 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 14/16 tasks completed.
+2026-09-28 17:24:33.120 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 15/16 tasks completed.
+2026-09-28 17:24:39.421 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 16/16 tasks completed.
+2026-09-28 17:24:39.834 | SUCCESS  | datatrove.executor.local:run:148 - 
+
+📉📉📉 Stats: All 16 tasks 📉📉📉
+
+Total Runtime: 3 minutes and 37.94 seconds ± 3.68 seconds/task
+
+📖 - READER: 📒 Parquet
+    Runtime: (2.25%) 4.91 seconds±0.18 seconds/task, min=4.66 seconds, max=5.24 seconds [8.12 milliseconds±7.73 milliseconds/batch]
+    Stats: {input_files: 16, doc_len: 37375139994 [min=26, max=962052, 3863.19±7566/doc], documents: 9674689 [min=604654, max=604669, 604668.06±4/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (97.75%) 3 minutes and 33.03 seconds±3.67 seconds/task, min=3 minutes and 26.75 seconds, max=3 minutes and 41.55 seconds [3 seconds and 492.28 milliseconds±518.27 milliseconds/batch]
+    Stats: {tokens: 10000003751 [min=16, max=353367, 1033.63±2036/doc]}
+[INFO] 16 metadata file(s) in /projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/raw_random/tokenized
+[INFO] target tokenizer dir: /projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer
+[FIX ] 00000_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00001_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00002_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00003_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00004_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00005_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00006_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00007_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00008_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00009_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00010_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00011_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00012_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00013_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00014_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[FIX ] 00015_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer'  (kept |2)
+[OK] all 16 metadata line-1 byte-identical: '/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/tokenizer|2'  (token_size=2)
+[OK] tokenizer-dir applied and |<token_size> suffix preserved.
+[tok] raw_random: 16 shards, 10,000,003,751 tokens (manifest expected_total_tokens 10,000,003,751)
+[tok] OK — /projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/tok_root/raw_random/tokenized is ready; tools/assert_invariants.py checks the same total from manifest.json

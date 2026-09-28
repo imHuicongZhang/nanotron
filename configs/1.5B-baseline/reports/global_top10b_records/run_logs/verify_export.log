@@ -1,0 +1,6 @@
+raw_top10b_fineweb_edu structural checks done no problems
+raw_top10b_modernbert structural checks done no problems
+raw_top10b_consensus structural checks done no problems
+raw_top10b_fineweb_edu OK {'rows': 7534192, 'train_tokens': 10000007488, 'file_order_sha256': 'f779b2beb50195f76e0e5f4967e2050e2b1430f549c90007bd02d35e63ce5fbf'} {'rows_checked': 32000, 'pool_shards_read': 200, 'mismatches': 0, 'mismatch_examples': [], 'rng': 'default_rng(12345), per file without replacement'}
+raw_top10b_modernbert OK {'rows': 5918416, 'train_tokens': 10000000657, 'file_order_sha256': '125367469d7561d302b4903b5a5ffc2bef9e74ec55abd9e466e501a7ab569754'} {'rows_checked': 32000, 'pool_shards_read': 200, 'mismatches': 0, 'mismatch_examples': [], 'rng': 'default_rng(12345), per file without replacement'}
+raw_top10b_consensus OK {'rows': 5643567, 'train_tokens': 10000003972, 'file_order_sha256': '707506d2163cd9701296de74649ff5f30373d4ee23de135f426ed9e5bf2ed6d3'} {'rows_checked': 32000, 'pool_shards_read': 200, 'mismatches': 0, 'mismatch_examples': [], 'rng': 'default_rng(12345), per file without replacement'}

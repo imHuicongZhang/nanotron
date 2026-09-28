@@ -1,0 +1,133 @@
+raw_top10b_fineweb_edu: exported 7,534,192 rows in 16 files
+raw_top10b_modernbert: exported 5,918,416 rows in 16 files
+raw_top10b_consensus: exported 5,643,567 rows in 16 files
+/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00010_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00011_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00012_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00013_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00014_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00015_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[OK] all 16 metadata line-1 byte-identical: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer|2'  (token_size=2)
+[OK] tokenizer-dir applied and |<token_size> suffix preserved.
+[tok] raw_top10b_fineweb_edu: 16 shards, 10,000,007,488 tokens (manifest expected_total_tokens 10,000,007,488)
+[tok] OK — /projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/raw_top10b_fineweb_edu/tokenized is ready; tools/assert_invariants.py checks the same total from manifest.json
+ 
+2026-09-28 15:20:45.884 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 12/16 tasks completed.
+2026-09-28 15:24:21.068 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 13/16 tasks completed.
+2026-09-28 15:24:24.911 | SUCCESS  | datatrove.executor.base:_run_for_rank:98 - Processing done for rank=13
+2026-09-28 15:24:24.927 | INFO     | datatrove.executor.base:_run_for_rank:104 - 
+
+📉📉📉 Stats: Task 13 📉📉📉
+
+Total Runtime: 3 minutes and 50.78 seconds
+
+📖 - READER: 📒 Parquet
+    Runtime: (1.80%) 4.15 seconds [8.82 milliseconds±7.88 milliseconds/batch]
+    Stats: {input_files: 1, doc_len: 2405172173 [min=107, max=607967, 5107.75±9712/doc], documents: 470887 [470887.00/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (98.20%) 3 minutes and 46.63 seconds [4 seconds and 721.43 milliseconds±832.61 milliseconds/batch]
+    Stats: {tokens: 625371481 [min=41, max=197108, 1328.07±2584/doc]}
+2026-09-28 15:24:24.933 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 14/16 tasks completed.
+2026-09-28 15:24:28.112 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 15/16 tasks completed.
+2026-09-28 15:24:30.833 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 16/16 tasks completed.
+2026-09-28 15:24:31.374 | SUCCESS  | datatrove.executor.local:run:148 - 
+
+📉📉📉 Stats: All 16 tasks 📉📉📉
+
+Total Runtime: 3 minutes and 53.14 seconds ± 6.15 seconds/task
+
+📖 - READER: 📒 Parquet
+    Runtime: (1.86%) 4.35 seconds±0.34 seconds/task, min=3.85 seconds, max=5.21 seconds [9.22 milliseconds±8.14 milliseconds/batch]
+    Stats: {input_files: 16, doc_len: 38462823586 [min=97, max=704330, 5105.10±9690/doc], documents: 7534192 [470887.00/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (98.14%) 3 minutes and 48.80 seconds±6.14 seconds/task, min=3 minutes and 34.42 seconds, max=3 minutes and 56.82 seconds [4 seconds and 766.61 milliseconds±809.34 milliseconds/batch]
+    Stats: {tokens: 10000007488 [min=27, max=230101, 1327.28±2592/doc]}
+
+raw_top10b_fineweb_edu: tokenized with the consumer script: 10,000,007,488 tokens in 16 shards == expected
+n1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00010_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00011_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00012_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00013_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00014_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00015_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[OK] all 16 metadata line-1 byte-identical: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer|2'  (token_size=2)
+[OK] tokenizer-dir applied and |<token_size> suffix preserved.
+[tok] raw_top10b_modernbert: 16 shards, 10,000,000,657 tokens (manifest expected_total_tokens 10,000,000,657)
+[tok] OK — /projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/raw_top10b_modernbert/tokenized is ready; tools/assert_invariants.py checks the same total from manifest.json
+ 2026-09-28 15:37:28.030 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 12/16 tasks completed.
+2026-09-28 15:41:15.416 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 13/16 tasks completed.
+2026-09-28 15:41:18.342 | SUCCESS  | datatrove.executor.base:_run_for_rank:98 - Processing done for rank=12
+2026-09-28 15:41:18.357 | INFO     | datatrove.executor.base:_run_for_rank:104 - 
+
+📉📉📉 Stats: Task 12 📉📉📉
+
+Total Runtime: 3 minutes and 45.18 seconds
+
+📖 - READER: 📒 Parquet
+    Runtime: (1.66%) 3.74 seconds [10.11 milliseconds±8.28 milliseconds/batch]
+    Stats: {input_files: 1, doc_len: 2418408276 [min=154, max=549304, 6537.99±9813/doc], documents: 369901 [369901.00/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (98.34%) 3 minutes and 41.44 seconds [5 seconds and 984.77 milliseconds±657.03 milliseconds/batch]
+    Stats: {tokens: 623635621 [min=39, max=123843, 1685.95±2574/doc]}
+2026-09-28 15:41:18.372 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 14/16 tasks completed.
+2026-09-28 15:41:19.845 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 15/16 tasks completed.
+2026-09-28 15:41:19.859 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 16/16 tasks completed.
+2026-09-28 15:41:20.571 | SUCCESS  | datatrove.executor.local:run:148 - 
+
+📉📉📉 Stats: All 16 tasks 📉📉📉
+
+Total Runtime: 3 minutes and 46.54 seconds ± 4.51 seconds/task
+
+📖 - READER: 📒 Parquet
+    Runtime: (1.71%) 3.88 seconds±0.34 seconds/task, min=3.33 seconds, max=4.63 seconds [10.48 milliseconds±8.71 milliseconds/batch]
+    Stats: {input_files: 16, doc_len: 38785084697 [min=67, max=634634, 6553.29±9859/doc], documents: 5918416 [369901.00/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (98.29%) 3 minutes and 42.66 seconds±4.49 seconds/task, min=3 minutes and 33.40 seconds, max=3 minutes and 50.92 seconds [6 seconds and 17.77 milliseconds±667.79 milliseconds/batch]
+    Stats: {tokens: 10000000657 [min=21, max=222744, 1689.64±2594/doc]}
+
+raw_top10b_modernbert: tokenized with the consumer script: 10,000,000,657 tokens in 16 shards == expected
+con1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00010_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00011_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00012_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00013_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00014_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[FIX ] 00015_unshuffled.ds.metadata: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer/tokenizer.json' -> '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer'  (kept |2)
+[OK] all 16 metadata line-1 byte-identical: '/projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/tokenizer|2'  (token_size=2)
+[OK] tokenizer-dir applied and |<token_size> suffix preserved.
+[tok] raw_top10b_consensus: 16 shards, 10,000,003,972 tokens (manifest expected_total_tokens 10,000,003,972)
+[tok] OK — /projects/bvandur1/zhuicon1/data/kys-1p5b-raw-top10b/publish/verify_root/raw_top10b_consensus/tokenized is ready; tools/assert_invariants.py checks the same total from manifest.json
+ local:_launch_run_for_rank:81 - 12/16 tasks completed.
+2026-09-28 15:57:55.439 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 13/16 tasks completed.
+2026-09-28 15:57:58.852 | SUCCESS  | datatrove.executor.base:_run_for_rank:98 - Processing done for rank=12
+2026-09-28 15:57:58.855 | INFO     | datatrove.executor.base:_run_for_rank:104 - 
+
+📉📉📉 Stats: Task 12 📉📉📉
+
+Total Runtime: 3 minutes and 51.91 seconds
+
+📖 - READER: 📒 Parquet
+    Runtime: (2.08%) 4.82 seconds [13.65 milliseconds±13.83 milliseconds/batch]
+    Stats: {input_files: 1, doc_len: 2441472169 [min=138, max=571778, 6921.78±11469/doc], documents: 352723 [352723.00/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (97.92%) 3 minutes and 47.09 seconds [6 seconds and 308.13 milliseconds±1 second and 120.38 milliseconds/batch]
+    Stats: {tokens: 624224229 [min=34, max=154159, 1769.73±3031/doc]}
+2026-09-28 15:57:58.862 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 14/16 tasks completed.
+2026-09-28 15:58:00.648 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 15/16 tasks completed.
+2026-09-28 15:58:06.169 | INFO     | datatrove.executor.local:_launch_run_for_rank:81 - 16/16 tasks completed.
+2026-09-28 15:58:07.003 | SUCCESS  | datatrove.executor.local:run:148 - 
+
+📉📉📉 Stats: All 16 tasks 📉📉📉
+
+Total Runtime: 3 minutes and 52.47 seconds ± 5.80 seconds/task
+
+📖 - READER: 📒 Parquet
+    Runtime: (1.67%) 3.89 seconds±0.33 seconds/task, min=3.45 seconds, max=4.82 seconds [11.02 milliseconds±9.94 milliseconds/batch]
+    Stats: {input_files: 16, doc_len: 39109072233 [min=78, max=1014540, 6929.85±11584/doc], documents: 5643567 [min=352722, max=352723, 352722.94±0/input_file]}
+🔢 - TOKENIZER: ✍️ Writer
+    Runtime: (98.33%) 3 minutes and 48.58 seconds±5.79 seconds/task, min=3 minutes and 38.34 seconds, max=3 minutes and 58.12 seconds [6 seconds and 349.47 milliseconds±1 second and 34.36 milliseconds/batch]
+    Stats: {tokens: 10000003972 [min=27, max=585286, 1771.93±3069/doc]}
+
+raw_top10b_consensus: tokenized with the consumer script: 10,000,003,972 tokens in 16 shards == expected

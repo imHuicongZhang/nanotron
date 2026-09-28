@@ -1,0 +1,9 @@
+[21:37:40] fasttext: 7,253,184 docs, 10,000,000,865 TRAIN tokens (overshoot 865), boundary score 0.92739487
+[21:38:24] raw_top10b_fineweb_edu: 7,534,192 docs, 10,000,007,488 TRAIN tokens (overshoot 7,488), boundary score 0.925073
+[21:39:17] raw_top10b_modernbert: 5,918,416 docs, 10,000,000,657 TRAIN tokens (overshoot 657), boundary score 0.94075686
+[21:40:10] raw_top10b_consensus: 5,643,567 docs, 10,000,003,972 TRAIN tokens (overshoot 3,972), boundary score 0.85293597
+[21:41:04] fasttext: 7,253,184 docs, 10,000,000,865 TRAIN tokens (overshoot 865), boundary score 0.92739487
+[21:41:53] raw_top10b_fineweb_edu: 7,534,192 docs, 10,000,007,488 TRAIN tokens (overshoot 7,488), boundary score 0.925073
+[21:42:50] raw_top10b_modernbert: 5,918,416 docs, 10,000,000,657 TRAIN tokens (overshoot 657), boundary score 0.94075686
+[21:43:44] raw_top10b_consensus: 5,643,567 docs, 10,000,003,972 TRAIN tokens (overshoot 3,972), boundary score 0.85293597
+[21:43:49] wrote /projects/bvandur1/zhuicon1/kys/top10b/selection_np126/selection_manifest.json

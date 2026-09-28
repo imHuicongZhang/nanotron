@@ -1,0 +1,37 @@
+[21:58:56] union of 3 selections: 13,671,205 docs
+[22:07:01] union of 3 selections: 13,671,205 docs
+[22:08:10]   staged 20/200 pool shards
+[22:12:06]   staged 40/200 pool shards
+[22:15:57]   staged 60/200 pool shards
+[22:19:51]   staged 80/200 pool shards
+[22:23:43]   staged 100/200 pool shards
+[22:27:36]   staged 120/200 pool shards
+[22:31:27]   staged 140/200 pool shards
+[22:35:19]   staged 160/200 pool shards
+[22:39:13]   staged 180/200 pool shards
+[22:43:04]   staged 200/200 pool shards
+[22:43:04] raw_top10b_fineweb_edu: staged 7,534,192 docs / 10,000,007,488 TRAIN tokens; every document length equals tokens-llama2
+[22:43:04] raw_top10b_modernbert: staged 5,918,416 docs / 10,000,000,657 TRAIN tokens; every document length equals tokens-llama2
+[22:43:04] raw_top10b_consensus: staged 5,643,567 docs / 10,000,003,972 TRAIN tokens; every document length equals tokens-llama2
+[22:43:04]   shuffle sizing: on-disk=15.4GiB est_in_mem=61.6GiB (x4.0) mem_cap=256GiB -> B=16 (peak ~7.7GiB)
+[22:44:00]   shuffle pass1: 50/200 shards scattered
+[22:44:56]   shuffle pass1: 100/200 shards scattered
+[22:45:53]   shuffle pass1: 150/200 shards scattered
+[22:46:51]   shuffle pass1: 200/200 shards scattered
+[22:46:51]   shuffle pass1 done: 7,534,192 rows scattered into 16/16 buckets
+[22:49:44]   shuffle pass2 done: 16 shards, 7,534,192 rows
+[22:50:00] raw_top10b_fineweb_edu: shuffled 7,534,192 rows into 16 parts (B=16); wrote /projects/bvandur1/zhuicon1/kys/top10b/corpus/raw_top10b_fineweb_edu/_raw_manifest.json
+[22:50:00]   shuffle sizing: on-disk=15.6GiB est_in_mem=62.6GiB (x4.0) mem_cap=256GiB -> B=16 (peak ~7.8GiB)
+[22:51:00]   shuffle pass1: 50/200 shards scattered
+[22:52:00]   shuffle pass1: 100/200 shards scattered
+[22:53:00]   shuffle pass1: 150/200 shards scattered
+[22:54:00]   shuffle pass1: 200/200 shards scattered
+[22:54:00]   shuffle pass1 done: 5,918,416 rows scattered into 16/16 buckets
+[22:56:56]   shuffle pass2 done: 12 shards, 5,918,416 rows
+[22:57:13] raw_top10b_modernbert: shuffled 5,918,416 rows into 12 parts (B=16); wrote /projects/bvandur1/zhuicon1/kys/top10b/corpus/raw_top10b_modernbert/_raw_manifest.json
+[22:57:13]   shuffle sizing: on-disk=15.5GiB est_in_mem=62.0GiB (x4.0) mem_cap=256GiB -> B=16 (peak ~7.8GiB)
+[22:58:14]   shuffle pass1: 50/200 shards scattered
+[22:59:15]   shuffle pass1: 100/200 shards scattered
+[23:05:18]   shuffle pass1: 150/200 shards scattered
+[23:35:47]   shuffle pass1: 200/200 shards scattered
+[23:35:47]   shuffle pass1 done: 5,643,567 rows scattered into 16/16 buckets
