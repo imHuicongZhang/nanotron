@@ -2,9 +2,11 @@
 
 - [`RAW_SELECTED_BASELINES_PROVENANCE.md`](RAW_SELECTED_BASELINES_PROVENANCE.md): the audit (verdicts, exact
   construction, what each raw/rewritten comparison supports). Byte-identical to the canonical copy
-  `docs/RAW_SELECTED_BASELINES_PROVENANCE.md` in the selection project (`projects/rewrite`, commit `28dbdbd`;
+  `docs/RAW_SELECTED_BASELINES_PROVENANCE.md` in the selection project (`projects/rewrite`, commit `7a16f37`;
   that repository has no remote, so it is published here).
-- `15_kys_raw_audit/`: the audit scripts and their JSON outputs, as committed in the selection project.
+- `15_kys_raw_audit/`: the audit scripts and their JSON outputs, as committed in the selection project;
+  `run_records_2026-09-28/` holds the re-verification run records (audit re-run JSON, logs, the consumer
+  tokenization's `.ds.metadata` per shard, the Hub publication record).
 - `cited_code/`: the selection, rewriting and post-processing scripts the report cites, copied at the same relative
   paths (`cited_code/04_select/select_10b.py` = `04_select/select_10b.py` in the report). They are the as-run
   files; their sha256 prefixes match the report's §9. `06_lambda_grid/lambda_grid.npz` (470 MB) is not copied; it is

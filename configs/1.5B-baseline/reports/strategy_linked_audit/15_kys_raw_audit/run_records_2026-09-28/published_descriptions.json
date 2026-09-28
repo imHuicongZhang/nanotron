@@ -1,0 +1,13 @@
+{
+  "repo": "blab-jhu/KYS-Pre-Rewritten",
+  "base_revision": "ed09db2aa18b0319297735af181bcbe8b877e830",
+  "revision": "9c641e5ea0d61301b9ee6b13d442e56fbe40bf92",
+  "paths_before": 133,
+  "paths_after": 134,
+  "other_paths_changed": [],
+  "paths_added": [
+    "reports/RAW_SELECTED_BASELINES_PROVENANCE.md"
+  ],
+  "manifest_roundtrip_equal": true,
+  "ok": true
+}
