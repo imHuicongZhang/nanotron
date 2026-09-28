@@ -194,3 +194,10 @@ Raw text read from the 100M raw pool by `orig_doc_id` (no rewriting, no transfor
 | `raw_top10b_fineweb_edu` | 16 | 10,000,007,488 | 10,000,007,488 | True | 20,000,014,976 |
 | `raw_top10b_modernbert` | 16 | 10,000,000,657 | 10,000,000,657 | True | 20,000,001,314 |
 
+## 9. Publication
+
+- **Repo and revision:** `blab-jhu/KYS-Pre-Rewritten` at revision `a5b3ab930fa64671d81eec2bafd84ecfcea78fb8`.
+- **Checksums:** 54 uploaded data files (parquet and selection arrays) checked against the Hub's LFS sha256 and size; mismatches: none.
+- **Manifest:** `manifest.json` downloaded back equals the local one: True.
+- **Generation code:** `imHuicongZhang/nanotron@0246ad59632e1ff761e08f5f0497d40b12a6ed04`.
+

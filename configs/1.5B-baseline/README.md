@@ -1,31 +1,44 @@
 # 1.5B raw-selected baselines
 
-> Operators on an external cluster: start with [RUNBOOK.md](RUNBOOK.md). Data counts live in the
-> data repo's `manifest.json` (blab-jhu/KYS-Pre-Rewritten) and are repeated here. Every number on
-> this page is measured; none is an estimate or a placeholder.
+> Operators on an external cluster: start with [WORKFLOW_RAW_BASELINES.md](WORKFLOW_RAW_BASELINES.md) (the single
+> entry point) and [RUNBOOK.md](RUNBOOK.md). Data counts live in the data repo's `manifest.json`
+> (blab-jhu/KYS-Pre-Rewritten) and are repeated here. The global Top-10B selections:
+> [reports/GLOBAL_TOP10B_SELECTION_REPORT.md](reports/GLOBAL_TOP10B_SELECTION_REPORT.md).
 
-No-rewrite controls for the Know-Your-Sources 1.5B grid. Each trains on the shared 5B anchor plus
-the **original, unrewritten** text of the documents one rewritten arm rewrote, subsampled at the
-document level to the same 5B strategy budget, so the difference from that arm isolates the effect
-of rewriting from the effect of source selection.
+Seven raw (unrewritten) corpora for the Know-Your-Sources 1.5B grid, in two families (list:
+`tools/kys_raw/registry.py`).
 
-| setting | rewritten counterpart | strategy half |
-|---|---|---|
-| `raw_diversity_oriented` | `diversity_oriented` | original text of the documents the Diversity-Oriented arm rewrote |
-| `raw_disagreement_aware` | `disagreement_aware` | original text of the documents the Disagreement-Aware arm rewrote |
-| `raw_random` | `wrap_inspired` | original text of the uniform random sample the WRAP-Inspired arm rewrote (no new sample drawn) |
-| `raw_rewire_inspired` | `rewire_inspired` | original text of the source documents of the 5B kept by REWIRE's post-rewrite filter |
+**Strategy-linked controls (4, published earlier, unchanged).** The shared 5B anchor plus a 5B raw strategy half
+linked to one rewritten arm, at the same token budget as that arm. Their interpretation is under separate review;
+this handoff does not re-audit them.
 
-`raw_random` is the **no-selection reference** — its sources are a uniform random sample — and the
-no-rewrite control for `wrap_inspired`. `raw_rewire_inspired` starts from a random pool too, but its
-sources are only those whose rewrites passed REWIRE's post-rewrite quality filter.
+| setting | comparator |
+|---|---|
+| `raw_diversity_oriented` | `diversity_oriented` |
+| `raw_disagreement_aware` | `disagreement_aware` |
+| `raw_random` | `wrap_inspired` |
+| `raw_rewire_inspired` | `rewire_inspired` |
+
+**Global Top-10B controls (3).**
+- Composition: the entire ~10B corpus is one global Top-10B selection over the Quality-Base universe: all scored
+  documents minus the 50,000-doc validation holdout, tie-aware v2 percentiles, the original tie-break, whole
+  documents to 1e10 TRAIN tokens.
+- **No anchor**, no rewriting.
+- Comparator: the existing fastText `quality_base`, which is the global fastText Top-10B up to 3 tail documents.
+
+| setting | score |
+|---|---|
+| `raw_top10b_fineweb_edu` | `fineweb-edu-ranking-v2` |
+| `raw_top10b_modernbert` | `modernbert-ranking-v2` |
+| `raw_top10b_consensus` | mean of the three v2 percentiles (float32) |
 
 ## Layout
 
     configs/1.5B-baseline/README.md, RUNBOOK.md
     configs/1.5B-baseline-seed<S>/                  S = 42, 43, 44
-        templates/<setting>_seed<S>_<kind>.yaml       24 experiment templates (tools/generate_configs.py)
-        <setting>_seed<S>_<kind>.yaml                 24 rendered configs with {{PLACEHOLDERS}} (render_placeholders.py)
+        templates/<setting>_seed<S>_<kind>.yaml       42 experiment templates (7 settings x 6; tools/generate_configs.py)
+        <setting>_seed<S>_<kind>.yaml                 42 rendered configs with {{PLACEHOLDERS}} (render_placeholders.py)
+    configs/1.5B-baseline/reports/                  selection report, scorer-training audit, config comparison
         filled/                                        produced on the training cluster (fill_placeholders.py)
 
 A clone contains the `.yaml` configs and templates but **no `.env` files**: `.gitignore` excludes
@@ -36,8 +49,9 @@ clone — the `.env` files carry only wandb metadata and are rebuilt from your `
 `<kind>` is `trunk1`, `trunk2`, `trunk3` (stable phase, ending at steps 4292 / 8583 / 12875) and
 `ep1`, `ep2`, `ep3` (decay branches from those trunk steps, ending at 4768 / 9537 / 14305).
 
-**What differs between settings.** Against its rewritten counterpart, each rendered config differs
-in exactly four fields (all 24 seed-42 configs rendered for skipjack and diffed): `general.run`, the
+**What differs between settings.** Across the seven settings the configs are identical after renaming (all 126;
+`reports/CONFIG_COMPARISON.md`). Against its rewritten counterpart, each rendered config differs
+in exactly four fields (the 24 original seed-42 configs rendered for skipjack and diffed): `general.run`, the
 dataset folder, the checkpoint paths (setting name only), and `parallelism.recompute_layer`. Model,
 LR schedule, steps, global batch, micro batch, seeds and data order are identical.
 
@@ -57,8 +71,9 @@ those values (renderer guards included) and `tools/kys_raw/plan_submit.py` write
 
 ## Data: blab-jhu/KYS-Pre-Rewritten (raw text)
 
-    raw_text/<setting>/part-00000.parquet ... part-00015.parquet    orig_doc_id, source (anchor|strategy), text
-    manifest.json   README.md
+    raw_text/<setting>/part-00000.parquet ... part-00015.parquet    strategy-linked: orig_doc_id, source (anchor|strategy), text
+                                                                    global Top-10B: orig_doc_id, doc_id, source (selected), text
+    selection/<setting>/*.npy   reports/   tokenizer/   manifest.json   README.md
 
 Published as raw text in the exact post-shuffle document order, anchor merged in, 16 contiguous files
 per setting. The consumer tokenizes with `tools/kys_raw/tokenize_raw_text.sh` (RUNBOOK.md, "Tokenizing
@@ -189,8 +204,9 @@ per-step overhead.
 
 **Wall time at 22.8 s/it**, per setting per seed: 27.2 h for each of the three trunk segments (the
 longest single job, comfortably inside a 3-day limit), 3.0 / 6.0 / 9.1 h for ep1 / ep2 / ep3 —
-15,735 steps, **99.7 h ~= 4.15 days**. All 24 runs of one seed-set of the grid: **~2,392 node-hours**
-on 4 x H100. Pass the measured value to the planner with
+15,735 steps, **99.7 h ~= 4.15 days** (one node). One seed of the seven-setting grid: 7 x 99.7 = **698 node-hours**;
+all 21 chains: **2,093 node-hours** on 4 x H100. (An earlier version of this page said ~2,392 node-hours for one
+seed of four settings; that was an arithmetic error — four chains are 399 node-hours.) Pass the measured value to the planner with
 `plan_submit.py --s-per-it 22.8` to get this table for your own cluster.
 
 ## Environment notes (skipjack; see INSTALL.md)

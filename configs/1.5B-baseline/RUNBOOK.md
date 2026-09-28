@@ -1,90 +1,181 @@
 # Know-Your-Sources raw-selected baselines: runbook
 
-**Full workflow:** [`WORKFLOW_RAW_BASELINES.md`](WORKFLOW_RAW_BASELINES.md) is the single entry point for executing this grid end to end on an external cluster — what to do, in what order, and who does it. This runbook is one of its detailed references.
+**Start with [`WORKFLOW_RAW_BASELINES.md`](WORKFLOW_RAW_BASELINES.md).** It is the single, self-contained entry
+point: what to do, in what order, and who does it. This runbook is a detailed reference for the same procedure. If
+the two ever disagree, the workflow document wins; please report the discrepancy.
 
 ## Purpose
-Train no-rewrite controls for four source-selection strategies so the rewriting effect can be separated from the selection effect. Each control uses the same 5B anchor and the same selected source documents as its rewritten counterpart, but keeps the documents in their original unrewritten form, subsampled at the document level to the same 5B budget. raw_random is the no-selection reference and the control for wrap_inspired. raw_rewire_inspired uses the source documents of the 5B kept by REWIRE's post-rewrite filter.
 
-| setting | rewritten counterpart |
-|---|---|
-| `raw_diversity_oriented` | `diversity_oriented` |
-| `raw_disagreement_aware` | `disagreement_aware` |
-| `raw_random` | `wrap_inspired` |
-| `raw_rewire_inspired` | `rewire_inspired` |
+Seven raw (unrewritten) 1.5B training corpora, in two families. The global Top-10B selections are documented in
+[`reports/GLOBAL_TOP10B_SELECTION_REPORT.md`](reports/GLOBAL_TOP10B_SELECTION_REPORT.md).
+
+**Strategy-linked controls (4, published earlier, unchanged).** Each is the shared 5B anchor + a 5B raw strategy
+half linked to one rewritten arm, with the same token budget as that arm. Their interpretation is under separate
+review; this handoff does not re-audit them.
+
+**Global Top-10B controls (3).** The whole ~10B corpus is one global Top-10B selection over the Quality-Base
+universe, by one score. There is no anchor. They are compared against the existing fastText Quality-Base.
+
+| setting | family | anchor | comparator (v2) |
+|---|---|---|---|
+| `raw_diversity_oriented` | strategy-linked | yes | `diversity_oriented` |
+| `raw_disagreement_aware` | strategy-linked | yes | `disagreement_aware` |
+| `raw_random` | strategy-linked | yes | `wrap_inspired` |
+| `raw_rewire_inspired` | strategy-linked | yes | `rewire_inspired` |
+| `raw_top10b_fineweb_edu` | global Top-10B by `fineweb-edu-ranking-v2` | no | `quality_base` |
+| `raw_top10b_modernbert` | global Top-10B by `modernbert-ranking-v2` | no | `quality_base` |
+| `raw_top10b_consensus` | global Top-10B by mean of the three v2 percentiles | no | `quality_base` |
+
+The list lives in `tools/kys_raw/registry.py`. Every tool reads it from there.
 
 ## What you need
-- Repo: https://github.com/imHuicongZhang/nanotron, branch huicong-dev, commit: the commit recorded as `code.commit` in the data repo's manifest.json (the commit that added this runbook; a runbook cannot contain its own hash). Any later huicong-dev commit that only fills pending values in this file is equivalent.
-- Data: https://huggingface.co/datasets/blab-jhu/KYS-Pre-Rewritten, folders raw_text/raw_diversity_oriented, raw_text/raw_disagreement_aware, raw_text/raw_random, raw_text/raw_rewire_inspired, each about 10B tokens, 16 parquet files. See manifest.json for token counts and checksums.
-  - The data is published as **raw text**; you tokenize it (section "Tokenizing from raw_text"). Each folder is the final corpus in training order: anchor merged in, shuffled, rows in order.
-  - Tokenizer: `tokenizer/` in the same dataset repo, the exact llama-2 tokenizer directory the grid was tokenized with (sha256 of each file in manifest.json, `tokenizer.sha256`). It downloads with the data; no other repo is needed.
-- Init checkpoints: https://huggingface.co/wytro/Know-Your-Sources-init (model repo)
-  - seed 42: `_init_1.5B_seed42/0/`, hash manifest `init_1.5B_seed42.hash.json`, rolling sha256 `2ede6612b2e48d7529f867f0e74ca0a7d9ba79cd635d4f803f8022d9b0113aba`
-  - seed 43: `_init_1.5B_seed43/0/`, hash manifest `init_1.5B_seed43.hash.json`, rolling sha256 `78ab44e2b2ac954ee441ea340e35969c82cf78bf3f2266f3c8cd0590ce3b8aa3`
-  - seed 44: `_init_1.5B_seed44/0/`, hash manifest `init_1.5B_seed44.hash.json`, rolling sha256 `a967df1cae0538c63bf1be412d6e3db0082e75936680f98b11b9a84d49642247`
-  - 1,504,299,008 parameters each. Verify with `python tools/hash_init_checkpoint.py <init_root>/_init_1.5B_seed<S>/0 --check <init_root>/init_1.5B_seed<S>.hash.json`.
-- Environment: follow INSTALL.md exactly, including grouped_gemm at the pinned commit. Verify with the 20-step smoke test described there (INSTALL.md §3.4, `tools/kys_raw/smoke_20steps.py`; run it after tokenizing `raw_diversity_oriented`).
-  - If your compute nodes have no Python development headers, set `python_include` in the cluster entry (INSTALL.md, "Python headers on compute nodes"); Triton and nanotron's dataset helper compile against `Python.h` at run time.
+
+- **Repo:** `github.com/imHuicongZhang/nanotron`, branch `huicong-dev`. The data repo's `manifest.json` records the
+  code commits that generated each corpus (`code.commit` for the four strategy-linked, `global_top10b.code.commit`
+  for the three new).
+- **Data:** `blab-jhu/KYS-Pre-Rewritten`, which holds `raw_text/<setting>/` (16 parquet files each, in training
+  order), `tokenizer/`, `manifest.json` (counts, `expected_total_tokens`, and sha256 of every file), `selection/`
+  and `reports/`. It is published as raw text; you tokenize it (below).
+- **Init checkpoints:** `wytro/Know-Your-Sources-init`.
+
+  | seed | directory | hash manifest | rolling sha256 |
+  |---|---|---|---|
+  | 42 | `_init_1.5B_seed42/0/` | `init_1.5B_seed42.hash.json` | `2ede6612b2e48d7529f867f0e74ca0a7d9ba79cd635d4f803f8022d9b0113aba` |
+  | 43 | `_init_1.5B_seed43/0/` | `init_1.5B_seed43.hash.json` | `78ab44e2b2ac954ee441ea340e35969c82cf78bf3f2266f3c8cd0590ce3b8aa3` |
+  | 44 | `_init_1.5B_seed44/0/` | `init_1.5B_seed44.hash.json` | `a967df1cae0538c63bf1be412d6e3db0082e75936680f98b11b9a84d49642247` |
+
+  Each has 1,504,299,008 parameters and 180 files. Check with
+  `python tools/hash_init_checkpoint.py <dir> --check <manifest>`.
+- **Environment:** INSTALL.md, exactly, including `grouped_gemm` at the pinned commit. Run the smoke tests of
+  INSTALL.md §3 (the 20-step run is §3.4).
 
 ## Order of work
-1. Run seed 42 for all four settings first. Start seeds 43 and 44 only after seed 42 is complete and its checkpoints are uploaded.
-2. Within a seed, each setting has 6 segments: trunk1, trunk2, trunk3 (stable phase, chained) and ep1, ep2, ep3 (decay branches, each starting from the end of the corresponding trunk). Dependencies: trunk2 after trunk1, trunk3 after trunk2, ep1 after trunk1, ep2 after trunk2, ep3 after trunk3.
-3. Final steps: trunk1/2/3 end at 4292 / 8583 / 12875, ep1/2/3 end at 4768 / 9537 / 14305.
-   - ep1 resumes from trunk step 4292 and decays over 476 steps, ep2 from 8583 over 954, ep3 from 12875 over 1430 (linear to 0). The trunks carry the ep3 decay parameters and stop at or before step 12875, so their LR is constant after the 500-step warmup.
+
+1. Seeds run one after another: 42, then 43, then 44. Each seed starts only after the previous seed's 21 finals are
+   uploaded.
+2. Within a seed, the 7 chains run in parallel. Each chain has 6 segments:
+   - `trunk1` 1→4292, `trunk2` →8583, `trunk3` →12875: the stable phase, chained through `latest.txt`;
+   - `ep1` 4292→4768, `ep2` 8583→9537, `ep3` 12875→14305: linear decay to 0, each resuming from its trunk step
+     directory.
+3. Dependencies (`afterok`): trunk2 after trunk1, trunk3 after trunk2, ep1 after trunk1, ep2 after trunk2, ep3 after
+   trunk3.
+4. Totals: 7 settings × 3 seeds = 21 chains, 126 segments, 63 annealed finals.
 
 ## Tokenizing from raw_text
-Do this once per setting, before filling configs. It needs the environment from INSTALL.md (datatrove 0.5.0) and CPU only.
 
-1. Download the data; the tokenizer comes with it, in `<data_root>/tokenizer/`:
-   ```python
-   from huggingface_hub import snapshot_download
-   data_root = snapshot_download("blab-jhu/KYS-Pre-Rewritten", repo_type="dataset", local_dir="<data_root>")
-   ```
-2. Tokenize each of the four settings into 16 shards, preserving document order. The tokenizer directory defaults to `<data_root>/tokenizer`; pass it as a third argument only if you keep it elsewhere.
+This is CPU only, once per setting.
+
+```python
+from huggingface_hub import snapshot_download
+data_root = snapshot_download("blab-jhu/KYS-Pre-Rewritten", repo_type="dataset", local_dir="<data_root>")
+```
+
+```bash
+for s in raw_diversity_oriented raw_disagreement_aware raw_random raw_rewire_inspired \
+         raw_top10b_fineweb_edu raw_top10b_modernbert raw_top10b_consensus; do
+  tools/kys_raw/tokenize_raw_text.sh <data_root> $s
+done
+```
+
+**What the script does, per setting:**
+1. Checks the tokenizer files and all 16 parquet files against `manifest.json` sha256.
+2. Runs:
    ```bash
-   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_diversity_oriented
-   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_disagreement_aware
-   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_random
-   tools/kys_raw/tokenize_raw_text.sh <data_root> raw_rewire_inspired
+   python tools/preprocess_data_parquet.py --tokenizer-name-or-path <data_root>/tokenizer/tokenizer.json \
+       --eos-token "</s>" --output-folder <data_root>/<s>/tokenized --logging-dir <data_root>/<s>/tokenize_logs \
+       --n-tasks 16 parquet --dataset <data_root>/raw_text/<s> --column text --glob-pattern "part-*.parquet"
    ```
-   For each setting the script:
-   - checks the tokenizer files against `tokenizer.sha256` and the 16 `raw_text/<setting>/part-000NN.parquet` files against the sha256 in manifest.json;
-   - runs `python tools/preprocess_data_parquet.py --tokenizer-name-or-path <data_root>/tokenizer/tokenizer.json --eos-token "</s>" --output-folder <data_root>/<setting>/tokenized --logging-dir <data_root>/<setting>/tokenize_logs --n-tasks 16 parquet --dataset <data_root>/raw_text/<setting> --column text --glob-pattern "part-*.parquet"`. With 16 files and 16 tasks, task i reads exactly file i and nothing is shuffled, so shards `00000`…`00015` concatenate to the file order;
-   - runs `python tools/fix_ds_metadata.py --output-folder <data_root>/<setting>/tokenized --tokenizer-dir <data_root>/tokenizer`;
-   - verifies 16 shards and that the summed `.ds.metadata` token count equals `settings.<setting>.expected_total_tokens` in manifest.json, exactly.
-3. **No merge or shuffle is needed on your side.** The anchor is already merged into every folder and the documents are already shuffled (seed 42). Do not pass `--shuffle`, change `--n-tasks`, or re-split the parquet files: any of these changes the data order.
-4. Use `<data_root>` as `data_root` and `<data_root>/tokenizer` as `tokenizer_path` in the cluster entry. `tools/assert_invariants.py` reads the expected totals from `<data_root>/manifest.json`.
+   With 16 files and 16 tasks, task i reads file i and nothing is shuffled.
+3. Runs `python tools/fix_ds_metadata.py --output-folder <data_root>/<s>/tokenized --tokenizer-dir <data_root>/tokenizer`.
+4. Requires 16 shards and a token total exactly equal to `settings.<s>.expected_total_tokens`.
+
+The three global Top-10B totals were confirmed this way before publication (selection report §8). The four earlier
+settings were not re-tokenized in this preparation; the same check runs on your side.
+
+**Do not:**
+- merge, shuffle, re-split or change the task count;
+- use another tokenizer.
+
+Use `<data_root>` as `data_root` and `<data_root>/tokenizer` as `tokenizer_path`. `tools/assert_invariants.py` reads
+the expected totals from `<data_root>/manifest.json`.
 
 ## Setup steps
-1. Download the four data folders and the init checkpoints. Verify sha256 against manifest.json.
-   - Data: `tokenize_raw_text.sh` checks every parquet file's sha256 against manifest.json before tokenizing.
-   - Init: `tools/hash_init_checkpoint.py --check` as above. That check covers the model weights only, so also confirm each `_init_1.5B_seed<S>/0/` holds all 180 files (a complete download; `plan_submit.py`'s seeding step refuses an incomplete init). trunk1 loads the init as **weights only** (`load_optimizer: false`, `load_lr_scheduler: false` in the configs): the init's optimizer file holds no Adam state, only fp32 copies bit-identical to the weights, and nanotron refuses to load an empty optimizer state. Do not switch those two flags on for trunk1; trunk2, trunk3 and the ep branches correctly load full optimizer state from the trunk checkpoints.
-2. Fill the placeholders {{DATA_ROOT}}, {{CKPT_ROOT}}, {{CLUSTER}} in configs/1.5B-baseline-seed<S>/ and the marc-cluster entry in deploy/clusters.yaml.
-   - The shipped configs also mark {{TOKENIZER_PATH}}, {{WANDB_ENTITY}}, {{WANDB_DIR}} and {{RECOMPUTE_LAYER}}. Do not edit the 24 configs by hand: fill every field of `marc-cluster` in `deploy/clusters.yaml` (each field is commented there), then run `python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed <S>`. It re-renders the 24 templates in `configs/1.5B-baseline-seed<S>/templates/` with your values into `configs/1.5B-baseline-seed<S>/filled/`, deriving accum from your mbs and dp and checking the memory fit.
-3. Parallelism: keep the global batch at 1024 sequences x 2048 tokens. The original grid used dp 4, mbs 32, accum 8. Use mbs 32 if it fits your GPUs, otherwise the largest mbs that fits and adjust accum to keep the global batch. Record the mbs you used. Our probe on 80GB H100 found mbs 32 with full layer recomputation (`recompute_layer: true`) and accum 8 fits: 49.6 GiB peak allocated on one H100, 23% slower than mbs 4 without recomputation (4.02 s vs 3.26 s per 64-sequence step). mbs 32 without recomputation needs about 191 GiB. Recomputation changes speed only, not the math, so mbs 32 + recompute reproduces the grid exactly. Measured on one H100 over a full 1024-sequence step (20 steps from the seed-42 init on the rewritten diversity_oriented corpus): **63.9 s/it at mbs 32 + recompute (57.9 GiB peak) against 72.2 s/it at mbs 4 without it (50.3 GiB peak)** — at the full step mbs 32 is ~11% *faster*, because mbs 4 needs 256 micro-batches per step instead of 32, and the per-micro-batch overhead outweighs recomputation. The two runs' losses agree at every step (10.8 -> 8.18 over 20 steps; one step differs by 0.01 at three significant figures), as expected since dp and recomputation change no math. Measured on 4 x H100 (dp 4, the real configuration; skipjack job 424271): **22.8 s/it at mbs 32 + recompute (59.4 GiB peak) against 17.9 s/it at mbs 4 without it (53.7 GiB peak)**, losses again identical at every step. Note the ordering flips from the one-GPU case — at dp 4 each replica runs 64 micro-batches at mbs 4 instead of 256, so recomputation's ~25% cost is no longer masked by per-micro-batch overhead; mbs 32 remains correct because it is the grid's value. Scaling from one GPU is 2.80x, not 4x. Budget from 22.8 s/it: **27.2 h per trunk segment** (the longest job; fits a 3-day limit), 3.0 / 6.0 / 9.1 h for ep1 / ep2 / ep3, **99.7 h ~= 4.15 days per setting per seed**, and **~2,392 node-hours for all 24 runs of one seed**. Pass your own measurement as `plan_submit.py --s-per-it <N>` to regenerate the wall-time table.
-   - If you must use another mbs, pass `--expected-mbs <N>` to `fill_placeholders.py` and `plan_submit.py`; a different mbs slightly changes the loss weighting (`masked_mean`, SOP.md §1), so report it.
-4. Run tools/assert_invariants.py on every config. It must pass and must report no remaining placeholders.
-   - `fill_placeholders.py` already runs it on all 24 (batch, placeholders). Before training, run it fully per config — `python tools/assert_invariants.py --config <filled cfg>` after sourcing the matching `.env` — so the corpus token count (from manifest.json) and the tokenizer path are checked against the data on disk. The launcher repeats this with `--check-resume` before every segment.
-5. Use the submission planner (tools/kys_raw/plan_submit.py) to generate SLURM scripts with the dependency chain above. Jobs must resume from the latest checkpoint on requeue or preemption.
-   - `python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed <S>` writes `configs/1.5B-baseline-seed<S>/filled/submit_seed<S>.sh`: it seeds each trunk directory with the seed's init checkpoint, then submits the 24 segments of `deploy/slurm/kys_segment.sbatch` with `afterok` dependencies. Run the script (or add `--submit`).
-   - **Run it from the clone you set as `repo_dir`.** The generated script invokes `kys_segment.sbatch` by absolute path from wherever `plan_submit.py` itself lives, while exporting `KYS_REPO=repo_dir` for the jobs. If those are two different clones the jobs run one tree's launcher against the other tree's code, so `plan_submit.py` refuses when they disagree rather than emitting a script that mixes them.
-   - `kys_segment.sbatch` is submitted with `--requeue`. On restart a trunk resumes from its newest checkpoint through `latest.txt` (checkpoint_interval 1500), a branch restarts from its branch point, and a segment whose final checkpoint already exists exits 0 without training.
+
+1. **Init.** Verify it (above). trunk1 loads the init as **weights only** (`load_optimizer: false`,
+   `load_lr_scheduler: false`): the init's optimizer file holds no Adam state, and nanotron refuses to load an empty
+   one. Later segments load full state from the trunk.
+2. **Cluster entry.** Fill every field of `marc-cluster` in `deploy/clusters.yaml`, then run:
+   ```bash
+   python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed <S>
+   ```
+   This re-renders the 42 templates of that seed into `configs/1.5B-baseline-seed<S>/filled/`, derives accum and
+   checks the memory fit. Never edit rendered configs by hand. Placeholders in the shipped configs:
+   `{{DATA_ROOT}} {{TOKENIZER_PATH}} {{CKPT_ROOT}} {{WANDB_ENTITY}} {{WANDB_DIR}} {{CLUSTER}} {{RECOMPUTE_LAYER}}`.
+3. **Parallelism.** Global batch 1024 × 2048; dp = GPUs per node; **mbs 32** with `recompute_layer: true` on 80 GB
+   cards; accum is derived.
+   - Why mbs stays 32: nanotron normalizes the loss per micro-batch (`src/nanotron/models/llama.py:984-1006`), so a
+     different mbs changes per-token weights. The recorded effect is 1.43e-3 relative for mbs 4 vs 16
+     (`deploy/clusters.yaml`, h200 entry).
+   - Recomputation changes speed, not the math.
+   - If mbs 32 cannot fit, pass `--expected-mbs N` to `fill_placeholders.py` and `plan_submit.py`, and report it.
+   - The v2 Quality-Base comparator's seed 42 itself ran mbs 16 / accum 16; every other v2 run used 32 / 8.
+4. **Measured speed** (skipjack, 20 steps, seed-42 init, full batch):
+
+   | configuration | s/it | peak memory |
+   |---|---:|---:|
+   | 4 × H100, dp 4, mbs 32 + recompute | 22.8 | 59.4 GiB |
+   | 4 × H100, dp 4, mbs 4, no recompute | 17.9 | 53.7 GiB |
+   | 1 × H100, mbs 32 + recompute | 63.9 | 57.9 GiB |
+   | 1 × H100, mbs 4 | 72.2 | 50.3 GiB |
+
+   Loss at steps 1 / 10 / 20 was 10.8 / 8.83 / 8.18–8.19 in all four (agreement to about 0.01 at three significant
+   figures; no bitwise claim).
+   - Wall time at 22.8 s/it: 27.2 h per trunk segment, 3.0 / 6.0 / 9.1 h for ep1 / ep2 / ep3.
+   - Per chain: 15,735 steps, 99.7 node-hours. Whole grid (21 chains): 2,093 node-hours.
+   - **`slurm.time` must exceed the longest stretch without a checkpoint** (about 9.5 h at 22.8 s/it) with margin,
+     so ≥ 12 h. `plan_submit.py --s-per-it` enforces this.
+5. **Invariants.** `fill_placeholders.py` runs `assert_invariants.py --skip-corpus --skip-env` on every config.
+   After tokenizing, run it fully per config (`python tools/assert_invariants.py --config <filled cfg>`, after
+   sourcing the `.env`). The launcher repeats it with `--check-resume` before every segment.
+6. **Submission.**
+   ```bash
+   python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed <S> --s-per-it <measured>
+   ```
+   This writes `submit_seed<S>.sh` and prints the plan. The script refuses to submit anything if one of its job
+   names is already queued for `$USER`, seeds each trunk with the init (step 0 + `latest.txt`), and submits
+   `deploy/slurm/kys_segment.sbatch` per segment with `afterok` dependencies and `--requeue`.
+   - `--test-only` asks SLURM to validate each segment without queueing.
+   - `--settings a,b` restricts it to a subset.
+   - `--submit` runs the script.
+   - Run it from the clone set as `repo_dir`.
+7. **Requeue.** A trunk resumes via `latest.txt`, losing at most 1500 steps; a branch reruns from its branch point; a
+   segment whose final checkpoint exists exits 0. Do **not** resubmit while jobs of the seed are still queued or
+   running: the final-checkpoint skip does not protect an unfinished segment.
 
 ## Logging
-Log to your own wandb project and send us the exported loss CSVs per segment. Run names: raw_<setting>_seed<S>_<segment>.
 
-Set `wandb.project`, `wandb.entity` and `wandb.dir` in `marc-cluster` to your own (or `mode: offline`). The configs set `general.run` to exactly that name, and the rendered `.env` sets `WANDB_RUN_GROUP=raw_<setting>_seed<S>`, `WANDB_JOB_TYPE=<segment>` and tags carrying mbs, dp, accum and cluster. Note: nanotron passes `general.project` (`zhc-1p5b-10b-wsd`) to `wandb.init`; keep that project name in your entity, or change `PROJECT` in `tools/generate_configs.py` and regenerate the templates.
+Use your own wandb project, or `mode: offline` with `wandb.dir` on shared storage. The run name is
+`<setting>_seed<S>_<segment>` (= `general.run`); the `.env` sets `WANDB_RUN_GROUP=<setting>_seed<S>`,
+`WANDB_JOB_TYPE=<segment>` and tags for mbs/dp/accum/cluster. nanotron passes `general.project`
+(`zhc-1p5b-10b-wsd`) to `wandb.init`. The deliverable is the exported per-segment loss CSV, not wandb.
 
 ## Deliverables per seed
-- For each setting, the final checkpoint of ep1, ep2 and ep3 in nanotron format and as an HF export, produced with tools/kys_eval/convert_to_hf.py. Upload to blab-jhu/KYS-1.5B-Raw-Selected-Baselines, layout rewrite-1p5b/seed<S>/<setting>/ep<N>/.
-  - Final checkpoints: ep1 step 4768, ep2 step 9537, ep3 step 14305, under `<ckpt_root>/seed<S>/<setting>/ep<N>/<setting>/seed<S>/<step>/`.
-  - Export: `python tools/kys_eval/convert_to_hf.py --checkpoint_path <step dir> --save_path <out> --tokenizer <tokenizer dir>` (CPU only; torch, safetensors, transformers).
-  - `blab-jhu/KYS-1.5B-Raw-Selected-Baselines` does not exist yet; we will create it (model repo) and grant your uploader write access before seed 42 finishes. Upload the nanotron step directory and the HF export side by side: `rewrite-1p5b/seed<S>/<setting>/ep<N>/nanotron/` and `rewrite-1p5b/seed<S>/<setting>/ep<N>/hf/`.
-- Loss logs per segment as CSV.
-- The filled configs and clusters.yaml entry as used, committed to a branch named marc-runs.
-- A short note with the mbs used, s/it, and any deviation from this runbook.
+
+- For each setting, each ep final in nanotron format **and** as an HF export, uploaded to
+  `blab-jhu/KYS-1.5B-Raw-Selected-Baselines`.
+  - The finals are ep1 4768, ep2 9537 and ep3 14305, at `<ckpt_root>/seed<S>/<setting>/ep<N>/<setting>/seed<S>/<step>/`.
+  - Export: `python tools/kys_eval/convert_to_hf.py --checkpoint_path <step dir> --save_path <out> --tokenizer <tokenizer dir>` (CPU).
+  - Upload layout: `rewrite-1p5b/seed<S>/<setting>/ep<N>/nanotron/`, `.../hf/`, and `rewrite-1p5b/seed<S>/<setting>/logs/`.
+- Loss CSVs per segment.
+- The filled configs and the `marc-cluster` entry on branch `marc-runs`. Never commit tokens.
+- A short note: mbs, s/it, requeues, and any deviation.
 
 ## Evaluation
-Run evaluation on each ep checkpoint. The LightEval configuration and task list will be added to this runbook in a follow-up commit; until then, upload checkpoints and loss logs as described above.
+
+Use `github.com/imHuicongZhang/kys-eval`: 63 cells, reference check first, `run_grid`, then `aggregate`. The commands
+are in WORKFLOW §14 and the kys-eval README. Upload `results/` and `reports/` to `rewrite-1p5b/seed<S>/eval/`.
 
 ## Contact
-Questions go to Huicong Zhang. Do not change the LR schedule, token budget, segment boundaries or data order.
+
+Questions go to Huicong Zhang. Do not change the LR schedule, token budget, segment boundaries, micro-batch size or
+data order.
