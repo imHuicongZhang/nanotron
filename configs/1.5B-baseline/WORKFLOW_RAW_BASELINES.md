@@ -2,7 +2,7 @@
 
 **For:** Marc Marone's cluster, and the agent operating it.
 **Code:** `github.com/imHuicongZhang/nanotron`, branch `huicong-dev`, at or after `e5316a52` (training code and configs are unchanged since `0246ad59`).
-**Data:** `huggingface.co/datasets/blab-jhu/KYS-Pre-Rewritten`, revision `9c641e5e` or later (data files identical since `a5b3ab93`; later revisions changed descriptions only). It holds
+**Data:** `huggingface.co/datasets/blab-jhu/KYS-Pre-Rewritten`, revision `4ba8df66` or later (data files identical since `a5b3ab93`; later revisions changed descriptions only). It holds
 the raw text of all seven corpora and the tokenizer.
 **Init:** `huggingface.co/wytro/Know-Your-Sources-init`, revision `87e13356`.
 **Outputs go to:** `huggingface.co/blab-jhu/KYS-1.5B-Raw-Selected-Baselines`.
@@ -243,7 +243,7 @@ upstream nanotron will not work. H100/H200 (`sm_90`) are covered by the prebuilt
 ```python
 from huggingface_hub import snapshot_download
 data_root = snapshot_download("blab-jhu/KYS-Pre-Rewritten", repo_type="dataset",
-                              revision="9c641e5ea0d61301b9ee6b13d442e56fbe40bf92", local_dir="/YOUR/PATH/kys_raw")
+                              revision="4ba8df66b51c210bb2bc51d2f5f93c48e850171d", local_dir="/YOUR/PATH/kys_raw")
 init_root = snapshot_download("wytro/Know-Your-Sources-init", revision="87e1335647a3105471928e0fd261d92846021d1a",
                               local_dir="/YOUR/PATH/kys_init")
 ```

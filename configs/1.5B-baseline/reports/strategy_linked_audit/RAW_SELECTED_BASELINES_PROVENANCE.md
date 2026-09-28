@@ -702,6 +702,8 @@ runs.**
 
 Outside this repository (2026-09-28): `imHuicongZhang/nanotron@c953d14c` `tools/kys_raw/build_raw_sources.py`,
 `assemble_raw_corpus.py`, `tokenize_raw_text.sh`, `tools/preprocess_data_parquet.py`, `src/nanotron/data/clm_collator.py`,
-`src/nanotron/parallel/pipeline_parallel/engine.py`; datatrove 0.5.0 `utils/tokenization.py`; the work directory
-`/projects/bvandur1/zhuicon1/data/kys-1p5b-strategy-linked-audit/` (revision pin, Quality-First ID extract, consumer
-tokenization logs).
+`src/nanotron/parallel/pipeline_parallel/engine.py`; datatrove 0.5.0 `utils/tokenization.py`. The temporary work
+directory of the re-verification was deleted after publication. Its small records (audit re-run JSON, logs, per-shard
+`.ds.metadata`, Hub publication record) are in `15_kys_raw_audit/run_records_2026-09-28/`; its large intermediates are
+reproducible: flat arrays with nanotron `tools/kys_raw/extract_scored_columns.py`, tokenized corpora with
+`tokenize_raw_text.sh`, the Quality-First ID extract with `15_kys_raw_audit/qf_sources.py`.

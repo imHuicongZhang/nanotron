@@ -2,7 +2,7 @@
 
 - [`RAW_SELECTED_BASELINES_PROVENANCE.md`](RAW_SELECTED_BASELINES_PROVENANCE.md): the audit (verdicts, exact
   construction, what each raw/rewritten comparison supports). Byte-identical to the canonical copy
-  `docs/RAW_SELECTED_BASELINES_PROVENANCE.md` in the selection project (`projects/rewrite`, commit `70195a0`;
+  `docs/RAW_SELECTED_BASELINES_PROVENANCE.md` in the selection project (`projects/rewrite`, commit `9cfa736`;
   that repository has no remote, so it is published here).
 - `15_kys_raw_audit/`: the audit scripts and their JSON outputs, as committed in the selection project;
   `run_records_2026-09-28/` holds the re-verification run records (audit re-run JSON, logs, the consumer
