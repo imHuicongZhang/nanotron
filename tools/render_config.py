@@ -102,17 +102,17 @@ SETTING_CORPUS = {
     'wrap_inspired':      'wrap_inspired',
     'rewire_inspired':    'rewire_inspired',
     'disagreement_aware': 'disagreement_aware',
-    # Raw-selected baselines (configs/1.5B-baseline-seed42). Not in the HF repo: built locally
-    # from the shared anchor + the original text of each arm's source documents (README there).
-    'raw_diversity_oriented': 'raw_diversity_oriented',
-    'raw_disagreement_aware': 'raw_disagreement_aware',
-    'raw_random':             'raw_random',
-    'raw_rewire_inspired':    'raw_rewire_inspired',
 }
+# Raw-selected baselines (configs/1.5B-baseline-seed<S>): corpus dir == setting name. The list is
+# tools/kys_raw/registry.py; the corpora ship as raw text in blab-jhu/KYS-Pre-Rewritten and are
+# tokenized by the consumer into <data_root>/<setting>/tokenized (tools/kys_raw/tokenize_raw_text.sh).
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'kys_raw'))
+from registry import SETTING_NAMES as _RAW_NAMES  # noqa: E402
+SETTING_CORPUS.update({s: s for s in _RAW_NAMES})
 # The raw baselines run on a different cluster from their rewritten counterparts, so they are
 # assigned by `baseline_seed_assignment` instead of `seed_assignment`, and their mbs uniformity
 # is checked among themselves (see clusters.yaml).
-RAW_SETTINGS = {'raw_diversity_oriented', 'raw_disagreement_aware', 'raw_random', 'raw_rewire_inspired'}
+RAW_SETTINGS = set(_RAW_NAMES)
 CORPUS_LEAF = 'tokenized'   # <data_root>/<corpus dir>/tokenized/*.ds
 
 

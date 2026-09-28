@@ -5,78 +5,115 @@ language:
 tags:
   - pretraining
   - data-selection
-pretty_name: Know Your Sources — raw-selected (pre-rewrite) baseline corpora
+pretty_name: Know Your Sources — raw (unrewritten) baseline corpora
 ---
 
-# Know Your Sources: raw-selected baseline corpora (raw text)
+# Know Your Sources: raw baseline corpora (raw text)
 
-No-rewrite controls for the Know-Your-Sources 1.5B grid. Each corpus trains a model on the **same
-shared 5B anchor** and **the same selected source documents** as a rewritten arm, but keeps those
-documents in their **original, unrewritten** form, subsampled at the document level to the same
-5B-token strategy budget. Training on these against the rewritten arms separates the effect of
-rewriting from the effect of source selection.
+Seven raw, unrewritten training corpora for the Know-Your-Sources 1.5B grid. Each is about 10B training tokens.
+They come in two families. For what each corpus is, and what each comparison can and cannot establish, see
+[`reports/RAW_SELECTED_BASELINES_PROVENANCE.md`](reports/RAW_SELECTED_BASELINES_PROVENANCE.md) and
+[`reports/GLOBAL_TOP10B_SELECTION_REPORT.md`](reports/GLOBAL_TOP10B_SELECTION_REPORT.md).
+
+## Strategy-linked raw controls (4)
+
+**Composition:** the **shared 5B anchor** plus a **5B strategy half**. The strategy half is a seed-42 random
+subsample of the unique source documents of one rewritten arm's *final rewritten half*, kept as original text.
+
+**Consequences:**
+- Only documents whose rewrite succeeded and survived assembly are eligible.
+- These controls match their rewritten arm's token budget.
+- They do **not** contain the same documents: the strategy half covers 46–53% of the arm's source documents.
 
 | folder | rewritten counterpart | strategy half |
 |---|---|---|
-| `raw_text/raw_diversity_oriented/` | `diversity_oriented` | original text of the documents the Diversity-Oriented arm rewrote |
-| `raw_text/raw_disagreement_aware/` | `disagreement_aware` | original text of the documents the Disagreement-Aware arm rewrote |
-| `raw_text/raw_random/` | `wrap_inspired` | original text of the uniform random sample the WRAP-Inspired arm rewrote |
-| `raw_text/raw_rewire_inspired/` | `rewire_inspired` | original text of the source documents of the 5B kept by REWIRE's post-rewrite filter |
+| `raw_text/raw_diversity_oriented/` | `diversity_oriented` | random half of the arm's successfully rewritten sources |
+| `raw_text/raw_disagreement_aware/` | `disagreement_aware` | random half of the arm's successfully rewritten sources |
+| `raw_text/raw_random/` | `wrap_inspired` | random half (52%) of the uniform sample WRAP rewrote successfully; a uniform-sample reference, not WRAP's exact documents |
+| `raw_text/raw_rewire_inspired/` | `rewire_inspired` | random half of the sources whose rewrites passed REWIRE's post-rewrite fastText filter |
 
-**`raw_random` is the no-selection reference for `wrap_inspired`**: its sources were drawn uniformly
-at random with no quality or diversity criterion, so it is both the no-rewrite control for
-`wrap_inspired` and the reference for what selection adds. **`raw_rewire_inspired`** starts from a
-random pool too, but its sources are only the documents whose rewrites passed REWIRE's post-rewrite
-filter — a selection made after rewriting.
+**`raw_rewire_inspired` is a conditional ablation.** Its membership depends on how well each document's *rewrite*
+scored, which is information that exists only after rewriting. It is not a raw-only selection policy.
+
+**Quality-First has no raw arm.** Its raw comparison is the existing Quality-Base: the anchor + the fastText-best 5B
+of Quality-First's own input.
+
+## Global Top-10B controls (3, no anchor)
+
+The whole ~10B corpus is one global Top-10B selection over the same universe as the original 1.5B Quality-Base:
+the 99,949,162 scored documents of
+[`blab-jhu/KYS-DCLM-Refinedweb-100M-Scored`](https://huggingface.co/datasets/blab-jhu/KYS-DCLM-Refinedweb-100M-Scored),
+minus the 50,000-doc validation holdout.
+
+**Selection rule:**
+- score descending, with the original seeded tie-break;
+- whole documents, until cumulative training tokens first reach 10B.
+
+**What these corpora do not have:** no shared anchor, no rewriting, no floors, quotas, variance terms or domain
+restrictions.
+
+**Comparator:** the existing fastText Quality-Base, which is the global fastText Top-10B under the same conventions
+up to 3 tail documents.
+
+| folder | score |
+|---|---|
+| `raw_text/raw_top10b_fineweb_edu/` | `fineweb-edu-ranking-v2` (tie-aware global percentile) |
+| `raw_text/raw_top10b_modernbert/` | `modernbert-ranking-v2` |
+| `raw_text/raw_top10b_consensus/` | mean of the three percentiles: (fastText + FineWeb-Edu + ModernBERT) / 3 |
 
 ## Files
 
-Each `raw_text/<setting>/` holds 16 parquet files, `part-00000.parquet` … `part-00015.parquet`:
+Each `raw_text/<setting>/` holds 16 parquet files, `part-00000.parquet` … `part-00015.parquet`.
 
 | column | type | meaning |
 |---|---|---|
-| `orig_doc_id` | int64 | position of the document in the 100M DCLM-RefinedWeb reservoir sample |
-| `source` | string | `anchor` (the shared 5B) or `strategy` (this setting's 5B) |
+| `orig_doc_id` | int64 | position in the 100M DCLM-RefinedWeb reservoir sample (shard `id // 500000`, row `id % 500000`) |
+| `doc_id` | int64 | *global Top-10B only*: row of the scored pool, the selection key |
+| `source` | string | `anchor` / `strategy` (strategy-linked) or `selected` (global Top-10B) |
 | `text` | string | the original document text |
 
-**This is the final training corpus, in training order**: anchor and strategy documents are already
-merged and shuffled; rows follow the exact post-shuffle document order, file by file. Each folder is
-about 10B tokens. [`manifest.json`](manifest.json) records every count, the expected token total after
-tokenization, and the sha256 of every file.
+- **Each folder is the final training corpus, in training order.** Documents are shuffled once at the document
+  level (seed 42, `pp_io.bucketed_shuffle`), and rows follow that order file by file.
+- [`manifest.json`](manifest.json) records every count, each setting's `expected_total_tokens`, the sha256 of every
+  file, the tokenizer's sha256, and the generation code commits.
+- `settings_overview` lists every setting's family, anchor presence and comparator.
+- `selection/<setting>/` holds the selected doc ids of the global Top-10B settings. The digest conventions are in
+  `manifest.json` under `global_top10b`.
 
-**Tokenization is done by the consumer**, with `tools/kys_raw/tokenize_raw_text.sh` from
-[`imHuicongZhang/nanotron`](https://github.com/imHuicongZhang/nanotron) (branch `huicong-dev`),
-as described in `configs/1.5B-baseline/RUNBOOK.md`: 16 datatrove tasks, one `</s>` per document, no
-merging or shuffling, then `tools/fix_ds_metadata.py`, then a check against the manifest's token total.
+## Tokenization — done by the consumer
 
-## How the corpora were built
+Use `tools/kys_raw/tokenize_raw_text.sh <data_root> <setting>` from
+[`imHuicongZhang/nanotron`](https://github.com/imHuicongZhang/nanotron) (branch `huicong-dev`).
 
-1. **Source documents.** For each rewritten arm, the `orig_doc_id` of every non-anchor row
-   (`source_prompt != 'original'`) of the published
-   [`wytro/Know-Your-Sources`](https://huggingface.co/datasets/wytro/Know-Your-Sources) parquet,
-   deduplicated across the rewriting prompts: the source documents whose rewrites were kept.
-2. **Original text.** Read from the 100M reservoir sample by position (`orig_doc_id`: shard
-   `id // 500000`, row `id % 500000`). No rewritten text is used anywhere.
-3. **Token budget rule.** Tokens per document = `len(llama2_tokenizer(text, add_special_tokens=False)) + 1`
-   (the `+1` is the end-of-document token). A source set above 5,000,000,000 tokens is cut by taking
-   documents in the order of `numpy.random.default_rng(42).permutation` over the sorted unique ids and
-   keeping the shortest prefix reaching 5B — whole documents only, at most one document of overshoot.
-   At or below 5B it is used as is. The same rule applies to all four settings.
-4. **Anchor.** The shared 5B anchor — 4,120,164 documents, 5,000,002,332 tokens, the rows with
-   `source_prompt == 'original'`, identical in every arm — also read from the pool by position.
-5. **Shuffle.** Anchor and strategy documents shuffled together at the document level with seed 42
-   by `pp_io.bucketed_shuffle`, the same function every published arm was shuffled with.
-6. **Leakage checks**, all passed before upload: every parquet read in the build code reads text only
-   from the raw pool; all 4,120,164 anchor texts match the pool byte for byte and total exactly
-   5,000,002,332 tokens; 200 sampled documents per setting match the pool and match none of the
-   rewrites of the same source document; style features (markdown headings and lists, missing
-   URLs/boilerplate) and document lengths sit with the raw pool, not with the rewritten arm.
+**What the script does:**
+- runs 16 datatrove tasks with one `</s>` per document and no BOS;
+- does no merging or shuffling;
+- runs `tools/fix_ds_metadata.py`;
+- checks the total against `expected_total_tokens`.
 
-Code: `tools/kys_raw/` (`build_raw_sources.py`, `assemble_raw_corpus.py`, `verify_raw_corpus.py`,
-`publish_raw_text.py`); the exact commit is in `manifest.json`.
+**Token convention:** `len(llama2_tokenizer(text, add_special_tokens=False)) + 1` per document.
+
+**Check before publication:** all seven totals were confirmed with this exact script.
+
+**Procedure:** `configs/1.5B-baseline/WORKFLOW_RAW_BASELINES.md` in the code repository.
+
+## Provenance in brief
+
+- **Text.** Every text is read from the raw 100M pool by position. No rewritten text is used anywhere.
+- **Strategy-linked settings:**
+  - source set = unique `orig_doc_id` of the non-anchor rows of the published
+    [`wytro/Know-Your-Sources`](https://huggingface.co/datasets/wytro/Know-Your-Sources) arm;
+  - 5B cut = `numpy.random.default_rng(42).permutation` order, shortest prefix reaching 5B;
+  - anchor = 4,120,164 documents / 5,000,002,332 tokens, identical in every arm, merged in.
+- **Global Top-10B settings:**
+  - the selection code reproduces the original Quality-Base selection bit for bit;
+  - the percentile columns reproduce exactly from the raw scores;
+  - every document was re-tokenized at assembly and its length checked equal to the scored pool's `tokens-llama2`.
+- **Code:** `tools/kys_raw/` in the code repository. The exact commits are in `manifest.json`.
 
 ## Related
 
-- Tokenizer: [`tokenizer/`](tokenizer) in this repo, the exact llama-2 tokenizer directory the grid was tokenized with (sha256 of each file in `manifest.json`, `tokenizer.sha256`). `tokenize_raw_text.sh` uses `<data_root>/tokenizer` by default.
-- Init checkpoints: [`wytro/Know-Your-Sources-init`](https://huggingface.co/wytro/Know-Your-Sources-init), `_init_1.5B_seed{42,43,44}/0/`, with hash manifests.
-- Training configs: `configs/1.5B-baseline-seed{42,43,44}/` and `configs/1.5B-baseline/RUNBOOK.md` in the code repo.
+- **Tokenizer:** [`tokenizer/`](tokenizer) in this repo, the exact llama-2 tokenizer directory the grid used.
+- **Init checkpoints:** [`wytro/Know-Your-Sources-init`](https://huggingface.co/wytro/Know-Your-Sources-init).
+- **Rewritten comparators (v2):** [`wytro/KYS-1.5B-Rewritten-v2`](https://huggingface.co/wytro/KYS-1.5B-Rewritten-v2).
+- **Trained raw baselines:** `blab-jhu/KYS-1.5B-Raw-Selected-Baselines`.

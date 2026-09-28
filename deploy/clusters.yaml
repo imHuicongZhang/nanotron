@@ -202,8 +202,8 @@ clusters:
     #
     # --- paths on that cluster ---
     data_root: null           # local_dir of snapshot_download("blab-jhu/KYS-Pre-Rewritten", repo_type="dataset");
-                              #   must contain raw_diversity_oriented/tokenized/, raw_disagreement_aware/tokenized/,
-                              #   raw_random/tokenized/, raw_rewire_inspired/tokenized/ (16 x .ds/.ds.index/.ds.metadata each)
+                              #   after tools/kys_raw/tokenize_raw_text.sh it must contain <setting>/tokenized/ (16 x
+                              #   .ds/.ds.index/.ds.metadata) for all seven settings of tools/kys_raw/registry.py
     tokenizer_path: null      # the llama2 tokenizer DIRECTORY: <data_root>/tokenizer (shipped in blab-jhu/KYS-Pre-Rewritten);
                               #   run tools/fix_ds_metadata.py on every tokenized/ folder with this exact path
     ckpt_root: null           # checkpoint root; runs write <ckpt_root>/seed<S>/<setting>/<trunk|epN>/<setting>/seed<S>/<step>/
@@ -238,7 +238,9 @@ clusters:
       nodes: 1
       gres: null              # e.g. "gpu:4" or "gpu:h100:4"; must provide dp * tp * pp GPUs on one node
       cpus_per_task: null
-      time: null              # partition wall limit, e.g. "3-00:00:00"; segments requeue and resume if they hit it
+      time: null              # per-job limit, e.g. "1-06:00:00". Must exceed the longest stretch without a checkpoint
+                              #   (1500 trunk steps or ep3's 1430 steps: ~9.5 h at 22.8 s/it) with margin, or a job
+                              #   requeues forever; plan_submit.py --s-per-it refuses a limit that is too short
 
   h200:
     # Collaborator's cluster. H200 SXM = same GH100 die as H100 (sm_90, 132 SM), 141 GB HBM3e.
@@ -334,7 +336,7 @@ seed_assignment:
   43: kys_grid_1p5b
   44: kys_grid_1p5b
 
-# Raw-selected baselines (4 settings, configs/1.5B-baseline-seed{42,43,44}) only. They cannot share a cluster
+# Raw-selected baselines (7 settings, tools/kys_raw/registry.py; configs/1.5B-baseline-seed{42,43,44}) only. They cannot share a cluster
 # with their rewritten counterparts, which ran on kys_grid_1p5b, so render_config.py assigns them
 # here instead and checks mbs uniformity among these clusters alone. Training runs on
 # marc-cluster (configs/1.5B-baseline/RUNBOOK.md); skipjack_h100 was used for the local probe,

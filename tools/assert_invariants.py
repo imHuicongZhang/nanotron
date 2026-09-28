@@ -42,7 +42,9 @@ EXPECTED_MBS = 32
 # Raw-selected baselines (configs/1.5B-baseline-seed*) use the grid's mbs too; on 80 GB cards that
 # needs full layer recomputation (probe job 424229, configs/1.5B-baseline/README.md). A cluster that
 # cannot fit mbs 32 passes --expected-mbs N and must report the deviation (RUNBOOK.md).
-RAW_SETTINGS = {'raw_diversity_oriented', 'raw_disagreement_aware', 'raw_random', 'raw_rewire_inspired'}
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'kys_raw'))
+from registry import SETTING_NAMES as _RAW_NAMES  # noqa: E402
+RAW_SETTINGS = set(_RAW_NAMES)
 EXPECTED_MBS_RAW = 32
 EXPECTED_TOK_PER_STEP = 2_097_152
 MBS_OVERRIDE = None     # set by --expected-mbs
@@ -93,11 +95,9 @@ EXPECTED_CORPUS = {
     'wrap_inspired':      (10_000_002_419, 16),
     'rewire_inspired':    (10_000_002_683, 16),
     'disagreement_aware': (10_000_002_333, 16),
-    # Raw-selected baselines, built locally. None until tokenized and counted: refuses to pass.
-    'raw_diversity_oriented': None,
-    'raw_disagreement_aware': None,
-    'raw_random':             None,
-    'raw_rewire_inspired':    None,
+    # Raw-selected baselines (tools/kys_raw/registry.py): None = read the expected total from the
+    # consumer's <data_root>/manifest.json (blab-jhu/KYS-Pre-Rewritten), below.
+    **{s: None for s in _RAW_NAMES},
 }
 
 # nanotron/trainer.py logs this banner once at startup:

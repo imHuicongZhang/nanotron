@@ -8,7 +8,7 @@ required field is still null, and re-renders configs/1.5B-baseline-seed<S>/templ
 tools/render_config.py with a profile built from that entry. Every renderer guard applies:
 accum = 1024 / (mbs * dp) must be an integer, the mbs must fit hbm_gib under the memory model,
 and the seed must be assigned to this cluster. Output: configs/1.5B-baseline-seed<S>/filled/
-(24 configs + .env files), then tools/assert_invariants.py runs on each (placeholders, batch,
+(one config + .env per setting x segment: 7 x 6 = 42 per seed; registry.py), then tools/assert_invariants.py runs on each (placeholders, batch,
 environment; corpus and resume checks need the data and checkpoints on disk and are run by the
 launcher before every segment).
 """
@@ -22,6 +22,9 @@ import tempfile
 from pathlib import Path
 
 import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from registry import parse_settings, template_names  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 REQUIRED = ('data_root', 'tokenizer_path', 'ckpt_root', 'init_root', 'repo_dir', 'env_activate',
@@ -38,6 +41,7 @@ def main():
                     help='pass the mbs you set if it is not 32 (recorded as a deviation by assert_invariants.py)')
     ap.add_argument('--profile', type=Path, default=REPO / 'deploy' / 'clusters.yaml')
     ap.add_argument('--out-dir', type=Path, help='default: configs/1.5B-baseline-seed<S>/filled')
+    ap.add_argument('--settings', help='comma-separated subset of tools/kys_raw/registry.py (default: all)')
     args = ap.parse_args()
 
     prof = yaml.safe_load(args.profile.read_text())
@@ -66,9 +70,13 @@ def main():
         profile = fh.name
 
     folder = REPO / 'configs' / f'1.5B-baseline-seed{args.seed}'
-    templates = sorted((folder / 'templates').glob(f'raw_*_seed{args.seed}_*.yaml'))
-    if len(templates) != 24:
-        sys.exit(f'{folder}/templates holds {len(templates)} templates, expected 24 (4 settings x 6 segments)')
+    want = template_names(args.seed, parse_settings(args.settings))
+    have = {p.name for p in (folder / 'templates').glob(f'raw_*_seed{args.seed}_*.yaml')}
+    if set(template_names(args.seed)) != have:
+        sys.exit(f'{folder}/templates does not hold exactly the {len(template_names(args.seed))} templates of '
+                 f'tools/kys_raw/registry.py; missing {sorted(set(template_names(args.seed)) - have)}, '
+                 f'extra {sorted(have - set(template_names(args.seed)))}')
+    templates = [folder / 'templates' / n for n in want]
     out_dir = args.out_dir or folder / 'filled'
     out_dir.mkdir(parents=True, exist_ok=True)
     failures = 0
@@ -88,7 +96,7 @@ def main():
     Path(profile).unlink()
     if failures:
         sys.exit(f'{failures} filled config(s) failed assert_invariants.py')
-    print(f'wrote 24 filled configs to {out_dir}. Next: run tools/assert_invariants.py --check-resume per segment '
+    print(f'wrote {len(templates)} filled configs to {out_dir}. Next: run tools/assert_invariants.py --check-resume per segment '
           f'(the launcher does), and tools/kys_raw/plan_submit.py --cluster {args.cluster} --seed {args.seed}.')
 
 

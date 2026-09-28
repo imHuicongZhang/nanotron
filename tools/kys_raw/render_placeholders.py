@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""Render the 24 raw-baseline templates per seed with site-specific values left as {{PLACEHOLDERS}}.
+"""Render the raw-baseline templates per seed (7 settings x 6 segments = 42; tools/kys_raw/registry.py) with site-specific values left as {{PLACEHOLDERS}}.
 
-The output is what ships for an external cluster: 24 configs per seed that are complete in every
-experiment and batch field (4 settings x 6 segments; the grid's dp 4 / mbs 32 / accum 8, LR schedule, steps, seeds) but
+The output is what ships for an external cluster: 42 configs per seed that are complete in every
+experiment and batch field (7 settings x 6 segments; the grid's dp 4 / mbs 32 / accum 8, LR schedule, steps, seeds) but
 carry these markers wherever a value belongs to the cluster that runs them:
 
     {{DATA_ROOT}}  {{TOKENIZER_PATH}}  {{CKPT_ROOT}}  {{WANDB_ENTITY}}  {{WANDB_DIR}}
@@ -26,6 +26,9 @@ import tempfile
 from pathlib import Path
 
 import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from registry import template_names  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 PLACEHOLDER_CLUSTER = '{{CLUSTER}}'
@@ -56,9 +59,12 @@ def main():
     n = 0
     for seed in seeds:
         folder = REPO / 'configs' / f'1.5B-baseline-seed{seed}'
-        templates = sorted((folder / 'templates').glob(f'raw_*_seed{seed}_*.yaml'))
-        if len(templates) != 24:
-            sys.exit(f'{folder}/templates holds {len(templates)} templates, expected 24 (4 settings x 6 segments)')
+        want = template_names(seed)
+        have = {p.name for p in (folder / 'templates').glob(f'raw_*_seed{seed}_*.yaml')}
+        if set(want) != have:
+            sys.exit(f'{folder}/templates: missing {sorted(set(want) - have)}, extra {sorted(have - set(want))} '
+                     f'relative to tools/kys_raw/registry.py')
+        templates = [folder / 'templates' / n for n in want]
         for t in templates:
             out = folder / t.name
             subprocess.run([sys.executable, REPO / 'tools/render_config.py', '--template', t, '--cluster',

@@ -66,16 +66,14 @@ SETTINGS = [
     'rewire_inspired',
     'disagreement_aware',
 ]
-# Raw-selected baselines (configs/1.5B-baseline-seed42): the shared 5B anchor plus the ORIGINAL,
-# unrewritten source documents of a rewritten arm, subsampled with seed 42 to 5B tokens. Same
-# schedule, segments and batch as the grid; only the corpus differs. Not part of the default
-# 108 — emit with `--settings` / `--seeds`.
-RAW_SETTINGS = [
-    'raw_diversity_oriented',     # counterpart: diversity_oriented
-    'raw_disagreement_aware',     # counterpart: disagreement_aware
-    'raw_random',                 # counterpart: wrap_inspired (the random sample WRAP rewrote)
-    'raw_rewire_inspired',        # counterpart: rewire_inspired (sources of the 5B REWIRE's filter kept)
-]
+# Raw-selected baselines (configs/1.5B-baseline-seed<S>). Same schedule, segments and batch as the
+# grid; only the corpus differs. The list lives in tools/kys_raw/registry.py (one place for every tool).
+# Not part of the default 108 — emit with `--settings` / `--seeds`.
+import sys as _sys  # noqa: E402
+_sys.path.insert(0, str(Path(__file__).resolve().parent / 'kys_raw'))
+from registry import FIRST_STEP as _FIRST_STEP, SETTING_NAMES as RAW_SETTINGS  # noqa: E402
+assert _FIRST_STEP == {'trunk1': 0, 'trunk2': TRUNK_SEGMENTS[0], 'trunk3': TRUNK_SEGMENTS[1],
+                       **{k: v[0] for k, v in BRANCHES.items()}}, 'registry.FIRST_STEP drifted from the schedule'
 
 # No path constants live here any more — ckpt_root / tokenizer_path / data_root are all
 # supplied per cluster in deploy/clusters.yaml and composed by tools/render_config.py.
@@ -233,6 +231,8 @@ def main():
     todo = [(s, sd, k) for s in settings for sd in seeds for k in kinds]
     if args.only:
         s, sd, k = args.only.split(':')
+        if s not in SETTINGS and s not in RAW_SETTINGS or k not in kinds:
+            ap.error(f'unknown setting or kind in --only {args.only}')
         todo = [(s, int(sd), k)]
 
     args.out.mkdir(parents=True, exist_ok=True)
