@@ -235,18 +235,21 @@ def main():
 
     # --- round trip ------------------------------------------------------------------------------------
     rev = api.repo_info(REPO_ID, repo_type='dataset').sha
-    remote = {f.path: f for f in api.get_paths_info(REPO_ID, [f'raw_text/{s}/{n}' for s in settings for n in recs[s]['files']],
-                                                    repo_type='dataset', revision=rev)}
-    bad = [p for s in settings for n, r in recs[s]['files'].items()
-           if (f := remote.get(f'raw_text/{s}/{n}')) is None or f.lfs is None or f.lfs.sha256 != r['sha256'] or f.size != r['bytes']]
+    want = {f'raw_text/{s}/{n}': (r['sha256'], r['bytes']) for s in settings for n, r in recs[s]['files'].items()}
+    for s in settings:
+        for p in sorted((args.selection / s).glob('*.npy')):
+            want[f'selection/{s}/{p.name}'] = (sha256(p), p.stat().st_size)
+    remote = {f.path: f for f in api.get_paths_info(REPO_ID, list(want), repo_type='dataset', revision=rev)}
+    bad = [p for p, (h, size) in want.items()
+           if (f := remote.get(p)) is None or f.lfs is None or f.lfs.sha256 != h or f.size != size]
     got = json.loads(Path(hf_hub_download(REPO_ID, 'manifest.json', repo_type='dataset', revision=rev,
                                           local_dir=args.out / 'hub_after')).read_text())
     ok = not bad and got == man
     (args.out / 'published.json').write_text(json.dumps({'repo': REPO_ID, 'revision': rev, 'manifest_commit': str(info),
-                                                         'files_checked': sum(len(recs[s]['files']) for s in settings),
+                                                         'files_checked': len(want),
                                                          'lfs_sha256_mismatches': bad, 'manifest_roundtrip_equal': got == man,
                                                          'ok': ok, 'code_commit': args.code_commit}, indent=2))
-    print(f'revision {rev}: {sum(len(recs[s]["files"]) for s in settings)} files checked, mismatches {bad}, manifest equal {got == man}')
+    print(f'revision {rev}: {len(want)} files checked, mismatches {bad}, manifest equal {got == man}')
     if not ok:
         sys.exit(1)
 

@@ -32,6 +32,9 @@ def get_args():
     group = parser.add_argument_group(title="Miscellaneous configs")
     group.add_argument("--logging-dir", type=str, default=None)
     group.add_argument("--n-tasks", type=int, default=8)
+    group.add_argument("--workers", type=int, default=-1,
+                       help="tasks run at once (-1 = all). Changes memory use only: each task still reads its own "
+                            "files and writes its own shard, so the output is identical.")
 
     sp = parser.add_subparsers(dest="readers", required=True,
                                description="Type of dataset to process: hf | jsonl | parquet")
@@ -81,6 +84,7 @@ def main(args):
             ),
         ],
         tasks=args.n_tasks,
+        workers=args.workers,
         logging_dir=args.logging_dir,
     ).run()
 

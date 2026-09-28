@@ -15,6 +15,11 @@
 # 00000..00015 concatenate to the file order. Same recipe as the published arms: datatrove 0.5.0
 # DocumentTokenizer, llama-2 tokenizer, one </s> appended per document, no BOS.
 #
+# Memory: the 16 tasks run at once by default and need roughly 5 GB each. On a node with less memory set
+# KYS_TOKENIZE_WORKERS=<n> to run n at a time; the 16 tasks, their files and their shards are unchanged.
+# KYS_TOKENIZE_STALL_MIN (default 30): minutes without any write under the output folder before the watchdog
+# stops the whole tokenizer process group and exits 1.
+#
 # Steps: check the tokenizer files and the 16 parquet files against manifest.json sha256 -> tokenize ->
 # tools/fix_ds_metadata.py -> assert 16 shards and the exact token total (settings.<setting>.expected_total_tokens).
 set -euo pipefail
@@ -56,21 +61,25 @@ if [[ -e "$OUT" ]] && compgen -G "$OUT/*.ds" >/dev/null; then
   echo "$OUT already holds .ds files; refusing to overwrite (remove it to re-tokenize)"; exit 1
 fi
 mkdir -p "$OUT" "$LOG"
+STALL_MIN="${KYS_TOKENIZE_STALL_MIN:-30}"
 cd "$REPO"
-"$PY" tools/preprocess_data_parquet.py \
+# setsid: the tokenizer and its datatrove workers form one process group, so the stall watchdog below can stop
+# all of them (killing only the parent leaves the workers running and writing shards).
+setsid "$PY" tools/preprocess_data_parquet.py \
     --tokenizer-name-or-path "$TOK/tokenizer.json" \
     --eos-token "</s>" \
     --output-folder "$OUT" \
     --logging-dir "$LOG" \
     --n-tasks 16 \
+    --workers "${KYS_TOKENIZE_WORKERS:--1}" \
     parquet --dataset "$IN" --column text --glob-pattern "part-*.parquet" &
 TP=$!
 while kill -0 $TP 2>/dev/null; do
   sleep 60
   newest=$(find "$OUT" "$LOG" -type f -printf '%T@\n' 2>/dev/null | sort -n | tail -1)
-  if [[ -n "$newest" ]] && (( $(date +%s) - ${newest%.*} > 1800 )); then
-    echo "[tok] no output for 30 min — a datatrove worker stalled (data_preprocessing_guide.md, Caveat 5); killing"
-    kill $TP; exit 1
+  if [[ -n "$newest" ]] && (( $(date +%s) - ${newest%.*} > STALL_MIN * 60 )); then
+    echo "[tok] no output for $STALL_MIN min — a datatrove worker stalled (data_preprocessing_guide.md, Caveat 5); killing"
+    kill -TERM -- -$TP 2>/dev/null; sleep 10; kill -KILL -- -$TP 2>/dev/null || true; exit 1
   fi
 done
 wait $TP
