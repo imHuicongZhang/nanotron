@@ -4,13 +4,13 @@ Every raw-baseline tool imports this module instead of carrying its own list: ge
 render_config.py, assert_invariants.py, fill_placeholders.py, render_placeholders.py, plan_submit.py.
 Adding a setting here (plus its corpus in blab-jhu/KYS-Pre-Rewritten and its templates) is the whole change.
 
-Two families (configs/1.5B-baseline/WORKFLOW_RAW_BASELINES.md, docs in projects/rewrite
-docs/RAW_SELECTED_BASELINES_PROVENANCE.md):
+Two families (configs/1.5B-baseline/WORKFLOW_RAW_BASELINES.md):
 
-  strategy_linked  shared 5B anchor + a 5B random subsample (seed 42) of the unique source documents of the
-                   counterpart's FINAL rewritten half (successful rewrites that survived assembly/filtering)
+  strategy_linked  shared 5B anchor + a 5B raw strategy half linked to one rewritten arm (published earlier;
+                   build code tools/kys_raw/build_raw_sources.py; interpretation under separate review)
   global_top10b    the entire ~10B corpus is one global Top-10B selection over the Quality-Base universe;
-                   NO anchor. Compared against the existing fastText quality_base arm.
+                   NO anchor. Compared against the existing fastText quality_base arm
+                   (configs/1.5B-baseline/reports/GLOBAL_TOP10B_SELECTION_REPORT.md).
 """
 from __future__ import annotations
 

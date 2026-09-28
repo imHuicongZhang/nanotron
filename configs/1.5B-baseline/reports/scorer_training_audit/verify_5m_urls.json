@@ -1,0 +1,12 @@
+{
+ "shard_0": {
+  "rows": 500000,
+  "url_equal": 500000,
+  "raw_files_touched": 21
+ },
+ "shard_9": {
+  "rows": 500000,
+  "url_equal": 500000,
+  "raw_files_touched": 21
+ }
+}

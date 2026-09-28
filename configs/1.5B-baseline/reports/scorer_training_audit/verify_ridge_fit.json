@@ -1,0 +1,16 @@
+{
+ "pickle_n_features_in": 768,
+ "X_shape": [
+  50427,
+  768
+ ],
+ "all_50427": {
+  "max_abs_coef_diff": 0.00021498406946857118,
+  "intercept_diff": 4.316299833106996e-06
+ },
+ "first_40340": {
+  "max_abs_coef_diff": 0.5649027769735897,
+  "intercept_diff": 0.10019558176226173
+ },
+ "combined_equals_train_then_val": true
+}

@@ -1,0 +1,564 @@
+{
+ "set_50k": {
+  "selected_50k_for_claude_rows": 50000,
+  "unique": 50000,
+  "scored_50k_final_rows": 49998,
+  "dropped_between_selection_and_scoring": [
+   47640209,
+   52200783
+  ],
+  "ridge_combined_dclm_rows": 49998,
+  "ridge_combined_dclm_unique": 49998,
+  "ridge_combined_dclm_equals_scored50k": true,
+  "train_split_dclm": 39998,
+  "val_split_dclm": 10000,
+  "train_val_disjoint": true,
+  "train_union_val_equals_combined": true,
+  "min_orig": 257,
+  "max_orig": 99998599,
+  "removed_50838_count": 50838,
+  "sel50k_in_removed": 50000,
+  "ridge_dclm_in_removed": 49998,
+  "removed_not_in_sel50k_(pool_duplicates_by_prefix)": 838
+ },
+ "set_5m": {
+  "rederived_n": 5000000,
+  "rederived_first5": [
+   1,
+   11,
+   12,
+   41,
+   94
+  ],
+  "exclusion_table_5m_basic_rows": 5001383,
+  "exclusion_table_50k_claude_rows": 47515,
+  "rederived_in_exclusion_5m_basic": 5000000,
+  "exclusion_5m_basic_not_in_rederived": 1383,
+  "exclusion_50k_claude_subset_of_sel50k": false,
+  "exclusion_50k_claude_not_in_sel50k": 5,
+  "exclusion_50k_claude_not_in_sel50k_in_removed": 5,
+  "sel50k_not_in_exclusion_50k_claude": 2490,
+  "sel50k_not_in_ex50_but_in_ex5": 2490,
+  "exclusion_5m_basic_extra_in_removed": 1,
+  "sel50k_in_rederived_5m": 2489,
+  "ridge_dclm_in_rederived_5m": 2489,
+  "rederived_5m_in_removed_50838": 2529,
+  "rederived_5m_surviving_in_pool": 4997471,
+  "exclusion_5m_basic_in_removed_50838": 2530,
+  "exclusion_5m_basic_surviving": 4998853,
+  "expected_random_5m_in_removed": 2541.9
+ },
+ "pool_presence": {
+  "ridge_dclm_present_in_pool": 0,
+  "ridge_dclm_absent": 49998,
+  "sel50k_present_in_pool": 0,
+  "sel50k_absent": 50000,
+  "sample5m_rederived_present_in_pool": 4997471,
+  "sample5m_rederived_absent": 2529,
+  "sample5m_excl_table_present_in_pool": 4998853,
+  "sample5m_excl_table_absent": 2530
+ },
+ "anchor_check": {
+  "raw_sources_anchor_n": 4120164,
+  "raw_sources_anchor_equals_QB_first_4120164_as_orig_set": true
+ },
+ "overlaps": {
+  "ridge_dclm_49998": {
+   "n_in_pool": 0,
+   "pool_fraction": 0.0,
+   "validation_holdout_50k": {
+    "target_docs": 50000,
+    "target_train_tokens": 47465672,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_top10b_fineweb_edu": {
+    "target_docs": 7534192,
+    "target_train_tokens": 10000007488,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_top10b_modernbert": {
+    "target_docs": 5918416,
+    "target_train_tokens": 10000000657,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_top10b_consensus": {
+    "target_docs": 5643567,
+    "target_train_tokens": 10000003972,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "fasttext_quality_base": {
+    "target_docs": 7253187,
+    "target_train_tokens": 10000003137,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "shared_5b_anchor": {
+    "target_docs": 4120164,
+    "target_train_tokens": 5000002332,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "fasttext_global_top10b": {
+    "target_docs": 7253184,
+    "target_train_tokens": 10000000865,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_disagreement_aware(4 raw strategy-linked corpora)": {
+    "target_docs": 2898764,
+    "target_train_tokens": 5000002737,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_diversity_oriented(4 raw strategy-linked corpora)": {
+    "target_docs": 3018451,
+    "target_train_tokens": 5000000553,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_random(4 raw strategy-linked corpora)": {
+    "target_docs": 5554525,
+    "target_train_tokens": 5000001419,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_rewire_inspired(4 raw strategy-linked corpora)": {
+    "target_docs": 3872986,
+    "target_train_tokens": 5000000799,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "full_pool": {
+    "target_docs": 99949162,
+    "target_train_tokens": 95357406157,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   }
+  },
+  "sel50k_50000": {
+   "n_in_pool": 0,
+   "pool_fraction": 0.0,
+   "validation_holdout_50k": {
+    "target_docs": 50000,
+    "target_train_tokens": 47465672,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_top10b_fineweb_edu": {
+    "target_docs": 7534192,
+    "target_train_tokens": 10000007488,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_top10b_modernbert": {
+    "target_docs": 5918416,
+    "target_train_tokens": 10000000657,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_top10b_consensus": {
+    "target_docs": 5643567,
+    "target_train_tokens": 10000003972,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "fasttext_quality_base": {
+    "target_docs": 7253187,
+    "target_train_tokens": 10000003137,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "shared_5b_anchor": {
+    "target_docs": 4120164,
+    "target_train_tokens": 5000002332,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "fasttext_global_top10b": {
+    "target_docs": 7253184,
+    "target_train_tokens": 10000000865,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_disagreement_aware(4 raw strategy-linked corpora)": {
+    "target_docs": 2898764,
+    "target_train_tokens": 5000002737,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_diversity_oriented(4 raw strategy-linked corpora)": {
+    "target_docs": 3018451,
+    "target_train_tokens": 5000000553,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_random(4 raw strategy-linked corpora)": {
+    "target_docs": 5554525,
+    "target_train_tokens": 5000001419,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "raw_rewire_inspired(4 raw strategy-linked corpora)": {
+    "target_docs": 3872986,
+    "target_train_tokens": 5000000799,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   },
+   "full_pool": {
+    "target_docs": 99949162,
+    "target_train_tokens": 95357406157,
+    "overlap_docs": 0,
+    "overlap_doc_share": 0.0,
+    "overlap_train_tokens": 0,
+    "overlap_token_share": 0.0,
+    "expected_docs_if_random": 0.0,
+    "enrichment_docs": null
+   }
+  },
+  "sample5m_rederived": {
+   "n_in_pool": 4997471,
+   "pool_fraction": 0.05000012906561438,
+   "validation_holdout_50k": {
+    "target_docs": 50000,
+    "target_train_tokens": 47465672,
+    "overlap_docs": 2454,
+    "overlap_doc_share": 0.04908,
+    "overlap_train_tokens": 2656089,
+    "overlap_token_share": 0.05595810378498381,
+    "expected_docs_if_random": 2500.006453280719,
+    "enrichment_docs": 0.981597466190399
+   },
+   "raw_top10b_fineweb_edu": {
+    "target_docs": 7534192,
+    "target_train_tokens": 10000007488,
+    "overlap_docs": 376686,
+    "overlap_doc_share": 0.04999686761367377,
+    "overlap_train_tokens": 498588442,
+    "overlap_token_share": 0.04985880686572542,
+    "expected_docs_if_random": 376710.5724051193,
+    "enrichment_docs": 0.999934771129564
+   },
+   "raw_top10b_modernbert": {
+    "target_docs": 5918416,
+    "target_train_tokens": 10000000657,
+    "overlap_docs": 295996,
+    "overlap_doc_share": 0.05001270610244363,
+    "overlap_train_tokens": 498587638,
+    "overlap_token_share": 0.049858760524279434,
+    "expected_docs_if_random": 295921.5638639972,
+    "enrichment_docs": 1.0002515400872816
+   },
+   "raw_top10b_consensus": {
+    "target_docs": 5643567,
+    "target_train_tokens": 10000003972,
+    "overlap_docs": 282496,
+    "overlap_doc_share": 0.050056285324511965,
+    "overlap_train_tokens": 502151883,
+    "overlap_token_share": 0.05021516835453513,
+    "expected_docs_if_random": 282179.0783904421,
+    "enrichment_docs": 1.0011231222788224
+   },
+   "fasttext_quality_base": {
+    "target_docs": 7253187,
+    "target_train_tokens": 10000003137,
+    "overlap_docs": 362419,
+    "overlap_doc_share": 0.04996686284249944,
+    "overlap_train_tokens": 502163446,
+    "overlap_token_share": 0.05021632884713764,
+    "expected_docs_if_random": 362660.28613703634,
+    "enrichment_docs": 0.999334677255107
+   },
+   "shared_5b_anchor": {
+    "target_docs": 4120164,
+    "target_train_tokens": 5000002332,
+    "overlap_docs": 205623,
+    "overlap_doc_share": 0.04990650857587222,
+    "overlap_train_tokens": 250188176,
+    "overlap_token_share": 0.05003761186245783,
+    "expected_docs_if_random": 206008.73177149802,
+    "enrichment_docs": 0.9981275950384187
+   },
+   "fasttext_global_top10b": {
+    "target_docs": 7253184,
+    "target_train_tokens": 10000000865,
+    "overlap_docs": 362419,
+    "overlap_doc_share": 0.04996688350936637,
+    "overlap_train_tokens": 502163446,
+    "overlap_token_share": 0.05021634025628657,
+    "expected_docs_if_random": 362660.1361366492,
+    "enrichment_docs": 0.9993350905913786
+   },
+   "raw_disagreement_aware(4 raw strategy-linked corpora)": {
+    "target_docs": 2898764,
+    "target_train_tokens": 5000002737,
+    "overlap_docs": 144942,
+    "overlap_doc_share": 0.05000131090354372,
+    "overlap_train_tokens": 250752188,
+    "overlap_token_share": 0.05015041014766548,
+    "expected_docs_if_random": 144938.5741307566,
+    "enrichment_docs": 1.000023636697573
+   },
+   "raw_diversity_oriented(4 raw strategy-linked corpora)": {
+    "target_docs": 3018451,
+    "target_train_tokens": 5000000553,
+    "overlap_docs": 150540,
+    "overlap_doc_share": 0.049873262809301856,
+    "overlap_train_tokens": 249986383,
+    "overlap_token_share": 0.04999727107030182,
+    "expected_docs_if_random": 150922.9395782328,
+    "enrichment_docs": 0.9974626814233611
+   },
+   "raw_random(4 raw strategy-linked corpora)": {
+    "target_docs": 5554525,
+    "target_train_tokens": 5000001419,
+    "overlap_docs": 277899,
+    "overlap_doc_share": 0.050031100769192684,
+    "overlap_train_tokens": 250283222,
+    "overlap_token_share": 0.05005663019392835,
+    "expected_docs_if_random": 277726.9668981817,
+    "enrichment_docs": 1.0006194324726174
+   },
+   "raw_rewire_inspired(4 raw strategy-linked corpora)": {
+    "target_docs": 3872986,
+    "target_train_tokens": 5000000799,
+    "overlap_docs": 193576,
+    "overlap_doc_share": 0.049981074034349725,
+    "overlap_train_tokens": 250024255,
+    "overlap_token_share": 0.050004843009226085,
+    "expected_docs_if_random": 193649.79986931756,
+    "enrichment_docs": 0.9996189003584441
+   },
+   "full_pool": {
+    "target_docs": 99949162,
+    "target_train_tokens": 95357406157,
+    "overlap_docs": 4997471,
+    "overlap_doc_share": 0.05000012906561438,
+    "overlap_train_tokens": 4770828954,
+    "overlap_token_share": 0.05003102691515254,
+    "expected_docs_if_random": 4997471.0,
+    "enrichment_docs": 1.0
+   }
+  },
+  "sample5m_exclusion_table": {
+   "n_in_pool": 4998853,
+   "pool_fraction": 0.050013956094999576,
+   "validation_holdout_50k": {
+    "target_docs": 50000,
+    "target_train_tokens": 47465672,
+    "overlap_docs": 2455,
+    "overlap_doc_share": 0.0491,
+    "overlap_train_tokens": 2656361,
+    "overlap_token_share": 0.05596383424214451,
+    "expected_docs_if_random": 2500.697804749979,
+    "enrichment_docs": 0.981725978779532
+   },
+   "raw_top10b_fineweb_edu": {
+    "target_docs": 7534192,
+    "target_train_tokens": 10000007488,
+    "overlap_docs": 376780,
+    "overlap_doc_share": 0.05000934406768503,
+    "overlap_train_tokens": 498742968,
+    "overlap_token_share": 0.049874259454154524,
+    "expected_docs_if_random": 376814.74789929704,
+    "enrichment_docs": 0.9999077851928813
+   },
+   "raw_top10b_modernbert": {
+    "target_docs": 5918416,
+    "target_train_tokens": 10000000657,
+    "overlap_docs": 296074,
+    "overlap_doc_share": 0.05002588530444632,
+    "overlap_train_tokens": 498707895,
+    "overlap_token_share": 0.049870786223489345,
+    "expected_docs_if_random": 296003.397975943,
+    "enrichment_docs": 1.0002385176134456
+   },
+   "raw_top10b_consensus": {
+    "target_docs": 5643567,
+    "target_train_tokens": 10000003972,
+    "overlap_docs": 282580,
+    "overlap_doc_share": 0.0500711695280662,
+    "overlap_train_tokens": 502296348,
+    "overlap_token_share": 0.05022961484879698,
+    "expected_docs_if_random": 282257.1121571885,
+    "enrichment_docs": 1.0011439493600136
+   },
+   "fasttext_quality_base": {
+    "target_docs": 7253187,
+    "target_train_tokens": 10000003137,
+    "overlap_docs": 362504,
+    "overlap_doc_share": 0.049978581828925686,
+    "overlap_train_tokens": 502268752,
+    "overlap_token_share": 0.05022685944383419,
+    "expected_docs_if_random": 362760.5761668217,
+    "enrichment_docs": 0.9992927120980651
+   },
+   "shared_5b_anchor": {
+    "target_docs": 4120164,
+    "target_train_tokens": 5000002332,
+    "overlap_docs": 205673,
+    "overlap_doc_share": 0.04991864401514114,
+    "overlap_train_tokens": 250250765,
+    "overlap_token_share": 0.05005012965661953,
+    "expected_docs_if_random": 206065.70140019784,
+    "enrichment_docs": 0.9980942903281358
+   },
+   "fasttext_global_top10b": {
+    "target_docs": 7253184,
+    "target_train_tokens": 10000000865,
+    "overlap_docs": 362504,
+    "overlap_doc_share": 0.04997860250063972,
+    "overlap_train_tokens": 502268752,
+    "overlap_token_share": 0.05022687085537567,
+    "expected_docs_if_random": 362760.42612495343,
+    "enrichment_docs": 0.9992931254169795
+   },
+   "raw_disagreement_aware(4 raw strategy-linked corpora)": {
+    "target_docs": 2898764,
+    "target_train_tokens": 5000002737,
+    "overlap_docs": 144984,
+    "overlap_doc_share": 0.05001579983744796,
+    "overlap_train_tokens": 250843812,
+    "overlap_token_share": 0.0501687349376345,
+    "expected_docs_if_random": 144978.65542576535,
+    "enrichment_docs": 1.0000368645592619
+   },
+   "raw_diversity_oriented(4 raw strategy-linked corpora)": {
+    "target_docs": 3018451,
+    "target_train_tokens": 5000000553,
+    "overlap_docs": 150583,
+    "overlap_doc_share": 0.04988750852672447,
+    "overlap_train_tokens": 250059803,
+    "overlap_token_share": 0.05001195506867777,
+    "expected_docs_if_random": 150964.67578890757,
+    "enrichment_docs": 0.9974717543232348
+   },
+   "raw_random(4 raw strategy-linked corpora)": {
+    "target_docs": 5554525,
+    "target_train_tokens": 5000001419,
+    "overlap_docs": 277991,
+    "overlap_doc_share": 0.05004766384164262,
+    "overlap_train_tokens": 250356346,
+    "overlap_token_share": 0.05007125498977783,
+    "expected_docs_if_random": 277803.76947857754,
+    "enrichment_docs": 1.0006739668139633
+   },
+   "raw_rewire_inspired(4 raw strategy-linked corpora)": {
+    "target_docs": 3872986,
+    "target_train_tokens": 5000000799,
+    "overlap_docs": 193633,
+    "overlap_doc_share": 0.04999579136098091,
+    "overlap_train_tokens": 250090530,
+    "overlap_token_share": 0.050018098007107936,
+    "expected_docs_if_random": 193703.35176054802,
+    "enrichment_docs": 0.9996368066948321
+   },
+   "full_pool": {
+    "target_docs": 99949162,
+    "target_train_tokens": 95357406157,
+    "overlap_docs": 4998853,
+    "overlap_doc_share": 0.050013956094999576,
+    "overlap_train_tokens": 4772138684,
+    "overlap_token_share": 0.0500447618734823,
+    "expected_docs_if_random": 4998853.0,
+    "enrichment_docs": 1.0
+   }
+  }
+ },
+ "pool_total_train_tokens": 95357406157
+}

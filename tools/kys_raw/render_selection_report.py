@@ -3,7 +3,8 @@
 
     python tools/kys_raw/render_selection_report.py --report <selection>/selection_report.json \
         [--tokenized-dir <dir with tokenized_<setting>.json>] [--published <published.json>] \
-        [--rerun-manifest <second selection_manifest.json>] --out GLOBAL_TOP10B_SELECTION_REPORT.md
+        [--rerun-manifest <second selection_manifest.json>] [--scorer-audit <overlaps.json>] \
+        [--export-verify <verify_export.json>] --out GLOBAL_TOP10B_SELECTION_REPORT.md
 
 Every number comes from the JSON inputs; nothing is typed in by hand.
 """
@@ -16,7 +17,7 @@ from pathlib import Path
 NEW = ['raw_top10b_fineweb_edu', 'raw_top10b_modernbert', 'raw_top10b_consensus']
 SETS = ['quality_base', *NEW]
 SHORT = {'quality_base': 'QB (fastText)', 'raw_top10b_fineweb_edu': 'FW-Edu', 'raw_top10b_modernbert': 'ModernBERT',
-         'raw_top10b_consensus': 'Consensus'}
+         'raw_top10b_consensus': 'Consensus', 'fasttext_quality_base': 'QB (fastText)', 'validation_holdout_50k': 'validation holdout (50k)'}
 
 
 def n(x):
@@ -29,6 +30,8 @@ def main():
     ap.add_argument('--tokenized-dir', type=Path)
     ap.add_argument('--published', type=Path)
     ap.add_argument('--rerun-manifest', type=Path, help='selection_manifest.json of an independent rerun (e.g. other numpy)')
+    ap.add_argument('--scorer-audit', type=Path, help='reports/scorer_training_audit/overlaps.json')
+    ap.add_argument('--export-verify', type=Path, help='tools/kys_raw/verify_global_top10b.py output')
     ap.add_argument('--out', type=Path, required=True)
     a = ap.parse_args()
     R = json.loads(a.report.read_text())
@@ -49,7 +52,7 @@ def main():
           '`sort(default_rng(SeedSequence(42).spawn(8)[0]).choice(N, 50_000, replace=False))`, exactly as '
           '`projects/rewrite/04_select/select_10b.py`, with sorted-id sha256 '
           f'`{u["val_doc_ids_sha256"][:16]}…`. No other exclusion; in particular the 5M analysis sample is **not** excluded, '
-          'as in the original.',
+          'as in the original. The scorer-training documents were already removed from the pool itself (§2b).',
           '- **TRAIN tokens:** `tokens-llama2 + 1`, i.e. Llama-2 length without special tokens, plus the one `</s>` '
           'datatrove appends.',
           '- **Scores.** Each is the pipeline\'s tie-aware global percentile, `rankdata(raw, "average") / 99,949,162`. '
@@ -89,6 +92,60 @@ def main():
           '- **Consequence.** Quality-Base *is* the global fastText Top-10B up to those 3 tail documents (0.00002% of '
           'tokens), so it is the matching fastText comparator for the three new arms. Its data **order** differs: the v2 '
           'Quality-Base trained on the `10B-base-shuf42` shuffle of that set.', '']
+
+    if a.scorer_audit:
+        S = json.loads(a.scorer_audit.read_text())
+        s50, s5, pp = S['set_50k'], S['set_5m'], S['pool_presence']
+        o5 = S['overlaps']['sample5m_rederived']
+        L += ['## 2b. Scorer-training data, the 5M analysis sample, and the source universe', '',
+              'Audited from the scorer pipeline\'s own files and recomputed from document IDs; scripts and JSON in '
+              '`configs/1.5B-baseline/reports/scorer_training_audit/` (nanotron repo).', '',
+              '**What the ModernBERT score is trained on (verified).**',
+              '- `modernbert` = a Ridge(α=1) head, trained by this project, on L2-normalised mean-pooled embeddings of the '
+              'frozen external `nomic-ai/modernbert-embed-base` (`projects/rewrite/01_explore/score_modernbert.py`).',
+              f'- Training rows: **50,427** Claude-Haiku-labelled documents ({n(s50["ridge_combined_dclm_rows"])} DCLM-RefinedWeb '
+              '+ 218 OpenWebMath + 211 algebraic-stack). The stored `model_meta.json` records `n_train: 50427`; a refit on all '
+              '50,427 rows reproduces the shipped coefficients (max |Δ| 2.1e-4), a refit on the 40,340 "train" split does not '
+              '(0.56). So the "val" split was also fit; there was no separate calibration set.',
+              f'- The {n(s50["selected_50k_for_claude_rows"])} DCLM documents picked for labelling (of which '
+              f'{n(s50["scored_50k_final_rows"])} were scored and used) were drawn from the raw 100M pool, seed 42.',
+              f'- **All of them were removed from the pool** before any scoring or selection: the 50,838 rows removed by '
+              '`00_TMP/merge_remove_50k.py` are every row whose first 4,000 characters (sha1) match a labelled document '
+              f'({n(s50["sel50k_in_removed"])} / 50,000 picks and {n(s50["ridge_dclm_in_removed"])} / '
+              f'{n(s50["ridge_combined_dclm_rows"])} training documents are in the removed set; '
+              f'{s50["removed_not_in_sel50k_(pool_duplicates_by_prefix)"]} further rows are prefix-duplicates). '
+              f'Present in the published pool: **{pp["ridge_dclm_present_in_pool"]}** training documents, so **0** in the '
+              'validation holdout, in any selection and in any corpus.',
+              '- Not checked: near-duplicates whose first 4,000 characters differ; any overlap with the external embedder\'s '
+              'own pretraining data (it only affects frozen features).', '',
+              '**The ~5M analysis sample (verified).**',
+              '- Drawn by `ppl_quality/sampling_5m/sample_5m.py`: `sort(default_rng(42).choice(100_000_000, 5_000_000))` '
+              'over the raw pool. Re-derived here; the re-derivation matches the sample\'s URLs (1,000,000 / 1,000,000 '
+              'checked in two shards) and the independently built exclusion table (all 5,000,000 positions).',
+              '- Used for score/topic analysis (fastText, FineWeb-Edu, perplexity, an earlier analysis-only Ridge, Luxical '
+              'clusters). **No code trains, validates or calibrates the production ModernBERT head on it**; the embedder '
+              'card\'s "5M sample" refers to Nomic\'s own contrastive data, not this one.',
+              f'- It was **not removed**: {n(s5["rederived_5m_surviving_in_pool"])} of its documents are in the published pool '
+              f'({n(s5["exclusion_5m_basic_surviving"])} counting duplicate crawl copies, the figure the 3B plan quotes). The '
+              'original 1.5B selection (`select_10b.py` l.202-205) excluded only the validation holdout; so did every later '
+              'selection. These baselines therefore keep it, **for comparability with Quality-Base**; no new exclusion is '
+              'introduced.', '',
+              '| set | docs | 5M-sample docs inside | doc share | TRAIN-token share | expected at random | enrichment |',
+              '|---|---:|---:|---:|---:|---:|---:|']
+        for k in ['fasttext_quality_base', 'raw_top10b_fineweb_edu', 'raw_top10b_modernbert', 'raw_top10b_consensus',
+                  'validation_holdout_50k']:
+            v = o5[k]
+            L.append(f'| {SHORT.get(k, k)} | {n(v["target_docs"])} | {n(v["overlap_docs"])} | {100 * v["overlap_doc_share"]:.3f}% | '
+                     f'{100 * v["overlap_token_share"]:.3f}% | {n(round(v["expected_docs_if_random"]))} | {v["enrichment_docs"]:.3f} |')
+        L += ['', '- Every selection holds the 5M sample at its pool rate (5.00%), with no enrichment: none of the scores '
+              'prefers these documents. Their presence is not scorer-training leakage (the head never saw them).',
+              '- **Evaluation contamination is a different question and was not tested.** No decontamination against '
+              'ARC, HellaSwag, PIQA, SIQA, OpenBookQA, CommonsenseQA or MMLU was found for the scorer data or the pool; '
+              'this applies equally to Quality-Base and every arm.',
+              '- **Optional sensitivity experiment (not done, not part of the primary grid):** rerun the same three rules '
+              'on the universe minus the 5M sample. Given 5.00% inclusion with enrichment 1.00, it would change about 5% '
+              'of each corpus and would no longer be comparable with Quality-Base unless Quality-Base were rebuilt the '
+              'same way.', '']
 
     L += ['## 3. Selected sets', '',
           '| setting | docs | TRAIN tokens | overshoot | boundary score | boundary doc (TRAIN tokens) | tie cluster at boundary: selected / eligible | next doc score |',
@@ -184,8 +241,22 @@ def main():
           f'({100 * tmin:.0f}–{100 * tmax:.0f}% of its tokens; §5), so differences between arms come mostly from the '
           'non-shared part.', '']
 
+    if a.export_verify:
+        V = json.loads(a.export_verify.read_text())
+        L += ['## 7b. Materialized corpora (independent check, `tools/kys_raw/verify_global_top10b.py`)', '',
+              'Raw text read from the 100M raw pool by `orig_doc_id` (no rewriting, no transformation), shuffled once '
+              '(`pp_io.bucketed_shuffle`, seed 42), exported to 16 contiguous files in that order.', '',
+              '| setting | rows | TRAIN tokens | doc set == selection | duplicates | order == shuffle | file_order_sha256 | texts byte-equal to pool (sampled) | ok |',
+              '|---|---:|---:|---|---:|---|---|---|---|']
+        for s in NEW:
+            v = V[s]
+            t = v['text_sample']
+            L.append(f'| `{s}` | {n(v["rows"])} | {n(v["train_tokens"])} | {v["docset_sha256"] == M["settings"][s]["docset_sha256"]} | '
+                     f'{v["duplicate_doc_ids"]} | {v["order_equals_assembled_shuffle"]} | `{v["file_order_sha256"][:16]}…` | '
+                     f'{n(t["rows_checked"] - t["mismatches"])} / {n(t["rows_checked"])} | {v["ok"]} |')
+        L += ['', '- At assembly every document was re-tokenized and its length matched `tokens-llama2` exactly (0 mismatches).', '']
     if a.tokenized_dir:
-        L += ['## 8. Tokenization check (consumer script, all seven settings)', '',
+        L += ['## 8. Tokenization check (consumer script, the three new settings)', '',
               '`tools/kys_raw/tokenize_raw_text.sh` was run unchanged on a local data root holding the published manifest, '
               'the tokenizer files and the 16 parquet files per setting. The script first checks every sha256. It then runs '
               'datatrove 0.5.0 with 16 tasks, `</s>` per document and no shuffling, applies `fix_ds_metadata.py`, and '
@@ -200,7 +271,7 @@ def main():
         p = json.loads(a.published.read_text())
         L += ['## 9. Publication', '',
               f'- **Repo and revision:** `{p["repo"]}` at revision `{p["revision"]}`.',
-              f'- **Checksums:** {p["files_checked"]} uploaded parquet files checked against the Hub\'s LFS sha256 and '
+              f'- **Checksums:** {p["files_checked"]} uploaded data files (parquet and selection arrays) checked against the Hub\'s LFS sha256 and '
               f'size; mismatches: {p["lfs_sha256_mismatches"] or "none"}.',
               f'- **Manifest:** `manifest.json` downloaded back equals the local one: {p["manifest_roundtrip_equal"]}.',
               f'- **Generation code:** `imHuicongZhang/nanotron@{p["code_commit"]}`.', '']

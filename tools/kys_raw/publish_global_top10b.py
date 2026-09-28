@@ -92,6 +92,7 @@ def main():
     ap.add_argument('--out', type=Path, required=True)
     ap.add_argument('--code-commit', required=True, help='pushed nanotron commit holding the generation code')
     ap.add_argument('--reports', type=Path, help='directory of report files to publish under reports/')
+    ap.add_argument('--export-verify', type=Path, help='verify_global_top10b.py output; required for --stage upload')
     ap.add_argument('--stage', choices=['export', 'verify', 'upload'], default='upload', help='run up to and including this stage')
     ap.add_argument('--settings', default=','.join(SETTINGS))
     args = ap.parse_args()
@@ -139,6 +140,12 @@ def main():
         'scored_pool': sel['scored_pool'],
         'universe': sel['universe'] | {'definition': 'all scored rows minus the 50,000-doc validation holdout '
                                                      '(SeedSequence(42).spawn(8)[0]); the 5M analysis sample is not excluded'},
+        'scorer_training_data': ('The ModernBERT score is a Ridge head fit on 50,427 Claude-labelled documents (49,998 from '
+                                 'DCLM-RefinedWeb); every one of those was removed from the pool before scoring (the 50,838-row '
+                                 'first-4000-character match removal), so 0 are in any corpus. The ~5M analysis sample was not '
+                                 'used to fit the head and was NOT removed (4,997,471 docs remain); each new selection holds it at '
+                                 'its pool rate (5.00%), as does Quality-Base. Kept for comparability with the original 1.5B '
+                                 'universe. Benchmark contamination was not tested. See reports/GLOBAL_TOP10B_SELECTION_REPORT.md §2b.'),
         'rules': sel['rules'],
         'digest_conventions': sel['digest_conventions'],
         'deterministic_rerun_identical': sel['deterministic_rerun_identical'],
@@ -150,7 +157,7 @@ def main():
         'code': {'repo': 'https://github.com/imHuicongZhang/nanotron', 'branch': 'huicong-dev', 'commit': args.code_commit,
                  'scripts': ['tools/kys_raw/extract_scored_columns.py', 'tools/kys_raw/select_global_top10b.py',
                              'tools/kys_raw/report_global_top10b.py', 'tools/kys_raw/assemble_global_top10b.py',
-                             'tools/kys_raw/publish_global_top10b.py']},
+                             'tools/kys_raw/verify_global_top10b.py', 'tools/kys_raw/publish_global_top10b.py']},
         'reports': 'reports/ (selection report, provenance report); selection/<setting>/ (doc-id arrays, see digest_conventions)',
     }
     for s in settings:
@@ -166,6 +173,22 @@ def main():
             'orig_docset_sha256': w['orig_docset_sha256'], 'shuffled_parts_sha256': asm['shuffled_sha256'],
             'files': recs[s]['files'],
         }
+    if args.export_verify:
+        ev = json.loads(args.export_verify.read_text())
+        for s in settings:
+            v = ev[s]
+            if not v['ok'] or v['docset_sha256'] != man['settings'][s]['docset_sha256']:
+                sys.exit(f'{s}: export verification failed: {v["problems"]}')
+            man['settings'][s]['file_order_sha256'] = v['file_order_sha256']
+            man['settings'][s]['export_verification'] = {
+                'script': 'tools/kys_raw/verify_global_top10b.py', 'rows': v['rows'], 'train_tokens': v['train_tokens'],
+                'docset_equals_selection': True, 'duplicate_doc_ids': v['duplicate_doc_ids'],
+                'order_equals_assembled_shuffle': v['order_equals_assembled_shuffle'],
+                'text_sample_byte_equal_to_pool': f'{v["text_sample"]["rows_checked"] - v["text_sample"]["mismatches"]}/'
+                                                  f'{v["text_sample"]["rows_checked"]}',
+                'every_doc_retokenized_length_equals_tokens_llama2': True}
+    elif args.stage == 'upload':
+        sys.exit('--export-verify is required before uploading')
     mpath = args.out / 'manifest.json'
     mpath.write_text(json.dumps(man, indent=2) + '\n')
     # nothing that existed may change

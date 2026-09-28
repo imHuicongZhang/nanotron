@@ -11,32 +11,28 @@ pretty_name: Know Your Sources — raw (unrewritten) baseline corpora
 # Know Your Sources: raw baseline corpora (raw text)
 
 Seven raw, unrewritten training corpora for the Know-Your-Sources 1.5B grid. Each is about 10B training tokens.
-They come in two families. For what each corpus is, and what each comparison can and cannot establish, see
-[`reports/RAW_SELECTED_BASELINES_PROVENANCE.md`](reports/RAW_SELECTED_BASELINES_PROVENANCE.md) and
+They come in two families. The three global Top-10B corpora are documented in
 [`reports/GLOBAL_TOP10B_SELECTION_REPORT.md`](reports/GLOBAL_TOP10B_SELECTION_REPORT.md).
 
-## Strategy-linked raw controls (4)
+## Strategy-linked raw controls (4, published earlier, unchanged)
 
-**Composition:** the **shared 5B anchor** plus a **5B strategy half**. The strategy half is a seed-42 random
-subsample of the unique source documents of one rewritten arm's *final rewritten half*, kept as original text.
+Each is the **shared 5B anchor** (4,120,164 documents / 5,000,002,332 training tokens, identical in all four) plus a
+**5B raw strategy half** linked to one rewritten arm of
+[`wytro/Know-Your-Sources`](https://huggingface.co/datasets/wytro/Know-Your-Sources). Their files, counts and
+generation commit are recorded in `manifest.json` and were not modified by the addition of the global Top-10B
+corpora.
 
-**Consequences:**
-- Only documents whose rewrite succeeded and survived assembly are eligible.
-- These controls match their rewritten arm's token budget.
-- They do **not** contain the same documents: the strategy half covers 46–53% of the arm's source documents.
+| folder | rewritten counterpart |
+|---|---|
+| `raw_text/raw_diversity_oriented/` | `diversity_oriented` |
+| `raw_text/raw_disagreement_aware/` | `disagreement_aware` |
+| `raw_text/raw_random/` | `wrap_inspired` |
+| `raw_text/raw_rewire_inspired/` | `rewire_inspired` |
 
-| folder | rewritten counterpart | strategy half |
-|---|---|---|
-| `raw_text/raw_diversity_oriented/` | `diversity_oriented` | random half of the arm's successfully rewritten sources |
-| `raw_text/raw_disagreement_aware/` | `disagreement_aware` | random half of the arm's successfully rewritten sources |
-| `raw_text/raw_random/` | `wrap_inspired` | random half (52%) of the uniform sample WRAP rewrote successfully; a uniform-sample reference, not WRAP's exact documents |
-| `raw_text/raw_rewire_inspired/` | `rewire_inspired` | random half of the sources whose rewrites passed REWIRE's post-rewrite fastText filter |
-
-**`raw_rewire_inspired` is a conditional ablation.** Its membership depends on how well each document's *rewrite*
-scored, which is information that exists only after rewriting. It is not a raw-only selection policy.
-
-**Quality-First has no raw arm.** Its raw comparison is the existing Quality-Base: the anchor + the fastText-best 5B
-of Quality-First's own input.
+**Interpretation under review.** How exactly each strategy half relates to its arm's rewriting input and rewritten
+output (document overlap, conditioning on rewrite success or on REWIRE's post-rewrite filter) is being reviewed
+separately. Until that review is published, treat these as equal-token-budget controls, not as document-matched
+"same documents, unrewritten" interventions.
 
 ## Global Top-10B controls (3, no anchor)
 
@@ -52,8 +48,13 @@ minus the 50,000-doc validation holdout.
 **What these corpora do not have:** no shared anchor, no rewriting, no floors, quotas, variance terms or domain
 restrictions.
 
-**Comparator:** the existing fastText Quality-Base, which is the global fastText Top-10B under the same conventions
-up to 3 tail documents.
+**Comparator:** the existing fastText Quality-Base. Rebuilt under the same conventions, its document set reproduces
+the published Quality-Base digest, and it equals the global fastText Top-10B plus 3 tail documents.
+
+**Scorer-training data.** The ModernBERT quality head was fit on 50,427 Claude-labelled documents; all DCLM ones were
+removed from the scored pool before scoring, so none is in any corpus. A separate ~5M-document analysis sample was
+not used to fit the head and was not removed, exactly as in the original Quality-Base universe; every selection
+holds it at its pool rate (5.00%). Benchmark contamination was not tested. Details: selection report §2b.
 
 | folder | score |
 |---|---|
@@ -93,22 +94,21 @@ Use `tools/kys_raw/tokenize_raw_text.sh <data_root> <setting>` from
 
 **Token convention:** `len(llama2_tokenizer(text, add_special_tokens=False)) + 1` per document.
 
-**Check before publication:** all seven totals were confirmed with this exact script.
+**Check before publication:** for the three global Top-10B settings, the datatrove totals from this exact script
+equal `expected_total_tokens` (selection report §8). The script enforces the same check for every setting.
 
 **Procedure:** `configs/1.5B-baseline/WORKFLOW_RAW_BASELINES.md` in the code repository.
 
 ## Provenance in brief
 
 - **Text.** Every text is read from the raw 100M pool by position. No rewritten text is used anywhere.
-- **Strategy-linked settings:**
-  - source set = unique `orig_doc_id` of the non-anchor rows of the published
-    [`wytro/Know-Your-Sources`](https://huggingface.co/datasets/wytro/Know-Your-Sources) arm;
-  - 5B cut = `numpy.random.default_rng(42).permutation` order, shortest prefix reaching 5B;
-  - anchor = 4,120,164 documents / 5,000,002,332 tokens, identical in every arm, merged in.
 - **Global Top-10B settings:**
-  - the selection code reproduces the original Quality-Base selection bit for bit;
-  - the percentile columns reproduce exactly from the raw scores;
-  - every document was re-tokenized at assembly and its length checked equal to the scored pool's `tokens-llama2`.
+  - the selection code uses the original 1.5B selection primitives (universe, tie-break, whole-document cutoff);
+    applied to fastText it reproduces the published Quality-Base document-set digest;
+  - the three percentile columns recompute exactly from the raw scores (all 99,949,162 rows);
+  - every document was re-tokenized at assembly and its length checked equal to the scored pool's `tokens-llama2`;
+  - exported files were checked against the selection (document set, no duplicates, order, token total) and a
+    sample of texts was compared byte for byte with the raw pool (selection report §7b).
 - **Code:** `tools/kys_raw/` in the code repository. The exact commits are in `manifest.json`.
 
 ## Related
