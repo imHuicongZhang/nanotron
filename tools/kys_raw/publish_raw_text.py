@@ -44,11 +44,21 @@ COUNTERPART = {
     'raw_random': 'wrap_inspired',
     'raw_rewire_inspired': 'rewire_inspired',
 }
-ROLE = {
-    'raw_diversity_oriented': 'no-rewrite control for diversity_oriented',
-    'raw_disagreement_aware': 'no-rewrite control for disagreement_aware',
-    'raw_random': 'no-selection reference (uniform random source sample) and no-rewrite control for wrap_inspired',
-    'raw_rewire_inspired': "no-rewrite control for rewire_inspired: source documents of the 5B kept by REWIRE's post-rewrite filter",
+ROLE = {  # audited 2026-09-28: configs/1.5B-baseline/reports/strategy_linked_audit/
+    'raw_diversity_oriented': ("equal-token-budget raw control for diversity_oriented (not an identical-document control): shared "
+                               "5B anchor + a seed-42 uniform random 5B (whole documents) of the unique source documents of "
+                               "diversity_oriented's final rewritten half, i.e. of successful rewrites (51.4% of those sources)"),
+    'raw_disagreement_aware': ("equal-token-budget raw control for disagreement_aware (not an identical-document control): shared "
+                               "5B anchor + a seed-42 uniform random 5B (whole documents) of the unique source documents of "
+                               "disagreement_aware's final rewritten half, i.e. of successful rewrites (51.8% of those sources)"),
+    'raw_random': ("equal-token-budget raw control for wrap_inspired (not an identical-document control): shared 5B anchor + a "
+                   "seed-42 uniform random 5B of the source documents WRAP rewrote successfully (52.4% of WRAP's input "
+                   "documents). WRAP's input was a uniform 10B sample of the pool minus validation and anchor, so the non-anchor "
+                   "half is a uniform-sample reference for that population; not WRAP's exact source set"),
+    'raw_rewire_inspired': ("CONDITIONAL raw control for rewire_inspired: shared 5B anchor + a seed-42 uniform random 5B of the "
+                            "source documents whose rewrites passed REWIRE's post-rewrite fastText filter (45.9% of them). "
+                            "Membership depends on rewrite outcomes: supports 'rewritten vs original text given the filter', not "
+                            "'REWIRE beats raw data' (compare rewire_inspired with raw_random for that)"),
 }
 N_FILES = 16
 ANCHOR_DOCS, ANCHOR_TOKENS = 4_120_164, 5_000_002_332

@@ -1,0 +1,113 @@
+{
+ "raw_diversity_oriented": {
+  "counterpart": "diversity_oriented",
+  "rewrite_rows": 8336411,
+  "rewritten_train_tokens": 4889635504,
+  "prompts": {
+   "distill": 2474728,
+   "wikipedia": 5861683
+  },
+  "unique_sources": 5867876,
+  "source_tokens_R": 9728111104,
+  "multiplicity": {
+   "1": 3399341,
+   "2": 2468535
+  },
+  "raw_docs": 3018451,
+  "raw_tokens": 5000000553,
+  "overlap_docs": 3018451,
+  "cov_raw_in_rewrite_sources": 1.0,
+  "cov_rewrite_sources_in_raw": 0.5144026560888472,
+  "jaccard": 0.5144026560888472,
+  "tokw_source_cov": 0.5139744498748685,
+  "rewritten_rows_with_source_in_raw": 4288640,
+  "rewritten_tokens_with_source_in_raw": 2515964796,
+  "rewritten_tokcov": 0.514550582337231,
+  "raw_overlap_anchor": 0,
+  "sel_digest_sorted_int64le": "4cdbeb0fb93a4331d82e5a51d0de81ebd65e3acbe882a2a2e4f8a8df2f9358c9"
+ },
+ "raw_disagreement_aware": {
+  "counterpart": "disagreement_aware",
+  "rewrite_rows": 8442273,
+  "rewritten_train_tokens": 5000000003,
+  "prompts": {
+   "distill": 2855159,
+   "wikipedia": 5587114
+  },
+  "unique_sources": 5592424,
+  "source_tokens_R": 9647286028,
+  "multiplicity": {
+   "1": 2742575,
+   "2": 2849849
+  },
+  "raw_docs": 2898764,
+  "raw_tokens": 5000002737,
+  "overlap_docs": 2898764,
+  "cov_raw_in_rewrite_sources": 1.0,
+  "cov_rewrite_sources_in_raw": 0.5183376653844558,
+  "jaccard": 0.5183376653844558,
+  "tokw_source_cov": 0.5182807602561113,
+  "rewritten_rows_with_source_in_raw": 4376795,
+  "rewritten_tokens_with_source_in_raw": 2591918460,
+  "rewritten_tokcov": 0.5183836916889698,
+  "raw_overlap_anchor": 0,
+  "sel_digest_sorted_int64le": "08ae25c57439792ecfed9d5f762c02b635fa91a4b7925fc6e7378437fa1e64bd"
+ },
+ "raw_random": {
+  "counterpart": "wrap_inspired",
+  "rewrite_rows": 13022091,
+  "rewritten_train_tokens": 5000000087,
+  "prompts": {
+   "distill": 2456200,
+   "wrap_easy": 2646480,
+   "wrap_hard": 2631853,
+   "wrap_qa": 2643215,
+   "wrap_wiki": 2644343
+  },
+  "unique_sources": 10573523,
+  "source_tokens_R": 9520542699,
+  "multiplicity": {
+   "1": 8124955,
+   "2": 2448568
+  },
+  "raw_docs": 5554525,
+  "raw_tokens": 5000001419,
+  "overlap_docs": 5554525,
+  "cov_raw_in_rewrite_sources": 1.0,
+  "cov_rewrite_sources_in_raw": 0.5253239625052123,
+  "jaccard": 0.5253239625052123,
+  "tokw_source_cov": 0.5251802945566517,
+  "rewritten_rows_with_source_in_raw": 6840890,
+  "rewritten_tokens_with_source_in_raw": 2626118448,
+  "rewritten_tokcov": 0.525223680461108,
+  "raw_overlap_anchor": 0,
+  "sel_digest_sorted_int64le": "75b91f4d6b96f7b9258999ac45b5f19a0caf323fb01189eb62f39a8cd1af4782"
+ },
+ "raw_rewire_inspired": {
+  "counterpart": "rewire_inspired",
+  "rewrite_rows": 12290444,
+  "rewritten_train_tokens": 5000000351,
+  "prompts": {
+   "distill": 7024123,
+   "wikipedia": 5266321
+  },
+  "unique_sources": 8445785,
+  "source_tokens_R": 10899228624,
+  "multiplicity": {
+   "1": 4601126,
+   "2": 3844659
+  },
+  "raw_docs": 3872986,
+  "raw_tokens": 5000000799,
+  "overlap_docs": 3872986,
+  "cov_raw_in_rewrite_sources": 1.0,
+  "cov_rewrite_sources_in_raw": 0.45857028091527313,
+  "jaccard": 0.45857028091527313,
+  "tokw_source_cov": 0.458748134523029,
+  "rewritten_rows_with_source_in_raw": 5636442,
+  "rewritten_tokens_with_source_in_raw": 2293612607,
+  "rewritten_tokcov": 0.45872248919768127,
+  "raw_overlap_anchor": 0,
+  "sel_digest_sorted_int64le": "c0693ae04e5ddad77c97a429dffb335bb5f084d8b6c1e71876e11d799d884102"
+ }
+}

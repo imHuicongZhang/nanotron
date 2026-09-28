@@ -6,8 +6,10 @@ Adding a setting here (plus its corpus in blab-jhu/KYS-Pre-Rewritten and its tem
 
 Two families (configs/1.5B-baseline/WORKFLOW_RAW_BASELINES.md):
 
-  strategy_linked  shared 5B anchor + a 5B raw strategy half linked to one rewritten arm (published earlier;
-                   build code tools/kys_raw/build_raw_sources.py; interpretation under separate review)
+  strategy_linked  shared 5B anchor + a seed-42 uniform random 5B of the unique source documents of the
+                   counterpart's final rewritten half (tools/kys_raw/build_raw_sources.py): equal token budget,
+                   not identical documents; raw_rewire_inspired is conditional on REWIRE's post-rewrite filter
+                   (configs/1.5B-baseline/reports/strategy_linked_audit/)
   global_top10b    the entire ~10B corpus is one global Top-10B selection over the Quality-Base universe;
                    NO anchor. Compared against the existing fastText quality_base arm
                    (configs/1.5B-baseline/reports/GLOBAL_TOP10B_SELECTION_REPORT.md).

@@ -11,28 +11,35 @@ pretty_name: Know Your Sources — raw (unrewritten) baseline corpora
 # Know Your Sources: raw baseline corpora (raw text)
 
 Seven raw, unrewritten training corpora for the Know-Your-Sources 1.5B grid. Each is about 10B training tokens.
-They come in two families. The three global Top-10B corpora are documented in
-[`reports/GLOBAL_TOP10B_SELECTION_REPORT.md`](reports/GLOBAL_TOP10B_SELECTION_REPORT.md).
+They come in two families, documented in
+[`reports/GLOBAL_TOP10B_SELECTION_REPORT.md`](reports/GLOBAL_TOP10B_SELECTION_REPORT.md) (global Top-10B) and
+[`reports/RAW_SELECTED_BASELINES_PROVENANCE.md`](reports/RAW_SELECTED_BASELINES_PROVENANCE.md) (strategy-linked).
 
-## Strategy-linked raw controls (4, published earlier, unchanged)
+## Strategy-linked raw controls (4)
 
-Each is the **shared 5B anchor** (4,120,164 documents / 5,000,002,332 training tokens, identical in all four) plus a
-**5B raw strategy half** linked to one rewritten arm of
-[`wytro/Know-Your-Sources`](https://huggingface.co/datasets/wytro/Know-Your-Sources). Their files, counts and
-generation commit are recorded in `manifest.json` and were not modified by the addition of the global Top-10B
-corpora.
+**Composition:** the **shared 5B anchor** (4,120,164 documents / 5,000,002,332 training tokens, identical in all four
+and to the anchor inside each rewritten arm) plus a **5B raw strategy half**: a seed-42 uniform random sample, whole
+documents, of the unique source documents of one rewritten arm's *final rewritten half* in
+[`wytro/Know-Your-Sources@9e5ff241`](https://huggingface.co/datasets/wytro/Know-Your-Sources/tree/9e5ff24149c2957c30f0c8fdd051a8eb3b75baad),
+kept as original text.
 
-| folder | rewritten counterpart |
-|---|---|
-| `raw_text/raw_diversity_oriented/` | `diversity_oriented` |
-| `raw_text/raw_disagreement_aware/` | `disagreement_aware` |
-| `raw_text/raw_random/` | `wrap_inspired` |
-| `raw_text/raw_rewire_inspired/` | `rewire_inspired` |
+**These are equal-token-budget controls, not identical-document controls.** Rewriting roughly halves document length,
+so at the same 5B budget the raw half holds a random ~half of the rewritten half's sources (same distribution, not
+the same documents). Only sources with a successful rewrite are eligible.
 
-**Interpretation under review.** How exactly each strategy half relates to its arm's rewriting input and rewritten
-output (document overlap, conditioning on rewrite success or on REWIRE's post-rewrite filter) is being reviewed
-separately. Until that review is published, treat these as equal-token-budget controls, not as document-matched
-"same documents, unrewritten" interventions.
+| folder | rewritten counterpart | raw strategy half | comparison it supports |
+|---|---|---|---|
+| `raw_text/raw_diversity_oriented/` | `diversity_oriented` | random 51.4% of the rewritten half's sources | rewrites vs original text of this strategy's sources, equal tokens |
+| `raw_text/raw_disagreement_aware/` | `disagreement_aware` | random 51.8% | same |
+| `raw_text/raw_random/` | `wrap_inspired` | random 52.4% of WRAP's input documents, **restricted to those WRAP rewrote successfully** (99.7% of the input) | WRAP-style rewriting of a uniform sample vs a uniform raw sample of the same population (pool minus validation and anchor); not WRAP's exact documents |
+| `raw_text/raw_rewire_inspired/` | `rewire_inspired` | random 45.9% of the sources whose rewrites **passed REWIRE's post-rewrite fastText filter** | **conditional**: rewritten vs original text given the filter's picks |
+
+**`raw_rewire_inspired` is a conditional ablation.** Its membership depends on how each document's *rewrite* scored,
+which exists only after rewriting. It does not support "REWIRE beats raw data" and is not a raw-only selection
+policy; for REWIRE's pipeline effect compare `rewire_inspired` with `raw_random` (same input population).
+
+**Quality-First has no raw arm.** Its raw comparison is the existing Quality-Base: the anchor + the fastText-best 5B
+of Quality-First's own rewriting input.
 
 ## Global Top-10B controls (3, no anchor)
 
@@ -87,15 +94,17 @@ Use `tools/kys_raw/tokenize_raw_text.sh <data_root> <setting>` from
 [`imHuicongZhang/nanotron`](https://github.com/imHuicongZhang/nanotron) (branch `huicong-dev`).
 
 **What the script does:**
-- runs 16 datatrove tasks with one `</s>` per document and no BOS;
+- runs 16 datatrove tasks; each document becomes its tokens + one `</s>` (id 2), with no `<s>` (datatrove replaces
+  the tokenizer's default `<s>`-prepending post-processor);
 - does no merging or shuffling;
 - runs `tools/fix_ds_metadata.py`;
 - checks the total against `expected_total_tokens`.
 
 **Token convention:** `len(llama2_tokenizer(text, add_special_tokens=False)) + 1` per document.
 
-**Check before publication:** for the three global Top-10B settings, the datatrove totals from this exact script
-equal `expected_total_tokens` (selection report §8). The script enforces the same check for every setting.
+**Check before publication:** for all seven settings, the datatrove totals from this exact script equal
+`expected_total_tokens` (selection report §8; provenance report §R5). The script enforces the same check for every
+setting.
 
 **Procedure:** `configs/1.5B-baseline/WORKFLOW_RAW_BASELINES.md` in the code repository.
 

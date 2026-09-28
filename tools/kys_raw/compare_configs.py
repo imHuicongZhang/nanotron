@@ -14,7 +14,7 @@ Two comparisons, per seed:
         parallelism.recompute_layer                                                    speed only (no math change)
         tokens.micro_batch_size, tokens.batch_accumulation_per_replica                 reported, see below
      micro_batch_size is reported, not waived: v2 Quality-Base seed 42 ran mbs 16 / accum 16, seeds 43/44
-     mbs 32 / accum 8; the raw configs use mbs 32 / accum 8 (the grid's value in 53 of 54 runs).
+     mbs 32 / accum 8; the raw configs use mbs 32 / accum 8 (the grid's value in 51 of 54 checkpoints).
      Keys present only in the v2 dump (nanotron fills defaults when it serializes) are listed separately.
   C. (--data-root, --tokenizer) each branch config with its placeholders filled is parsed by nanotron's own
      loader (nanotron.config.get_config_from_file) and re-serialized, then compared with the v2 dump over the

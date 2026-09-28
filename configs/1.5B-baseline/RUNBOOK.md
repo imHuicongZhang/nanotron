@@ -9,9 +9,10 @@ the two ever disagree, the workflow document wins; please report the discrepancy
 Seven raw (unrewritten) 1.5B training corpora, in two families. The global Top-10B selections are documented in
 [`reports/GLOBAL_TOP10B_SELECTION_REPORT.md`](reports/GLOBAL_TOP10B_SELECTION_REPORT.md).
 
-**Strategy-linked controls (4, published earlier, unchanged).** Each is the shared 5B anchor + a 5B raw strategy
-half linked to one rewritten arm, with the same token budget as that arm. Their interpretation is under separate
-review; this handoff does not re-audit them.
+**Strategy-linked controls (4, published earlier; audited, data unchanged).** Each is the shared 5B anchor + a seed-42
+uniform random 5B of the unique source documents of one rewritten arm's final rewritten half: an **equal-token-budget**
+control, not an identical-document one. `raw_random`'s half is restricted to sources WRAP rewrote successfully;
+`raw_rewire_inspired`'s is **conditional on REWIRE's post-rewrite filter**. Audit: [reports/strategy_linked_audit/RAW_SELECTED_BASELINES_PROVENANCE.md](reports/strategy_linked_audit/RAW_SELECTED_BASELINES_PROVENANCE.md).
 
 **Global Top-10B controls (3).** The whole ~10B corpus is one global Top-10B selection over the Quality-Base
 universe, by one score. There is no anchor. They are compared against the existing fastText Quality-Base.
@@ -20,8 +21,8 @@ universe, by one score. There is no anchor. They are compared against the existi
 |---|---|---|---|
 | `raw_diversity_oriented` | strategy-linked | yes | `diversity_oriented` |
 | `raw_disagreement_aware` | strategy-linked | yes | `disagreement_aware` |
-| `raw_random` | strategy-linked | yes | `wrap_inspired` |
-| `raw_rewire_inspired` | strategy-linked | yes | `rewire_inspired` |
+| `raw_random` | strategy-linked (uniform-sample population, successful WRAP rewrites only) | yes | `wrap_inspired` |
+| `raw_rewire_inspired` | strategy-linked, **conditional on REWIRE's post-rewrite filter** | yes | `rewire_inspired` |
 | `raw_top10b_fineweb_edu` | global Top-10B by `fineweb-edu-ranking-v2` | no | `quality_base` |
 | `raw_top10b_modernbert` | global Top-10B by `modernbert-ranking-v2` | no | `quality_base` |
 | `raw_top10b_consensus` | global Top-10B by mean of the three v2 percentiles | no | `quality_base` |
@@ -89,8 +90,8 @@ done
 3. Runs `python tools/fix_ds_metadata.py --output-folder <data_root>/<s>/tokenized --tokenizer-dir <data_root>/tokenizer`.
 4. Requires 16 shards and a token total exactly equal to `settings.<s>.expected_total_tokens`.
 
-The three global Top-10B totals were confirmed this way before publication (selection report §8). The four earlier
-settings were not re-tokenized in this preparation; the same check runs on your side.
+All seven totals were confirmed this way on the preparation cluster (selection report §8; strategy-linked audit
+§R5). Each document is its text + one `</s>`; no `<s>` is added.
 
 **Do not:**
 - merge, shuffle, re-split or change the task count;

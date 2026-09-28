@@ -36,7 +36,7 @@ from pathlib import Path
 import yaml
 
 # What the grid actually ran with, from the config.yaml of all 54 released checkpoints
-# (2026-09-15): mbs 32 in 53 of 54 (seed42/quality_base ran mbs 16). The 16 previously pinned
+# (2026-09-15): mbs 32 in 51 of 54 (seed42/quality_base ep1-ep3 ran mbs 16). The 16 previously pinned
 # here was never the grid's value. See deploy/clusters.yaml `kys_grid_1p5b`.
 EXPECTED_MBS = 32
 # Raw-selected baselines (configs/1.5B-baseline-seed*) use the grid's mbs too; on 80 GB cards that

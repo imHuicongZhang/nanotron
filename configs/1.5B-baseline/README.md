@@ -8,16 +8,17 @@
 Seven raw (unrewritten) corpora for the Know-Your-Sources 1.5B grid, in two families (list:
 `tools/kys_raw/registry.py`).
 
-**Strategy-linked controls (4, published earlier, unchanged).** The shared 5B anchor plus a 5B raw strategy half
-linked to one rewritten arm, at the same token budget as that arm. Their interpretation is under separate review;
-this handoff does not re-audit them.
+**Strategy-linked controls (4, published earlier; audited, data unchanged).** The shared 5B anchor plus a seed-42
+uniform random 5B (whole documents) of the unique source documents of one rewritten arm's final rewritten half.
+They are **equal-token-budget** raw controls, not identical-document controls: rewriting roughly halves length, so
+the raw half holds a random ~half of those sources. Audit: [reports/strategy_linked_audit/RAW_SELECTED_BASELINES_PROVENANCE.md](reports/strategy_linked_audit/RAW_SELECTED_BASELINES_PROVENANCE.md).
 
-| setting | comparator |
-|---|---|
-| `raw_diversity_oriented` | `diversity_oriented` |
-| `raw_disagreement_aware` | `disagreement_aware` |
-| `raw_random` | `wrap_inspired` |
-| `raw_rewire_inspired` | `rewire_inspired` |
+| setting | comparator | raw strategy half |
+|---|---|---|
+| `raw_diversity_oriented` | `diversity_oriented` | random 51.4% of the rewritten half's sources |
+| `raw_disagreement_aware` | `disagreement_aware` | random 51.8% |
+| `raw_random` | `wrap_inspired` | random 52.4% of WRAP's input documents, restricted to those rewritten successfully |
+| `raw_rewire_inspired` | `rewire_inspired` | random 45.9% of the sources whose rewrites passed REWIRE's post-rewrite filter: **conditional** on the filter |
 
 **Global Top-10B controls (3).**
 - Composition: the entire ~10B corpus is one global Top-10B selection over the Quality-Base universe: all scored
@@ -153,7 +154,7 @@ Build path: `tools/kys_raw/build_raw_sources.py` â†’ `assemble_raw_corpus.py` â†
 Global batch 1024 x 2048 tokens; the grid's dp 4 / **mbs 32** / accum 8, zero_stage 0.
 
 **What the original grid ran**, read from the `config.yaml` of all 54 released checkpoints: dp 4,
-mbs 32, accum 8 in 53 of 54. **The one exception is seed-42 `quality_base`** (ep1-ep3), which ran
+mbs 32, accum 8 in 51 of 54. **The exceptions are the three seed-42 `quality_base` checkpoints** (ep1-ep3), which ran
 mbs 16 / accum 16. The mbs 16 previously pinned in `deploy/clusters.yaml`, `SOP.md` and
 `tools/assert_invariants.py` was never the grid's value; those now record 32.
 

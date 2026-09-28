@@ -1,0 +1,56 @@
+{
+ "rewritten_revision": "wytro/Know-Your-Sources@9e5ff24149c2957c30f0c8fdd051a8eb3b75baad (quality_first)",
+ "qf_arm_anchor_equals_rule_anchor": true,
+ "quality_base_docset_sha256": "90252ee58ad4b298adadb7dfd0dfd9ba5fe01ed595fa62cd5c1a53947e4c2a22",
+ "profiles": {
+  "QB_block": {
+   "docs": 3133023,
+   "train_tokens": 5000000805,
+   "mean_ft_pct": 0.9430762529373169,
+   "min_ft_pct": 0.927394688129425,
+   "mean_train_tokens_per_doc": 1595.9030000737307
+  },
+  "QF_input": {
+   "docs": 6136187,
+   "train_tokens": 10000000529,
+   "mean_ft_pct": 0.9280447959899902,
+   "min_ft_pct": 0.897331714630127,
+   "mean_train_tokens_per_doc": 1629.6766263805193
+  },
+  "R_QF": {
+   "docs": 6122949,
+   "train_tokens": 9509596850,
+   "mean_ft_pct": 0.9280614852905273,
+   "min_ft_pct": 0.897331714630127,
+   "mean_train_tokens_per_doc": 1553.1073098926677
+  },
+  "hypothetical_random_half_of_R_QF": {
+   "docs": 3219945,
+   "train_tokens": 5000000972,
+   "mean_ft_pct": 0.9280616044998169,
+   "min_ft_pct": 0.8973320126533508,
+   "mean_train_tokens_per_doc": 1552.8218562739426
+  }
+ },
+ "QB_block_subset_of_QF_input": true,
+ "QB_block_covered_by_R_QF": {
+  "docs": 0.99865433480699,
+  "tokens": 0.9561145550655566
+ },
+ "R_QF_covered_by_QB_block": {
+  "docs": 0.5109967435626199,
+  "tokens": 0.5027104324617084
+ },
+ "QF_input_covered_by_R_QF": {
+  "docs": 0.9978426341961221,
+  "tokens": 0.9509596346942353
+ },
+ "R_QF_subset_of_QF_input": true,
+ "QF_rewrite_rows": 10311309,
+ "QF_rewrite_prompts": {
+  "distill": 4198815,
+  "wikipedia": 6112494
+ },
+ "QF_rewritten_train_tokens": 5000000308,
+ "QF_output_tokens_whose_source_in_QB_block": 0.5877254569961119
+}

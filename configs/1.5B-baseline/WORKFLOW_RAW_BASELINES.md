@@ -20,6 +20,9 @@ This document is the single entry point. It is self-contained. The other files a
   §2b.
 - [`reports/CONFIG_COMPARISON.md`](reports/CONFIG_COMPARISON.md): proof that the configs differ from the validated
   reference only in run/dataset fields.
+- [`reports/strategy_linked_audit/RAW_SELECTED_BASELINES_PROVENANCE.md`](reports/strategy_linked_audit/RAW_SELECTED_BASELINES_PROVENANCE.md):
+  the audit of the four strategy-linked raw corpora: exact construction, verdicts, what each comparison supports.
+  Its evidence (scripts, JSON, the cited production code) is in the same folder.
 
 ---
 
@@ -29,8 +32,8 @@ This document is the single entry point. It is self-contained. The other files a
 handoff trains on Huicong's cluster.
 
 **Preparation-side checks that were executed** (on Huicong's cluster, CPU only, 2026-09-28). They cover the three
-new global Top-10B settings and the shared tooling. The four strategy-linked corpora were **not** re-audited or
-re-tokenized; their Hub files and manifest entries are byte-unchanged.
+new global Top-10B settings, the shared tooling, and an audit of the four strategy-linked corpora (§2a), whose data
+files are byte-unchanged.
 
 | check | result |
 |---|---|
@@ -45,6 +48,8 @@ re-tokenized; their Hub files and manifest entries are byte-unchanged.
 | configs: `fill_placeholders.py` for seeds 42/43/44 (a dry-run cluster entry copying skipjack's H100 values) | 126 configs rendered; `assert_invariants.py` passes on all |
 | `compare_configs.py` A/B/C vs `wytro/KYS-1.5B-Rewritten-v2@b22c8733` | PASS (only run/path, recompute and seed-42 mbs fields differ; §13) |
 | `plan_submit.py` plan + `--test-only` for seeds 42/43/44 | 126/126 segments accepted by `sbatch --test-only`; nothing queued; unknown `--settings` and too-short `time` refused |
+| strategy-linked audit: each raw strategy half rebuilt from `wytro/Know-Your-Sources@9e5ff241` alone; anchors vs the arms' anchors | all four equal the published corpora; anchors identical; no overlap or duplicates |
+| consumer tokenization of the four strategy-linked corpora (files checked against `manifest.json` sha256) | datatrove totals = `expected_total_tokens` exactly; every document is text + `</s>`, no `<s>` |
 | kys-eval `selftest` (7 settings, 63 cells) | pass (run in the preparation Python env, not a fresh `./install.sh` venv) |
 
 **Still pending, and Marc's to run** (hardware- and site-dependent): the INSTALL.md environment and smoke checks
@@ -144,21 +149,32 @@ seed 44 likewise. Within a seed the seven chains are independent and should run 
 Two families answer different questions. The corpus directory, the setting name and the checkpoint path component
 are the same string.
 
-### 2a. Four strategy-linked raw controls (published earlier, unchanged)
+### 2a. Four strategy-linked raw controls (published earlier; audited, unchanged)
 
-Each is the shared 5B anchor plus a 5B raw strategy half linked to one rewritten arm. They were built and published
-before this handoff: code `tools/kys_raw/build_raw_sources.py` etc. at the commit recorded in `manifest.json`. This
-handoff does not change their data, configs or schedule; it only adds the three settings of §2b.
+Each is the shared 5B anchor (identical to the anchor inside its rewritten counterpart) + a **5B raw strategy half**:
+a seed-42 uniform random sample, whole documents, of the unique source documents of the counterpart's **final
+rewritten half**, up to 5e9 TRAIN tokens. Audit: `reports/strategy_linked_audit/RAW_SELECTED_BASELINES_PROVENANCE.md`.
 
-| setting | comparator (v2) |
-|---|---|
-| `raw_diversity_oriented` | `diversity_oriented` |
-| `raw_disagreement_aware` | `disagreement_aware` |
-| `raw_random` | `wrap_inspired` |
-| `raw_rewire_inspired` | `rewire_inspired` |
+**What they are: equal-token-budget raw controls, not identical-document controls.**
+- Rewriting roughly halves document length (0.46–0.53 rewritten tokens per source token). At the same 5B budget the
+  raw half can therefore hold only about half of the rewritten half's source documents; it holds a uniform random
+  half, so it has the same distribution as those sources.
+- Only sources whose rewrite succeeded (and, for REWIRE, passed the filter) are eligible. For three settings this
+  drops 0.15–0.29% of the strategy's input documents, mostly over-length ones.
 
-**Their interpretation is under separate review.** Nothing in this handoff re-audits them. Train them as specified;
-do not describe them as "the same documents, unrewritten" until that review is published.
+| setting | comparator (v2) | raw strategy half | what the pair supports |
+|---|---|---|---|
+| `raw_diversity_oriented` | `diversity_oriented` | random 51.4% of the rewritten half's sources | rewrites vs original text for this strategy's sources, at equal tokens |
+| `raw_disagreement_aware` | `disagreement_aware` | random 51.8% of them | same |
+| `raw_random` | `wrap_inspired` | random 52.5% of the sources WRAP rewrote **successfully** = 52.4% of WRAP's input documents. WRAP's input was a uniform 10B sample of the pool minus validation and anchor. | WRAP-style rewriting of a uniform sample vs a uniform raw sample of the same population. Not WRAP's exact documents; "uniform-sample reference" only for its non-anchor half. |
+| `raw_rewire_inspired` | `rewire_inspired` | random 45.9% of the sources whose rewrites **passed REWIRE's post-rewrite fastText filter** | **conditional**: rewritten vs original text *given* the filter's picks. Not "REWIRE beats raw data"; its membership uses rewrite outcomes. |
+
+- **REWIRE's pipeline vs raw data** is `rewire_inspired` vs `raw_random`: REWIRE's input and `raw_random`'s input
+  are uniform samples of the same population.
+- **Quality-First has no raw arm.** Quality-Base's non-anchor half is the fastText-best 5B of Quality-First's own
+  rewriting input (99.87% of it was rewritten into Quality-First), so `quality_first` vs `quality_base` is its
+  comparison, with a slightly stronger, unconditioned raw side.
+- The anchor is half of every corpus and identical everywhere, so each comparison varies only the other half.
 
 ### 2b. Three global Top-10B quality controls (new)
 
@@ -244,7 +260,7 @@ init_root = snapshot_download("wytro/Know-Your-Sources-init", revision="87e13356
 ```
 <data_root>/manifest.json                         counts, expected_total_tokens, sha256 of every file, tokenizer sha256, code commits
 <data_root>/raw_text/<setting>/part-000NN.parquet 16 files per setting, in training order
-<data_root>/tokenizer/                            Llama-2 tokenizer (vocab 32000, BOS 1, EOS 2)
+<data_root>/tokenizer/                            Llama-2 tokenizer (vocab 32000; <s> = 1, </s> = 2)
 <data_root>/selection/<new setting>/*.npy         selected doc ids of the three global Top-10B settings
 <data_root>/reports/                              provenance, selection and config reports
 <init_root>/_init_1.5B_seed<S>/0/                 init checkpoint (180 files), S in 42 43 44
@@ -285,7 +301,7 @@ done
 
 **What the script does, per setting:**
 1. Checks the three tokenizer files and the 16 parquet files against `manifest.json` sha256.
-2. Runs `tools/preprocess_data_parquet.py` with datatrove 0.5.0, 16 tasks, `</s>` per document, no BOS and no
+2. Runs `tools/preprocess_data_parquet.py` with datatrove 0.5.0, 16 tasks, one `</s>` appended per document, no `<s>` and no
    shuffling. Task i reads exactly file i, so shards `00000…00015` concatenate to the file order.
 3. Runs `tools/fix_ds_metadata.py --tokenizer-dir <data_root>/tokenizer`, which makes every `.ds.metadata` name
    the tokenizer directory that nanotron's config asserts against.
@@ -294,9 +310,14 @@ done
 Output: `<data_root>/<setting>/tokenized/000NN_unshuffled.ds{,.index,.metadata}`, which is what the configs
 reference as `{{DATA_ROOT}}/<setting>/tokenized`.
 
-**Verified before publication, for the three global Top-10B settings:** tokenized this way from the files that
-were uploaded, and every total matched (selection report §8). The four earlier settings were not re-tokenized in
-this preparation; the script applies the same total check to them on your side.
+**Verified for all seven settings** on the preparation cluster: tokenized this way from files whose sha256 match
+`manifest.json`, and every total matched `expected_total_tokens` exactly (selection report §8; strategy-linked
+audit §R5).
+
+**Token convention: document text + one `</s>` (id 2), no `<s>` (id 1).** The Llama-2 `tokenizer.json` would prepend
+`<s>` by default; datatrove 0.5.0 replaces that post-processor with `$A </s>`. The rewritten comparators' training
+streams have the same structure (checked on the bytes). Older code comments that call the per-document "+1" a BOS
+(`select_10b.py`, `pp_io.py`) mislabel it: it is the appended `</s>`, and the counts are unaffected.
 - **Memory:** each of the 16 datatrove tasks peaked at ~10.2 GiB RSS, so the default (all 16 at once) needs
   ~165 GiB. On a smaller node set `KYS_TOKENIZE_WORKERS=<n>` with n × 10.5 GiB fitting in memory; the output is
   identical. If a task is OOM-killed, delete `<data_root>/<setting>/` and rerun with a smaller n.
@@ -504,12 +525,17 @@ checkpoint's `config.yaml` in all 105 keys except run name, paths and (seed 42 o
 
 **Micro-batch size stays 32; scale `dp`, never `mbs`.**
 - nanotron normalizes the loss **per micro-batch**: `masked_mean = (loss·mask).sum() / mask.sum()`
-  (`src/nanotron/models/llama.py:984-1006`). `label_mask` drops the token before each document boundary, so
-  regrouping the same 1024 sequences into a different mbs changes per-token weights. The recorded measurement is
-  1.43e-3 relative for mbs 4 vs 16 (`deploy/clusters.yaml`, h200 entry).
+  (`src/nanotron/models/llama.py:984-1006`), then divides by the number of micro-batches
+  (`src/nanotron/parallel/pipeline_parallel/engine.py:55`). `label_mask` removes only the label at each document
+  start (`src/nanotron/data/clm_collator.py:83-94`), so regrouping the same 1024 sequences into a different mbs
+  changes per-token weights slightly. The recorded measurement is 1.43e-3 relative for mbs 4 vs 16
+  (`deploy/clusters.yaml`, h200 entry).
 - On 80 GB cards mbs 32 needs `recompute_layer: true`. Recomputation changes speed, not the math.
-- **Known deviation in the comparator:** the v2 Quality-Base **seed 42** ran mbs 16 / accum 16; seeds 43/44 and all
-  other v2 runs used mbs 32 / accum 8. Keep that in mind when comparing seed-42 cells against Quality-Base.
+- **Known deviation in the comparator:** of the 54 released v2 checkpoints, 51 used mbs 32 / accum 8; the three
+  Quality-Base **seed 42** checkpoints (ep1–ep3) used mbs 16 / accum 16. Keep mbs 32 for every new run (it matches
+  every rewritten comparator and Quality-Base seeds 43/44). When comparing against Quality-Base, report seed-averaged
+  results with this footnote plus a seeds-43/44-only check; the effect is expected to be far below seed noise
+  (Quality-Base ep3 Mean6 by seed: 0.4566 / 0.4617 / 0.4698).
 - If you truly cannot fit mbs 32, pass `--expected-mbs N` to `fill_placeholders.py` and `plan_submit.py`, and report
   it.
 
@@ -537,8 +563,9 @@ It uses the exact v2 protocol (LightEval commit and patch, 0-shot `acc_norm`, da
 - **Benchmarks:** Mean6 (ARC-Easy, HellaSwag, PIQA, SIQA, OpenBookQA, CommonsenseQA) and MMLU (57 subjects,
   macro-averaged, plus 4 categories).
 - **Grid:** 63 cells = 7 settings × 3 seeds × 3 epochs.
-- **Comparisons:** each strategy-linked setting against its rewritten counterpart; each global Top-10B setting
-  against `quality_base`.
+- **Comparisons:** each strategy-linked setting against its rewritten counterpart (read `raw_rewire_inspired`'s
+  as conditional, §2a); `rewire_inspired` against `raw_random` for REWIRE's pipeline effect; each global Top-10B
+  setting against `quality_base`.
 
 ```bash
 git clone https://github.com/imHuicongZhang/kys-eval.git && cd kys-eval

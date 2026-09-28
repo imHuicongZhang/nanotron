@@ -135,7 +135,7 @@ clusters:
   kys_grid_1p5b:
     # What the 1.5B grid ACTUALLY ran with, read from the config.yaml inside every one of the
     # 54 released checkpoints under <ckpt_root> (2026-09-15): dp 4 / tp 1 / pp 1,
-    # micro_batch_size 32, batch_accumulation_per_replica 8, zero_stage 0 — in 53 of 54.
+    # micro_batch_size 32, batch_accumulation_per_replica 8, zero_stage 0 — in 51 of 54.
     # The exception is seed42/quality_base (ep1..ep3): micro_batch_size 16, accum 16.
     # The GPU type is not recorded in the checkpoints (hbm_gib left null, so no memory check),
     # and neither the h200 dp 8 layout below nor mbs 16 is what produced the released models.

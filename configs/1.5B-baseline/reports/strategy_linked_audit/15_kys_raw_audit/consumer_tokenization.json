@@ -1,0 +1,30 @@
+{
+ "raw_diversity_oriented": {
+  "shards": 16,
+  "datatrove_total_tokens": 10000002885,
+  "expected_total_tokens": 10000002885,
+  "ds_bytes": 20000005770,
+  "seconds": 1039
+ },
+ "raw_disagreement_aware": {
+  "shards": 16,
+  "datatrove_total_tokens": 10000005069,
+  "expected_total_tokens": 10000005069,
+  "ds_bytes": 20000010138,
+  "seconds": 979
+ },
+ "raw_random": {
+  "shards": 16,
+  "datatrove_total_tokens": 10000003751,
+  "expected_total_tokens": 10000003751,
+  "ds_bytes": 20000007502,
+  "seconds": 978
+ },
+ "raw_rewire_inspired": {
+  "shards": 16,
+  "datatrove_total_tokens": 10000003131,
+  "expected_total_tokens": 10000003131,
+  "ds_bytes": 20000006262,
+  "seconds": 978
+ }
+}
