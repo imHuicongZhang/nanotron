@@ -1,0 +1,42 @@
+{
+  "setting": "raw_top10b_modernbert",
+  "contains_anchor": false,
+  "docs": 5918416,
+  "train_tokens": 10000000657,
+  "token_check": "every document re-tokenized; length == scored-pool tokens-llama2 for all documents",
+  "text_source": "/weka/scratch/jhu/bvandur1/zhuicon1/datasets/ppl-dsai/dclm-refinedweb-100m-sample",
+  "text_read_in": "assemble_global_top10b._stage (raw pool by orig_doc_id)",
+  "selection": {
+    "score": "modernbert-ranking-v2",
+    "docs": 5918416,
+    "train_tokens": 10000000657,
+    "overshoot": 657,
+    "selection_order_sha256": "b5a805bce7e6dcd163824987b03e7cb8dd59f45dc952a5462c737bb3b5214c7f",
+    "docset_sha256": "758f13bc7fb91a1e32eca4b288e9fb827a133b57ada8171a7a7c4a801823adb5",
+    "orig_docset_sha256": "de65a4db8f2a958e076233297eace74aa3a2072460a2f24e48a508a903cf7d6c"
+  },
+  "shuffle": {
+    "function": "tools/kys_raw/pp_io.py bucketed_shuffle",
+    "pp_io_sha256": "5134dcc16bde1757345212ae7afd7a737133c8d7934e3570e9138e1b4e5f4d52",
+    "seed": 42,
+    "rows_per_shard": 500000,
+    "buckets": 16,
+    "input_order": "staged pool_NNNNN.parquet sorted by path"
+  },
+  "shuffled_rows": 5918416,
+  "shuffled_shards": 12,
+  "shuffled_sha256": {
+    "part_00000.parquet": "5387b976fe84f9c733dd5139c75051d36c0de646a9acecefb1ce44618f19e4ac",
+    "part_00001.parquet": "9ef7dde5e5cb55d1f496669eae6b39fa5db1c6036947a586f0a67f5356593fff",
+    "part_00002.parquet": "f359a984b1b7d81070d5febd1a8b5f41f00ae6f1a7d6b41d40b08aa66fd40448",
+    "part_00003.parquet": "3c4d05a3830c8052f8ef9b90a1f58c37fae62da61e262d70839c1aa22d4ac817",
+    "part_00004.parquet": "d0dc331d9bbdf2f3dd76d0712b4d0ae8aa2e04b06a431a2b871a0bb6f5e930b7",
+    "part_00005.parquet": "1495c617a7b07ff9da9d367ceb141d088dd4ad2e5ff952ec7540d898bc6055b7",
+    "part_00006.parquet": "8a6702bb0377a2345d8898d99d8421ce86bdb67cb4310611fc452da7adf83481",
+    "part_00007.parquet": "2238f3c9a81db87e2f546dda3c426b56f7db9ff4083e65ea5e76e9bb03b0dd33",
+    "part_00008.parquet": "8535205691d15943fddf1b0d1c1508c6a0e5ee37551f61ab28e9eb44f98d2337",
+    "part_00009.parquet": "4f8afcd03e82a6e4c63edebf21657784be08d6d93926305531f2b8ae3067f5c9",
+    "part_00010.parquet": "8da9671198e7befc50683394215c6bd503d144513ca6a50192d77e068ad69498",
+    "part_00011.parquet": "3a42d7ae418e08f4b6e056d36e62afbc1ce181fc259d9c1231dec80ebbfe0fc7"
+  }
+}

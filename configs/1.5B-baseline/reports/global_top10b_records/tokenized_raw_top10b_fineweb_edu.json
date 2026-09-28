@@ -1,0 +1,42 @@
+{
+  "setting": "raw_top10b_fineweb_edu",
+  "shards": 16,
+  "datatrove_total_tokens": 10000007488,
+  "expected_total_tokens": 10000007488,
+  "shard_tokens": {
+    "00000_unshuffled.ds.metadata": 623019047,
+    "00001_unshuffled.ds.metadata": 627074397,
+    "00002_unshuffled.ds.metadata": 626382081,
+    "00003_unshuffled.ds.metadata": 624185047,
+    "00004_unshuffled.ds.metadata": 628108474,
+    "00005_unshuffled.ds.metadata": 626713437,
+    "00006_unshuffled.ds.metadata": 623952784,
+    "00007_unshuffled.ds.metadata": 623590615,
+    "00008_unshuffled.ds.metadata": 622310260,
+    "00009_unshuffled.ds.metadata": 625144626,
+    "00010_unshuffled.ds.metadata": 622141526,
+    "00011_unshuffled.ds.metadata": 623090143,
+    "00012_unshuffled.ds.metadata": 628676074,
+    "00013_unshuffled.ds.metadata": 625371481,
+    "00014_unshuffled.ds.metadata": 625409340,
+    "00015_unshuffled.ds.metadata": 624838156
+  },
+  "ds_bytes": {
+    "00000_unshuffled.ds": 1246038094,
+    "00001_unshuffled.ds": 1254148794,
+    "00002_unshuffled.ds": 1252764162,
+    "00003_unshuffled.ds": 1248370094,
+    "00004_unshuffled.ds": 1256216948,
+    "00005_unshuffled.ds": 1253426874,
+    "00006_unshuffled.ds": 1247905568,
+    "00007_unshuffled.ds": 1247181230,
+    "00008_unshuffled.ds": 1244620520,
+    "00009_unshuffled.ds": 1250289252,
+    "00010_unshuffled.ds": 1244283052,
+    "00011_unshuffled.ds": 1246180286,
+    "00012_unshuffled.ds": 1257352148,
+    "00013_unshuffled.ds": 1250742962,
+    "00014_unshuffled.ds": 1250818680,
+    "00015_unshuffled.ds": 1249676312
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "setting": "raw_top10b_modernbert",
+  "shards": 16,
+  "datatrove_total_tokens": 10000000657,
+  "expected_total_tokens": 10000000657,
+  "shard_tokens": {
+    "00000_unshuffled.ds.metadata": 624898787,
+    "00001_unshuffled.ds.metadata": 627091266,
+    "00002_unshuffled.ds.metadata": 624401767,
+    "00003_unshuffled.ds.metadata": 625594229,
+    "00004_unshuffled.ds.metadata": 625782879,
+    "00005_unshuffled.ds.metadata": 625946081,
+    "00006_unshuffled.ds.metadata": 623907094,
+    "00007_unshuffled.ds.metadata": 624209673,
+    "00008_unshuffled.ds.metadata": 626172983,
+    "00009_unshuffled.ds.metadata": 623967309,
+    "00010_unshuffled.ds.metadata": 624204332,
+    "00011_unshuffled.ds.metadata": 624851590,
+    "00012_unshuffled.ds.metadata": 623635621,
+    "00013_unshuffled.ds.metadata": 626884324,
+    "00014_unshuffled.ds.metadata": 623245088,
+    "00015_unshuffled.ds.metadata": 625207634
+  },
+  "ds_bytes": {
+    "00000_unshuffled.ds": 1249797574,
+    "00001_unshuffled.ds": 1254182532,
+    "00002_unshuffled.ds": 1248803534,
+    "00003_unshuffled.ds": 1251188458,
+    "00004_unshuffled.ds": 1251565758,
+    "00005_unshuffled.ds": 1251892162,
+    "00006_unshuffled.ds": 1247814188,
+    "00007_unshuffled.ds": 1248419346,
+    "00008_unshuffled.ds": 1252345966,
+    "00009_unshuffled.ds": 1247934618,
+    "00010_unshuffled.ds": 1248408664,
+    "00011_unshuffled.ds": 1249703180,
+    "00012_unshuffled.ds": 1247271242,
+    "00013_unshuffled.ds": 1253768648,
+    "00014_unshuffled.ds": 1246490176,
+    "00015_unshuffled.ds": 1250415268
+  }
+}

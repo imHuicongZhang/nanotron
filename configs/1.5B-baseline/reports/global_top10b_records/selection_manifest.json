@@ -1,0 +1,123 @@
+{
+ "code": "tools/kys_raw/select_global_top10b.py",
+ "scored_pool": {
+  "repo": "blab-jhu/KYS-DCLM-Refinedweb-100M-Scored",
+  "revision": "dcbbc360838f3f7108ad8f2b810cc4814f9d0431",
+  "rows": 99949162
+ },
+ "flat_sha256": {
+  "orig_doc_id.npy": "695b8fefe2a7758eae4e63267fbec53426677aba92c1f76b3e5aa30c38c2f1e5",
+  "tokens_llama2.npy": "933ccb2169e07f5a6919c24ee4f15cafad90c75b0623fd0e2133afb305e98c76",
+  "ft_v2.npy": "03a728a63202b38e1a6aaaa15d9f541aded282ee74328009b50f05d0e0094a0d",
+  "fw_v2.npy": "6442b697b39b868ef7b3489dcb92ba87bc3bd725c11dbdfa7224e5e65e1e7a21",
+  "mb_v2.npy": "5f1a4d8e3d472231d2ee0cdfcb36e8e3fe87c11d44dd67829dc57ce606960212",
+  "topic_code.npy": "c1ac8294cf1cede68e45a14dc07c4028cfeb1c1387feaecce82f47ca91195e54"
+ },
+ "universe": {
+  "rows": 99949162,
+  "val_holdout": 50000,
+  "eligible": 99899162,
+  "eligible_train_tokens": 95309940485,
+  "val_doc_ids_sha256": "c234317b706bed7de74d3f4b704bf5ad27cc9f5dcf12137b1954c09f3d8b1c14"
+ },
+ "rules": {
+  "train_tokens": "tokens-llama2 + 1",
+  "target": 10000000000,
+  "order": "score DESC (float64 compare), ties by SeedSequence(42).spawn(8)[1] permutation ASC",
+  "cutoff": "first cumulative >= target, last document whole"
+ },
+ "digest_conventions": {
+  "selection_order_sha256": "sha256 of selected doc_id (scored pool, int64 LE) in selection order",
+  "docset_sha256": "sha256 of selected doc_id sorted ascending (int64 LE)",
+  "orig_docset_sha256": "sha256 of selected orig_doc_id sorted ascending (int64 LE)"
+ },
+ "deterministic_rerun_identical": {
+  "fasttext": true,
+  "raw_top10b_fineweb_edu": true,
+  "raw_top10b_modernbert": true,
+  "raw_top10b_consensus": true
+ },
+ "settings": {
+  "raw_top10b_fineweb_edu": {
+   "score": "fineweb-edu-ranking-v2",
+   "docs": 7534192,
+   "train_tokens": 10000007488,
+   "overshoot": 7488,
+   "boundary_score": 0.9250730276107788,
+   "boundary_doc_id": 51799054,
+   "boundary_doc_train_tokens": 29531,
+   "boundary_tie_cluster_total": 188494,
+   "boundary_tie_cluster_selected": 143403,
+   "next_doc_id": 74012950,
+   "next_doc_score": 0.9250730276107788,
+   "selection_order_sha256": "b43315301aadd1e4b64918b6f9c08a21b2b75edccf1339886daaed086e298096",
+   "docset_sha256": "517928390c4fa6ff634321e2b014b14a95224b4a325a12a4831322f059725327",
+   "orig_docset_sha256": "d5814583a8636e68fc132cc0403f40f9c9e6db8d1375601edf1f8e19422c9789"
+  },
+  "raw_top10b_modernbert": {
+   "score": "modernbert-ranking-v2",
+   "docs": 5918416,
+   "train_tokens": 10000000657,
+   "overshoot": 657,
+   "boundary_score": 0.9407568573951721,
+   "boundary_doc_id": 79886019,
+   "boundary_doc_train_tokens": 1099,
+   "boundary_tie_cluster_total": 14,
+   "boundary_tie_cluster_selected": 5,
+   "next_doc_id": 24845691,
+   "next_doc_score": 0.9407568573951721,
+   "selection_order_sha256": "b5a805bce7e6dcd163824987b03e7cb8dd59f45dc952a5462c737bb3b5214c7f",
+   "docset_sha256": "758f13bc7fb91a1e32eca4b288e9fb827a133b57ada8171a7a7c4a801823adb5",
+   "orig_docset_sha256": "de65a4db8f2a958e076233297eace74aa3a2072460a2f24e48a508a903cf7d6c"
+  },
+  "raw_top10b_consensus": {
+   "score": "q = (fasttext-ranking-v2 + fineweb-edu-ranking-v2 + modernbert-ranking-v2) / 3, float32",
+   "docs": 5643567,
+   "train_tokens": 10000003972,
+   "overshoot": 3972,
+   "boundary_score": 0.8529359698295593,
+   "boundary_doc_id": 8194521,
+   "boundary_doc_train_tokens": 10960,
+   "boundary_tie_cluster_total": 11,
+   "boundary_tie_cluster_selected": 1,
+   "next_doc_id": 57227969,
+   "next_doc_score": 0.8529359698295593,
+   "selection_order_sha256": "26d5a87b2be28fd765b5b701282b4488448b268520841a18be5d0232193818fd",
+   "docset_sha256": "10bd03d8b519d426d55558b069f1eaaa8d9daaa575eb235ffae5574415fe1457",
+   "orig_docset_sha256": "f1aee5298051ebeeeff5844e9ffd08ba8b6d22e45234c2948d89f8306101d9bc"
+  }
+ },
+ "reference": {
+  "fasttext_global_top10b": {
+   "docs": 7253184,
+   "train_tokens": 10000000865,
+   "overshoot": 865,
+   "boundary_score": 0.9273948669433594,
+   "boundary_doc_id": 63690257,
+   "boundary_doc_train_tokens": 1551,
+   "boundary_tie_cluster_total": 15,
+   "boundary_tie_cluster_selected": 15,
+   "next_doc_id": 25926932,
+   "next_doc_score": 0.927394688129425,
+   "selection_order_sha256": "ffec677da4ca21f82ca9c86684afec411a222ace4fd046d0287f5864539244ba",
+   "docset_sha256": "ac0decb07c098140ee8788b71a6e61d0e8724f61c45d19f77e38c633ca2ad4a0",
+   "orig_docset_sha256": "d3baf235404959c3359efe052b682de8abafbb3efb39cc2395e49a53c2f77f70"
+  },
+  "fasttext_quality_base_reconstruction": {
+   "shared_docs": 4120164,
+   "shared_tokens": 5000002332,
+   "shared_overshoot": 2332,
+   "qb_docs": 3133023,
+   "qb_tokens": 5000000805,
+   "qb_overshoot": 805,
+   "docs": 7253187,
+   "train_tokens": 10000003137,
+   "docset_sha256": "90252ee58ad4b298adadb7dfd0dfd9ba5fe01ed595fa62cd5c1a53947e4c2a22",
+   "orig_docset_sha256": "59afc0f946f85ad2a29f4e69e20a49f75bd33fd9483934625bd36202614f4389",
+   "global_top10b_subset_of_quality_base": true,
+   "docs_in_quality_base_not_in_global_top10b": 3,
+   "shared_top_equals_published_anchor": true,
+   "published_anchor_docs": 4120164
+  }
+ }
+}

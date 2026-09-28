@@ -1,0 +1,42 @@
+{
+  "setting": "raw_top10b_consensus",
+  "contains_anchor": false,
+  "docs": 5643567,
+  "train_tokens": 10000003972,
+  "token_check": "every document re-tokenized; length == scored-pool tokens-llama2 for all documents",
+  "text_source": "/weka/scratch/jhu/bvandur1/zhuicon1/datasets/ppl-dsai/dclm-refinedweb-100m-sample",
+  "text_read_in": "assemble_global_top10b._stage (raw pool by orig_doc_id)",
+  "selection": {
+    "score": "q = (fasttext-ranking-v2 + fineweb-edu-ranking-v2 + modernbert-ranking-v2) / 3, float32",
+    "docs": 5643567,
+    "train_tokens": 10000003972,
+    "overshoot": 3972,
+    "selection_order_sha256": "26d5a87b2be28fd765b5b701282b4488448b268520841a18be5d0232193818fd",
+    "docset_sha256": "10bd03d8b519d426d55558b069f1eaaa8d9daaa575eb235ffae5574415fe1457",
+    "orig_docset_sha256": "f1aee5298051ebeeeff5844e9ffd08ba8b6d22e45234c2948d89f8306101d9bc"
+  },
+  "shuffle": {
+    "function": "tools/kys_raw/pp_io.py bucketed_shuffle",
+    "pp_io_sha256": "5134dcc16bde1757345212ae7afd7a737133c8d7934e3570e9138e1b4e5f4d52",
+    "seed": 42,
+    "rows_per_shard": 500000,
+    "buckets": 16,
+    "input_order": "staged pool_NNNNN.parquet sorted by path"
+  },
+  "shuffled_rows": 5643567,
+  "shuffled_shards": 12,
+  "shuffled_sha256": {
+    "part_00000.parquet": "65a42ba458aa1aac3f3a95a00fca1ed880fe2fe92b983aed431739be312958b1",
+    "part_00001.parquet": "1e9aebd003655fb4bf2370651abf012894edc61260bae2e859226d5c36457d26",
+    "part_00002.parquet": "f2bad9cab6cb93c65cdbd5adb3b118fc498f08f885b51fcf978cc722a60770e4",
+    "part_00003.parquet": "afb9e530f2e61065ee99caecc801d63ba0c5ed0498d7f3a0b14d03b3c85ac578",
+    "part_00004.parquet": "25c6ab8ed7adec388b5548cae8276f57a2c507689923b7f214e8e5dd18305978",
+    "part_00005.parquet": "24331e100f745a37c667e0615dab44fb9e2b77ec2be45fa115f01f43106c2f93",
+    "part_00006.parquet": "7d244a8c113d5375b63d412e2a8609012a3ec0d9ab9d0a59182c29e173b3d34a",
+    "part_00007.parquet": "c25b5213c739795e4794987e770bc318fc16b09b9384646136b24d19cabd4372",
+    "part_00008.parquet": "5f8706d9736d2d42d7ade82d940ff047f098018575e9b6fedcd0efe30d87f683",
+    "part_00009.parquet": "9557f16a22be69706fd3dbe3cd20f85117bcc95717418de0cce0d89156038009",
+    "part_00010.parquet": "1d96c166d0db06db463df47a4e42a0147eea1362f891993d2d04fe293a7226b0",
+    "part_00011.parquet": "9feffe705a70a9b27a0147274c5a0a05421c0b580270b2cb8cdc1f3ee77b42f4"
+  }
+}

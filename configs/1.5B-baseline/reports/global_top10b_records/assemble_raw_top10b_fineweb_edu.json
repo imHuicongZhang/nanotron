@@ -1,0 +1,46 @@
+{
+  "setting": "raw_top10b_fineweb_edu",
+  "contains_anchor": false,
+  "docs": 7534192,
+  "train_tokens": 10000007488,
+  "token_check": "every document re-tokenized; length == scored-pool tokens-llama2 for all documents",
+  "text_source": "/weka/scratch/jhu/bvandur1/zhuicon1/datasets/ppl-dsai/dclm-refinedweb-100m-sample",
+  "text_read_in": "assemble_global_top10b._stage (raw pool by orig_doc_id)",
+  "selection": {
+    "score": "fineweb-edu-ranking-v2",
+    "docs": 7534192,
+    "train_tokens": 10000007488,
+    "overshoot": 7488,
+    "selection_order_sha256": "b43315301aadd1e4b64918b6f9c08a21b2b75edccf1339886daaed086e298096",
+    "docset_sha256": "517928390c4fa6ff634321e2b014b14a95224b4a325a12a4831322f059725327",
+    "orig_docset_sha256": "d5814583a8636e68fc132cc0403f40f9c9e6db8d1375601edf1f8e19422c9789"
+  },
+  "shuffle": {
+    "function": "tools/kys_raw/pp_io.py bucketed_shuffle",
+    "pp_io_sha256": "5134dcc16bde1757345212ae7afd7a737133c8d7934e3570e9138e1b4e5f4d52",
+    "seed": 42,
+    "rows_per_shard": 500000,
+    "buckets": 16,
+    "input_order": "staged pool_NNNNN.parquet sorted by path"
+  },
+  "shuffled_rows": 7534192,
+  "shuffled_shards": 16,
+  "shuffled_sha256": {
+    "part_00000.parquet": "3748322f483a19b8045a6c609d908a88d6a1745c2138825860d705c7a5ad61e7",
+    "part_00001.parquet": "246a1f7a1fc20aa188ef2b91311bb3347524df9224dd64c94e0e8ae7e1bad385",
+    "part_00002.parquet": "6d738bb40ff0f6248e5463cee6db4d8fc65d49d663a5129f6a60119efd2505df",
+    "part_00003.parquet": "b7222195eb55ad68816eeef74bd62d22d31141a1ba5fecd821edbd1468fa4c04",
+    "part_00004.parquet": "6f40f22eca9b2a490d92c7de77061ea9c7ae76a4fd84c931645bf6e382cc5ab8",
+    "part_00005.parquet": "599265fca35c5132f489a71c24070f25cece3b6ea30b651acc95b432103eab2b",
+    "part_00006.parquet": "c7359ac7cb3446a577b9a2a6c72137305a2518036f010f8d7ee60d8a405faadd",
+    "part_00007.parquet": "c23ba1103e3373aaea30020f920a91aaccca9d236d28cdd4e7aa979389ee3755",
+    "part_00008.parquet": "b9e55f55c46bd1a7d8c2d515e0f40b613d084c2add9cf8e446a70e819e4ea941",
+    "part_00009.parquet": "de5c80e88eba7f010242f3ef0ce41c3f7f8349baedde85f4f34aa2ef3cd26f59",
+    "part_00010.parquet": "c651b0b7735625c7f11c23f8c75ea10722ad0e276448b59eae4545aab85152e5",
+    "part_00011.parquet": "a1593b4bdb2e6d9ca0cdcd6ea9e877db3ff8d9b94c1fb9c2294a0fe611996380",
+    "part_00012.parquet": "81e7f98adb2c5fa7e598f3584fe6c93cfb2717e149178a726d843fc048c4d090",
+    "part_00013.parquet": "52aca599c56ef1b504d911c97bd81ef8e74333dab492c3d394f7218a98108173",
+    "part_00014.parquet": "8c0cc65ad2f9d4587525a5c7a6f690e26af9f2792e3c6a568df3cf690a70fc8a",
+    "part_00015.parquet": "3a039e91ef5a9adcd83e8358a37c4f228a74c33b7be2403e2bc8b11d417163c1"
+  }
+}

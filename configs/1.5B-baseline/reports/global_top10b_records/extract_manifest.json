@@ -1,0 +1,57 @@
+{
+ "repo": "blab-jhu/KYS-DCLM-Refinedweb-100M-Scored",
+ "revision": "dcbbc360838f3f7108ad8f2b810cc4814f9d0431",
+ "rows": 99949162,
+ "columns": [
+  "doc_id",
+  "orig_doc_id",
+  "tokens-llama2",
+  "topic",
+  "fasttext-ranking-v2",
+  "fineweb-edu-ranking-v2",
+  "modernbert-ranking-v2"
+ ],
+ "nulls": {
+  "doc_id": 0,
+  "orig_doc_id": 0,
+  "tokens-llama2": 0,
+  "topic": 0,
+  "fasttext-ranking-v2": 0,
+  "fineweb-edu-ranking-v2": 0,
+  "modernbert-ranking-v2": 0
+ },
+ "topic_vocab": [
+  "Adult",
+  "Art & Design",
+  "Crime & Law",
+  "Education & Jobs",
+  "Entertainment",
+  "Fashion & Beauty",
+  "Finance & Business",
+  "Food & Dining",
+  "Games",
+  "Hardware",
+  "Health",
+  "History",
+  "Home & Hobbies",
+  "Industrial",
+  "Literature",
+  "Politics",
+  "Religion",
+  "Science & Tech.",
+  "Social Life",
+  "Software",
+  "Software Dev.",
+  "Sports & Fitness",
+  "Transportation",
+  "Travel"
+ ],
+ "sha256": {
+  "orig_doc_id.npy": "695b8fefe2a7758eae4e63267fbec53426677aba92c1f76b3e5aa30c38c2f1e5",
+  "tokens_llama2.npy": "933ccb2169e07f5a6919c24ee4f15cafad90c75b0623fd0e2133afb305e98c76",
+  "ft_v2.npy": "03a728a63202b38e1a6aaaa15d9f541aded282ee74328009b50f05d0e0094a0d",
+  "fw_v2.npy": "6442b697b39b868ef7b3489dcb92ba87bc3bd725c11dbdfa7224e5e65e1e7a21",
+  "mb_v2.npy": "5f1a4d8e3d472231d2ee0cdfcb36e8e3fe87c11d44dd67829dc57ce606960212",
+  "topic_code.npy": "c1ac8294cf1cede68e45a14dc07c4028cfeb1c1387feaecce82f47ca91195e54"
+ }
+}

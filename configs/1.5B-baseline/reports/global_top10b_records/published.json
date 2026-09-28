@@ -1,0 +1,10 @@
+{
+  "repo": "blab-jhu/KYS-Pre-Rewritten",
+  "revision": "a5b3ab930fa64671d81eec2bafd84ecfcea78fb8",
+  "manifest_commit": "https://huggingface.co/datasets/blab-jhu/KYS-Pre-Rewritten/blob/main/manifest.json",
+  "files_checked": 54,
+  "lfs_sha256_mismatches": [],
+  "manifest_roundtrip_equal": true,
+  "ok": true,
+  "code_commit": "0246ad59632e1ff761e08f5f0497d40b12a6ed04"
+}

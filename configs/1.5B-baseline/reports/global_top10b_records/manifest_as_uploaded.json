@@ -1,0 +1,1033 @@
+{
+  "repo": "blab-jhu/KYS-Pre-Rewritten",
+  "description": "Raw text of the four raw-selected (unrewritten) baseline corpora for the Know-Your-Sources 1.5B grid.",
+  "layout": "raw_text/<setting>/part-000NN.parquet, 16 files per setting; columns orig_doc_id (int64), source ('anchor' | 'strategy'), text; rows in the exact post-shuffle document order, anchor merged in",
+  "code": {
+    "repo": "https://github.com/imHuicongZhang/nanotron",
+    "branch": "huicong-dev",
+    "commit": "4f9f968d84268a4427583abe783f34e257842e26"
+  },
+  "source_selection": "unique orig_doc_id of every non-anchor row (source_prompt != 'original') of the published rewritten arm wytro/Know-Your-Sources/<counterpart>/*.parquet, deduplicated across prompts",
+  "text_source": "DCLM-RefinedWeb 100M reservoir sample (200 parquet x 500,000 rows); text read by position orig_doc_id: shard = id // 500000, row = id % 500000. No rewritten text is used.",
+  "token_convention": "len(llama2_tokenizer(text, add_special_tokens=False)) + 1 per document (the +1 is the </s> appended at tokenization)",
+  "budget_tokens": 5000000000,
+  "subsampling": {
+    "seed": 42,
+    "rule": "np.random.default_rng(42).permutation over sorted unique ids; shortest prefix with cumulative tokens >= budget"
+  },
+  "anchor": {
+    "docs": 4120164,
+    "tokens": 5000002332,
+    "source": "rows with source_prompt == 'original' in the published arms (identical ids in all four); text from the pool",
+    "identical_across_arms": [
+      "disagreement_aware",
+      "diversity_oriented",
+      "rewire_inspired",
+      "wrap_inspired"
+    ]
+  },
+  "shuffle": {
+    "function": "pp_io.bucketed_shuffle (projects/rewrite/10_postprocess/pp_io.py), the shuffle every published arm used",
+    "seed": 42,
+    "scope": "anchor + strategy documents together"
+  },
+  "tokenizer": {
+    "name": "llama-2 (llama2-unsloth), vocab 32000, 2-byte tokens",
+    "repo": "blab-jhu/KYS-Pre-Rewritten",
+    "repo_type": "dataset",
+    "path": "tokenizer/",
+    "origin": "tokenizer/ of wytro/Know-Your-Sources-tokenized, copied unchanged: the directory the grid was tokenized with",
+    "sha256": {
+      "tokenizer.json": "81bb383c6138159665cd350a59fbcb5aa1fe65712cf5ed9b6481bc802cdbd8e5",
+      "tokenizer_config.json": "2bffa41435e22dde97e37b2c5b97e13dbfcd1e41e921f2051bef14623b474fc2",
+      "tokenizer_report.json": "4dcd1212911e7acfd59068eab1b96ed8077584fecded75fe0335035d9913c8c1"
+    },
+    "tokenizer.json_sha256": "81bb383c6138159665cd350a59fbcb5aa1fe65712cf5ed9b6481bc802cdbd8e5"
+  },
+  "tokenization": "done by the consumer: tools/kys_raw/tokenize_raw_text.sh (datatrove 0.5.0, </s> per document, 16 tasks, no shuffling) -> 16 shards whose concatenation is the file order; see RUNBOOK.md",
+  "init_checkpoints": {
+    "repo": "wytro/Know-Your-Sources-init",
+    "repo_type": "model",
+    "seeds": {
+      "42": {
+        "path": "_init_1.5B_seed42/0/",
+        "hash_manifest": "init_1.5B_seed42.hash.json",
+        "parameters": 1504299008,
+        "rolling_sha256": "2ede6612b2e48d7529f867f0e74ca0a7d9ba79cd635d4f803f8022d9b0113aba"
+      },
+      "43": {
+        "path": "_init_1.5B_seed43/0/",
+        "hash_manifest": "init_1.5B_seed43.hash.json",
+        "parameters": 1504299008,
+        "rolling_sha256": "78ab44e2b2ac954ee441ea340e35969c82cf78bf3f2266f3c8cd0590ce3b8aa3"
+      },
+      "44": {
+        "path": "_init_1.5B_seed44/0/",
+        "hash_manifest": "init_1.5B_seed44.hash.json",
+        "parameters": 1504299008,
+        "rolling_sha256": "a967df1cae0538c63bf1be412d6e3db0082e75936680f98b11b9a84d49642247"
+      }
+    },
+    "verify_with": "tools/hash_init_checkpoint.py <init_root>/_init_1.5B_seed<S>/0 --check <init_root>/init_1.5B_seed<S>.hash.json"
+  },
+  "settings": {
+    "raw_diversity_oriented": {
+      "rewritten_counterpart": "diversity_oriented",
+      "role": "no-rewrite control for diversity_oriented",
+      "source_docs_dedup": 5867876,
+      "raw_tokens_before_subsampling": 9728111104,
+      "docs_after_subsampling": 3018451,
+      "tokens_after_subsampling": 5000000553,
+      "subsampling_seed": 42,
+      "anchor_docs": 4120164,
+      "anchor_tokens": 5000002332,
+      "final_merged_docs": 7138615,
+      "expected_total_tokens": 10000002885,
+      "shards_after_tokenization": 16,
+      "leakage_checks": {
+        "passed": [
+          "provenance",
+          "anchor",
+          "hashes",
+          "style",
+          "lengths"
+        ],
+        "hash_spot_check": "200/200 equal the raw pool, 0 equal a rewrite"
+      },
+      "files": {
+        "part-00000.parquet": {
+          "rows": 446164,
+          "bytes": 1042985491,
+          "sha256": "ea7dd584e5a5d29ed6ea99f807cb124ea6d378b0902ddf2649dfff4c528d2638"
+        },
+        "part-00001.parquet": {
+          "rows": 446164,
+          "bytes": 1044994216,
+          "sha256": "b0bc42af651186d59f0ee56319cfbe519c2d3ffb61dcff2c0dbcc0be0715b867"
+        },
+        "part-00002.parquet": {
+          "rows": 446164,
+          "bytes": 1046305774,
+          "sha256": "4e858724e614aaa64cb9702d4ef59702f2e918d0889328b262c6cbecca16125b"
+        },
+        "part-00003.parquet": {
+          "rows": 446164,
+          "bytes": 1042294572,
+          "sha256": "2e2b05c56b6fac7aaffa51b9e7a72ffb89db3e913a98892cab896726afcc0b81"
+        },
+        "part-00004.parquet": {
+          "rows": 446164,
+          "bytes": 1046588474,
+          "sha256": "aabfe052e94e355279acd5525975dd22ef0550f783ad006442fe78a2f2722698"
+        },
+        "part-00005.parquet": {
+          "rows": 446164,
+          "bytes": 1046741665,
+          "sha256": "fe49af418b2433ed1c68e34019bf66a97e26b0878ff199fe7d83f2f299e958f3"
+        },
+        "part-00006.parquet": {
+          "rows": 446164,
+          "bytes": 1047323726,
+          "sha256": "dc79f0e48bdc3f468848971134a85106146ceb7d42ce4f026f748c31711ac5f0"
+        },
+        "part-00007.parquet": {
+          "rows": 446164,
+          "bytes": 1049202930,
+          "sha256": "59a37d1dc435afd1197f5c1371575bb42c0e79388a65e3875384e962b2574d29"
+        },
+        "part-00008.parquet": {
+          "rows": 446164,
+          "bytes": 1044967661,
+          "sha256": "66334f659370469d3b126de5317055b2f7f342a53848e420d550a6882a252abf"
+        },
+        "part-00009.parquet": {
+          "rows": 446164,
+          "bytes": 1042905891,
+          "sha256": "11bab6d5404e028b0f5cc39470cf137dd5fd430971f46cf3ed0e3a5ef6b3075c"
+        },
+        "part-00010.parquet": {
+          "rows": 446164,
+          "bytes": 1042153455,
+          "sha256": "d4584eb401ca90a86b85cee01cc9ed0222b7fc3e036ba68e09a7809130e24049"
+        },
+        "part-00011.parquet": {
+          "rows": 446164,
+          "bytes": 1041918964,
+          "sha256": "cc900ff75de4ac1167461cc572ea0f56a34f5c5ab3899c3cb9ce12d2983b1066"
+        },
+        "part-00012.parquet": {
+          "rows": 446164,
+          "bytes": 1046984703,
+          "sha256": "be96ba56e8b9475dcf0748f4570b6da2f8b9f89b8249ec85b5aa61c5dff30795"
+        },
+        "part-00013.parquet": {
+          "rows": 446164,
+          "bytes": 1048796055,
+          "sha256": "fcbbc5b50309d17ccf103b67845cb151ec30bd1a4035e484348beac848801d69"
+        },
+        "part-00014.parquet": {
+          "rows": 446164,
+          "bytes": 1048698378,
+          "sha256": "27ec550f5d8c2597b6c38894a390f1b0dc016a5eda5981993b4b2b978e6df9e2"
+        },
+        "part-00015.parquet": {
+          "rows": 446155,
+          "bytes": 1043995195,
+          "sha256": "92b71187d027a6196dfe37d560eabbcda63655bdbe7a92d27be82320124eaad1"
+        }
+      }
+    },
+    "raw_disagreement_aware": {
+      "rewritten_counterpart": "disagreement_aware",
+      "role": "no-rewrite control for disagreement_aware",
+      "source_docs_dedup": 5592424,
+      "raw_tokens_before_subsampling": 9647286028,
+      "docs_after_subsampling": 2898764,
+      "tokens_after_subsampling": 5000002737,
+      "subsampling_seed": 42,
+      "anchor_docs": 4120164,
+      "anchor_tokens": 5000002332,
+      "final_merged_docs": 7018928,
+      "expected_total_tokens": 10000005069,
+      "shards_after_tokenization": 16,
+      "leakage_checks": {
+        "passed": [
+          "provenance",
+          "anchor",
+          "hashes",
+          "style",
+          "lengths"
+        ],
+        "hash_spot_check": "200/200 equal the raw pool, 0 equal a rewrite"
+      },
+      "files": {
+        "part-00000.parquet": {
+          "rows": 438683,
+          "bytes": 1042822525,
+          "sha256": "40829e521980a336b2ad16c3079eca6bb6c386a49c82960c929c5046b2f2d999"
+        },
+        "part-00001.parquet": {
+          "rows": 438683,
+          "bytes": 1038349268,
+          "sha256": "c1022f16538207401376cc918dc4e807a548fd516f631e76ae5b89f9fc8027ec"
+        },
+        "part-00002.parquet": {
+          "rows": 438683,
+          "bytes": 1041489446,
+          "sha256": "16852df5f7d69bd0347f971b6b77aff8fd56cdee5a9ef7b7e9f8ae01797fff6a"
+        },
+        "part-00003.parquet": {
+          "rows": 438683,
+          "bytes": 1041304891,
+          "sha256": "3d9c796b36a9e0edd4636affb4482532e3e689fcc7e928ee0795ec2c1f882b4e"
+        },
+        "part-00004.parquet": {
+          "rows": 438683,
+          "bytes": 1040006404,
+          "sha256": "6228063cdf41ddd7596e0e1128015986f831ab5711d2511714486bec27720b4a"
+        },
+        "part-00005.parquet": {
+          "rows": 438683,
+          "bytes": 1038508995,
+          "sha256": "6b45e41feacc9bdb9b44ac47a45d58b9ebf094000a5a426180fcc286e14659d1"
+        },
+        "part-00006.parquet": {
+          "rows": 438683,
+          "bytes": 1037530589,
+          "sha256": "144bb08fa6dc7a7a89f6f28f2c18b09c2b2c8e6eb23fe6511a7e9397c37cb127"
+        },
+        "part-00007.parquet": {
+          "rows": 438683,
+          "bytes": 1041891385,
+          "sha256": "32f5074b1f09bc78c50f7a403f0985ea48fa4b6ecdb7f0d691bf4e3e93a68a93"
+        },
+        "part-00008.parquet": {
+          "rows": 438683,
+          "bytes": 1042063197,
+          "sha256": "827a58ca2da0d44d5a630b4b2d8cbefd441e84837995f3b94e80925e30f7df37"
+        },
+        "part-00009.parquet": {
+          "rows": 438683,
+          "bytes": 1040771903,
+          "sha256": "d607da6f80299f442a4392a016d473b21c7244d2dc22cb49cc3333aefe1017cb"
+        },
+        "part-00010.parquet": {
+          "rows": 438683,
+          "bytes": 1037712661,
+          "sha256": "e00dd0d9ca8da545d5caedfea6b8e0e73c0f993420eb0dfdc9a76c6f50d83726"
+        },
+        "part-00011.parquet": {
+          "rows": 438683,
+          "bytes": 1039586813,
+          "sha256": "5afa43c47c3eda2aaa578865a0f6b4151d3f6561b73a5a956eaa282b5a44bca2"
+        },
+        "part-00012.parquet": {
+          "rows": 438683,
+          "bytes": 1037812801,
+          "sha256": "4ae998d5329b3e218553607332473e8efbbab8719b455c73171100755013157a"
+        },
+        "part-00013.parquet": {
+          "rows": 438683,
+          "bytes": 1042759319,
+          "sha256": "89daa956fc67ace521aa5e7c1eea797e6c22f4448515fe1893208e2fef397b4e"
+        },
+        "part-00014.parquet": {
+          "rows": 438683,
+          "bytes": 1044655735,
+          "sha256": "35d07ed75b3d142103601d17f488661b77d04f45cb725d5ade4c878179c9e299"
+        },
+        "part-00015.parquet": {
+          "rows": 438683,
+          "bytes": 1043443517,
+          "sha256": "c5474a7ea4465121e50810c11ccd655349477e1c6722add0e8a921b572be7883"
+        }
+      }
+    },
+    "raw_random": {
+      "rewritten_counterpart": "wrap_inspired",
+      "role": "no-selection reference (uniform random source sample) and no-rewrite control for wrap_inspired",
+      "source_docs_dedup": 10573523,
+      "raw_tokens_before_subsampling": 9520542699,
+      "docs_after_subsampling": 5554525,
+      "tokens_after_subsampling": 5000001419,
+      "subsampling_seed": 42,
+      "anchor_docs": 4120164,
+      "anchor_tokens": 5000002332,
+      "final_merged_docs": 9674689,
+      "expected_total_tokens": 10000003751,
+      "shards_after_tokenization": 16,
+      "leakage_checks": {
+        "passed": [
+          "provenance",
+          "anchor",
+          "hashes",
+          "style",
+          "lengths"
+        ],
+        "hash_spot_check": "200/200 equal the raw pool, 0 equal a rewrite"
+      },
+      "files": {
+        "part-00000.parquet": {
+          "rows": 604669,
+          "bytes": 1041077904,
+          "sha256": "d79f95287fb8591853bbcae450877b109ea89920bb8f5dd72979c782019f50ce"
+        },
+        "part-00001.parquet": {
+          "rows": 604669,
+          "bytes": 1043091894,
+          "sha256": "99d00dee9315553d0904dedd242a8fb247ac0daae51272b8f70ff9d7c87d6064"
+        },
+        "part-00002.parquet": {
+          "rows": 604669,
+          "bytes": 1046630244,
+          "sha256": "044c793d8749ed0a02f07db49218e8742dcbaab7541dd2109cf751767f9829b6"
+        },
+        "part-00003.parquet": {
+          "rows": 604669,
+          "bytes": 1042145061,
+          "sha256": "dd9488107e7db69141e6bfe92dc3496b01ef4dc84dfea2399561e718703019cb"
+        },
+        "part-00004.parquet": {
+          "rows": 604669,
+          "bytes": 1040351370,
+          "sha256": "6db466ba4398005e3f5bfb6a319a520e42bbbeec3aa5724a1063682d3c771d98"
+        },
+        "part-00005.parquet": {
+          "rows": 604669,
+          "bytes": 1038405052,
+          "sha256": "a12040fcdfba1653035eee202c89b67b56def406df1b3a1daac1be49613a08fd"
+        },
+        "part-00006.parquet": {
+          "rows": 604669,
+          "bytes": 1036375160,
+          "sha256": "f86efc380da9843853b3e3785e32bd56a331fff42fb629e1a270bf8aac721e73"
+        },
+        "part-00007.parquet": {
+          "rows": 604669,
+          "bytes": 1043157340,
+          "sha256": "64803142fe044da67873fa39f6696f66f228aba996d1b402adcf300081a13d37"
+        },
+        "part-00008.parquet": {
+          "rows": 604669,
+          "bytes": 1040856115,
+          "sha256": "1cff03487cc69cf5330ced3fc10f3b0bf6eef22a6665b5b410ff607ac3ff40ff"
+        },
+        "part-00009.parquet": {
+          "rows": 604669,
+          "bytes": 1043518981,
+          "sha256": "af6e88947d64c9389a76c947092c3adc3ae2502e708a4184986fe066ab8cde0a"
+        },
+        "part-00010.parquet": {
+          "rows": 604669,
+          "bytes": 1039904777,
+          "sha256": "735dbdda0cb66e8cbe59000e920b7c38f2e1fc31484575375f7f47827d9cfc4f"
+        },
+        "part-00011.parquet": {
+          "rows": 604669,
+          "bytes": 1039030696,
+          "sha256": "0e70ce19d4f727da624a263956f1c0788da1b064e288da307258baa90e0c33a4"
+        },
+        "part-00012.parquet": {
+          "rows": 604669,
+          "bytes": 1039717945,
+          "sha256": "014fd87d6d2ff3dde9e042e35f9f39b29bcf36b4a8a9390fa20177e03418bcbf"
+        },
+        "part-00013.parquet": {
+          "rows": 604669,
+          "bytes": 1040125967,
+          "sha256": "033e5c66dc9dfb21274b9c273e0b1c7d41028308bff1431ca8404eb16ffded54"
+        },
+        "part-00014.parquet": {
+          "rows": 604669,
+          "bytes": 1040878972,
+          "sha256": "1efe6da44254ed517540829d21b0c9c3acd8d3b89fa00d57e1db57d07082f03b"
+        },
+        "part-00015.parquet": {
+          "rows": 604654,
+          "bytes": 1041611943,
+          "sha256": "7841a00b69f596af58db342d9b52911edd8bf39d059498c0e68a6c627e589a94"
+        }
+      }
+    },
+    "raw_rewire_inspired": {
+      "rewritten_counterpart": "rewire_inspired",
+      "role": "no-rewrite control for rewire_inspired: source documents of the 5B kept by REWIRE's post-rewrite filter",
+      "source_docs_dedup": 8445785,
+      "raw_tokens_before_subsampling": 10899228624,
+      "docs_after_subsampling": 3872986,
+      "tokens_after_subsampling": 5000000799,
+      "subsampling_seed": 42,
+      "anchor_docs": 4120164,
+      "anchor_tokens": 5000002332,
+      "final_merged_docs": 7993150,
+      "expected_total_tokens": 10000003131,
+      "shards_after_tokenization": 16,
+      "leakage_checks": {
+        "passed": [
+          "provenance",
+          "anchor",
+          "hashes",
+          "style",
+          "lengths"
+        ],
+        "hash_spot_check": "200/200 equal the raw pool, 0 equal a rewrite"
+      },
+      "files": {
+        "part-00000.parquet": {
+          "rows": 499572,
+          "bytes": 1039586081,
+          "sha256": "abe4ee70ab4dafd85ac8fb91ee0f9cc8316f8b4a4968903c9d53ac72dd8c1d5c"
+        },
+        "part-00001.parquet": {
+          "rows": 499572,
+          "bytes": 1039183663,
+          "sha256": "ec134f51a41b210248b24572770fc24e0c4d9f55842d295865651e436fd2fad2"
+        },
+        "part-00002.parquet": {
+          "rows": 499572,
+          "bytes": 1041678244,
+          "sha256": "d5222c9c3ae5fd654c9c467349455217d872b4b9a6abfc5f8ad3d87d31f26b79"
+        },
+        "part-00003.parquet": {
+          "rows": 499572,
+          "bytes": 1037868980,
+          "sha256": "ce703f45609364cd03972b4b8f47e9f89718010fe603b076a16d9b73aab01965"
+        },
+        "part-00004.parquet": {
+          "rows": 499572,
+          "bytes": 1041634617,
+          "sha256": "ef29fc0141104e93a685ecd191e6121a40533e6ddfb959f355e3c7b57e940cd6"
+        },
+        "part-00005.parquet": {
+          "rows": 499572,
+          "bytes": 1039333587,
+          "sha256": "cf412799334e3e96912b06342bec87bdf8ab0604d250385e262851a20f662f7b"
+        },
+        "part-00006.parquet": {
+          "rows": 499572,
+          "bytes": 1040806135,
+          "sha256": "7348496a6d850fbdb670f55f8f2fad4bda25c5271fa249cdf0c66759258c55ce"
+        },
+        "part-00007.parquet": {
+          "rows": 499572,
+          "bytes": 1039766635,
+          "sha256": "472f8c0f40c776527c502ad52c39a1963f1e12e7f4a73275175a47cecb570433"
+        },
+        "part-00008.parquet": {
+          "rows": 499572,
+          "bytes": 1037417902,
+          "sha256": "baa60065dbe89603213637e17d363992839ff535831de783abe11224d99b889f"
+        },
+        "part-00009.parquet": {
+          "rows": 499572,
+          "bytes": 1040380754,
+          "sha256": "f0691521a3e510a0a1262069f9df222eecc7c6a546a4228630787101e182276d"
+        },
+        "part-00010.parquet": {
+          "rows": 499572,
+          "bytes": 1045665874,
+          "sha256": "0547a6f893a3abb966ac5c35ea3b39aa5640b718750b18a405a8a3390911e0ca"
+        },
+        "part-00011.parquet": {
+          "rows": 499572,
+          "bytes": 1038984834,
+          "sha256": "bc34c261418da0973f42a2f54ef511a2ccd814147a05281bf2d235073ea37120"
+        },
+        "part-00012.parquet": {
+          "rows": 499572,
+          "bytes": 1037862778,
+          "sha256": "3dc402f7bbfc3f3bed8d3fe00341a905d4acb565a6ece37924ed669c516ca0bf"
+        },
+        "part-00013.parquet": {
+          "rows": 499572,
+          "bytes": 1041620311,
+          "sha256": "98aade8a9dd982d2bce1cd5a4ddff17ab5c2c5bce35a662686967fce35e66648"
+        },
+        "part-00014.parquet": {
+          "rows": 499572,
+          "bytes": 1036898863,
+          "sha256": "f06a2602419fbc6f08e7104f199a89ebea806a373f7cc3dc1d6571a335452b04"
+        },
+        "part-00015.parquet": {
+          "rows": 499570,
+          "bytes": 1039618137,
+          "sha256": "fa9a3b33fecdf91c0faf5c7e70edde11d0b0c786a997035ce85b33beae65b211"
+        }
+      }
+    },
+    "raw_top10b_fineweb_edu": {
+      "family": "global_top10b",
+      "contains_anchor": false,
+      "comparator": "quality_base",
+      "role": "global Top-10B by fineweb-edu-ranking-v2 over the Quality-Base universe (no anchor)",
+      "score": "fineweb-edu-ranking-v2",
+      "anchor_docs": 0,
+      "anchor_tokens": 0,
+      "final_merged_docs": 7534192,
+      "expected_total_tokens": 10000007488,
+      "shards_after_tokenization": 16,
+      "overshoot": 7488,
+      "boundary_score": 0.9250730276107788,
+      "selection_order_sha256": "b43315301aadd1e4b64918b6f9c08a21b2b75edccf1339886daaed086e298096",
+      "docset_sha256": "517928390c4fa6ff634321e2b014b14a95224b4a325a12a4831322f059725327",
+      "orig_docset_sha256": "d5814583a8636e68fc132cc0403f40f9c9e6db8d1375601edf1f8e19422c9789",
+      "shuffled_parts_sha256": {
+        "part_00000.parquet": "3748322f483a19b8045a6c609d908a88d6a1745c2138825860d705c7a5ad61e7",
+        "part_00001.parquet": "246a1f7a1fc20aa188ef2b91311bb3347524df9224dd64c94e0e8ae7e1bad385",
+        "part_00002.parquet": "6d738bb40ff0f6248e5463cee6db4d8fc65d49d663a5129f6a60119efd2505df",
+        "part_00003.parquet": "b7222195eb55ad68816eeef74bd62d22d31141a1ba5fecd821edbd1468fa4c04",
+        "part_00004.parquet": "6f40f22eca9b2a490d92c7de77061ea9c7ae76a4fd84c931645bf6e382cc5ab8",
+        "part_00005.parquet": "599265fca35c5132f489a71c24070f25cece3b6ea30b651acc95b432103eab2b",
+        "part_00006.parquet": "c7359ac7cb3446a577b9a2a6c72137305a2518036f010f8d7ee60d8a405faadd",
+        "part_00007.parquet": "c23ba1103e3373aaea30020f920a91aaccca9d236d28cdd4e7aa979389ee3755",
+        "part_00008.parquet": "b9e55f55c46bd1a7d8c2d515e0f40b613d084c2add9cf8e446a70e819e4ea941",
+        "part_00009.parquet": "de5c80e88eba7f010242f3ef0ce41c3f7f8349baedde85f4f34aa2ef3cd26f59",
+        "part_00010.parquet": "c651b0b7735625c7f11c23f8c75ea10722ad0e276448b59eae4545aab85152e5",
+        "part_00011.parquet": "a1593b4bdb2e6d9ca0cdcd6ea9e877db3ff8d9b94c1fb9c2294a0fe611996380",
+        "part_00012.parquet": "81e7f98adb2c5fa7e598f3584fe6c93cfb2717e149178a726d843fc048c4d090",
+        "part_00013.parquet": "52aca599c56ef1b504d911c97bd81ef8e74333dab492c3d394f7218a98108173",
+        "part_00014.parquet": "8c0cc65ad2f9d4587525a5c7a6f690e26af9f2792e3c6a568df3cf690a70fc8a",
+        "part_00015.parquet": "3a039e91ef5a9adcd83e8358a37c4f228a74c33b7be2403e2bc8b11d417163c1"
+      },
+      "files": {
+        "part-00000.parquet": {
+          "rows": 470887,
+          "bytes": 1032156942,
+          "sha256": "58e8e8577297e3a2908169449005c55df8f8a9fcec507c65d1b1e49dfdcb6602"
+        },
+        "part-00001.parquet": {
+          "rows": 470887,
+          "bytes": 1038754112,
+          "sha256": "0ad6e13e2f7d25a8d3a5062a46a01cea0e81d21b8b993353f04f21c02a59f2d8"
+        },
+        "part-00002.parquet": {
+          "rows": 470887,
+          "bytes": 1037946326,
+          "sha256": "95efeecaced9158c20c89f265d79703685784e76256a42f9c9eca6ae0457e1cd"
+        },
+        "part-00003.parquet": {
+          "rows": 470887,
+          "bytes": 1034537959,
+          "sha256": "fc24a7586c48f91775b3e08f54e71a8598734920e058fc193647f227a70b74c6"
+        },
+        "part-00004.parquet": {
+          "rows": 470887,
+          "bytes": 1040619531,
+          "sha256": "8cde697a4c5d2336a1f5b33ddbf83db282ba65050d8c866d693f5e05fc050e1c"
+        },
+        "part-00005.parquet": {
+          "rows": 470887,
+          "bytes": 1038458930,
+          "sha256": "47527a341f35eabe5688cbd6c286cb4ae41ef0b8e2c018bd9b05137cd59727f7"
+        },
+        "part-00006.parquet": {
+          "rows": 470887,
+          "bytes": 1034251725,
+          "sha256": "2e1e3e99d48a9680855bc5c15d6c15cc7378d6057c716a958e291c620989c1de"
+        },
+        "part-00007.parquet": {
+          "rows": 470887,
+          "bytes": 1034049132,
+          "sha256": "5fc4d4e09106071fcb3f33f5b4563c38119e7e51eccf0f9a336c353bf9be5fe9"
+        },
+        "part-00008.parquet": {
+          "rows": 470887,
+          "bytes": 1031722909,
+          "sha256": "05c12290f8a5f5f9dcc232362fe292ea0d2646a8007b68262e9d7db414bd1191"
+        },
+        "part-00009.parquet": {
+          "rows": 470887,
+          "bytes": 1036134222,
+          "sha256": "a34a22cf36866318739cc2e28c9fe88f1d1ef4da5cd6d8ea1a1ce7d4b27bf603"
+        },
+        "part-00010.parquet": {
+          "rows": 470887,
+          "bytes": 1032074069,
+          "sha256": "ab0e959ff2ef1e5360f76cb8abb4fa61cd33c491c6b1839dadde6cd3d1f65fe8"
+        },
+        "part-00011.parquet": {
+          "rows": 470887,
+          "bytes": 1033521193,
+          "sha256": "8947972a7cd7ddf846521b824e228b1a50400e62482d4368d26efffbbef4d3a7"
+        },
+        "part-00012.parquet": {
+          "rows": 470887,
+          "bytes": 1041354039,
+          "sha256": "79d92ada8750c6b9738034d5a1b3fdb81f4e41f0f3e99e4e109ef8bcf58e7fb0"
+        },
+        "part-00013.parquet": {
+          "rows": 470887,
+          "bytes": 1036416265,
+          "sha256": "f14c4c7267e323f2c8b490683a6c3578e4453881b7b6c9224f023b19624ac6f4"
+        },
+        "part-00014.parquet": {
+          "rows": 470887,
+          "bytes": 1036814637,
+          "sha256": "659b9e347b9c4f3c56adcfff2855da20a76bca5894588baf87e48dcd98cfae16"
+        },
+        "part-00015.parquet": {
+          "rows": 470887,
+          "bytes": 1035902189,
+          "sha256": "da550a0e917c50fbad639d4eafd7ce384744f0c71aab962fa40bf2f35cfe0d1b"
+        }
+      },
+      "file_order_sha256": "f779b2beb50195f76e0e5f4967e2050e2b1430f549c90007bd02d35e63ce5fbf",
+      "export_verification": {
+        "script": "tools/kys_raw/verify_global_top10b.py",
+        "rows": 7534192,
+        "train_tokens": 10000007488,
+        "docset_equals_selection": true,
+        "duplicate_doc_ids": 0,
+        "order_equals_assembled_shuffle": true,
+        "text_sample_byte_equal_to_pool": "32000/32000",
+        "every_doc_retokenized_length_equals_tokens_llama2": true
+      },
+      "tokenization_verified": {
+        "script": "tools/kys_raw/tokenize_raw_text.sh (datatrove 0.5.0, 16 tasks, </s> per document)",
+        "datatrove_total_tokens": 10000007488,
+        "shards": 16,
+        "tokenized_ds_bytes_total": 20000014976
+      }
+    },
+    "raw_top10b_modernbert": {
+      "family": "global_top10b",
+      "contains_anchor": false,
+      "comparator": "quality_base",
+      "role": "global Top-10B by modernbert-ranking-v2 over the Quality-Base universe (no anchor)",
+      "score": "modernbert-ranking-v2",
+      "anchor_docs": 0,
+      "anchor_tokens": 0,
+      "final_merged_docs": 5918416,
+      "expected_total_tokens": 10000000657,
+      "shards_after_tokenization": 16,
+      "overshoot": 657,
+      "boundary_score": 0.9407568573951721,
+      "selection_order_sha256": "b5a805bce7e6dcd163824987b03e7cb8dd59f45dc952a5462c737bb3b5214c7f",
+      "docset_sha256": "758f13bc7fb91a1e32eca4b288e9fb827a133b57ada8171a7a7c4a801823adb5",
+      "orig_docset_sha256": "de65a4db8f2a958e076233297eace74aa3a2072460a2f24e48a508a903cf7d6c",
+      "shuffled_parts_sha256": {
+        "part_00000.parquet": "5387b976fe84f9c733dd5139c75051d36c0de646a9acecefb1ce44618f19e4ac",
+        "part_00001.parquet": "9ef7dde5e5cb55d1f496669eae6b39fa5db1c6036947a586f0a67f5356593fff",
+        "part_00002.parquet": "f359a984b1b7d81070d5febd1a8b5f41f00ae6f1a7d6b41d40b08aa66fd40448",
+        "part_00003.parquet": "3c4d05a3830c8052f8ef9b90a1f58c37fae62da61e262d70839c1aa22d4ac817",
+        "part_00004.parquet": "d0dc331d9bbdf2f3dd76d0712b4d0ae8aa2e04b06a431a2b871a0bb6f5e930b7",
+        "part_00005.parquet": "1495c617a7b07ff9da9d367ceb141d088dd4ad2e5ff952ec7540d898bc6055b7",
+        "part_00006.parquet": "8a6702bb0377a2345d8898d99d8421ce86bdb67cb4310611fc452da7adf83481",
+        "part_00007.parquet": "2238f3c9a81db87e2f546dda3c426b56f7db9ff4083e65ea5e76e9bb03b0dd33",
+        "part_00008.parquet": "8535205691d15943fddf1b0d1c1508c6a0e5ee37551f61ab28e9eb44f98d2337",
+        "part_00009.parquet": "4f8afcd03e82a6e4c63edebf21657784be08d6d93926305531f2b8ae3067f5c9",
+        "part_00010.parquet": "8da9671198e7befc50683394215c6bd503d144513ca6a50192d77e068ad69498",
+        "part_00011.parquet": "3a42d7ae418e08f4b6e056d36e62afbc1ce181fc259d9c1231dec80ebbfe0fc7"
+      },
+      "files": {
+        "part-00000.parquet": {
+          "rows": 369901,
+          "bytes": 1051775276,
+          "sha256": "5240ccc4d48dd9bfd27e7f5af5242910181f1e61d48f47f906cee8e3a8559fa9"
+        },
+        "part-00001.parquet": {
+          "rows": 369901,
+          "bytes": 1055545222,
+          "sha256": "e28d2e9afd72f07f42b9d2989a3176188ef9089724e5eeeae984e9f717848596"
+        },
+        "part-00002.parquet": {
+          "rows": 369901,
+          "bytes": 1050971558,
+          "sha256": "ed920f2e109626553a7055d7fa35a2a29294c529cc3340c057116956281cde78"
+        },
+        "part-00003.parquet": {
+          "rows": 369901,
+          "bytes": 1052818222,
+          "sha256": "0a96d8a8386b31af66f80ec2c74a955793922cd4574a3d70ceb341b2828b0d7c"
+        },
+        "part-00004.parquet": {
+          "rows": 369901,
+          "bytes": 1053266961,
+          "sha256": "ae63076ce92bb7d07d8f7551dae5c60a37074031e9c99d21184eddbf341f6869"
+        },
+        "part-00005.parquet": {
+          "rows": 369901,
+          "bytes": 1053841434,
+          "sha256": "48336bd2a17aea8c250599542eb131b2a360b693c2682c0aa176120a9c3b3cf5"
+        },
+        "part-00006.parquet": {
+          "rows": 369901,
+          "bytes": 1050357439,
+          "sha256": "794a2cae01e5a426235a5728c2183d02345428a2507bc819d085197d38625cd9"
+        },
+        "part-00007.parquet": {
+          "rows": 369901,
+          "bytes": 1050770418,
+          "sha256": "c9cc113bfe21f31d55eaf82d33f41c8659977f145315721a61bc20d505f1452e"
+        },
+        "part-00008.parquet": {
+          "rows": 369901,
+          "bytes": 1054449412,
+          "sha256": "25ae8c4391aaef14d25d44442d12417f1e79d09d3b552b9d2a337010fa24eca7"
+        },
+        "part-00009.parquet": {
+          "rows": 369901,
+          "bytes": 1050907846,
+          "sha256": "5a635055629d2bd1a8da4022669d43da2e44d7ce2cd79a0bb312face46350922"
+        },
+        "part-00010.parquet": {
+          "rows": 369901,
+          "bytes": 1050584037,
+          "sha256": "b7febc2ba7e8f873d0bfbe2937ff60a8acab5f229c4fc0550e6845b2152b29ed"
+        },
+        "part-00011.parquet": {
+          "rows": 369901,
+          "bytes": 1051421214,
+          "sha256": "6b4d364d91d525ee119308198be517049dcec354267eb4085e36d71eeba6ad0b"
+        },
+        "part-00012.parquet": {
+          "rows": 369901,
+          "bytes": 1049878498,
+          "sha256": "e980403090b2f26ec516618824f215abe4f7e7d8b1201efeff573527598a51e6"
+        },
+        "part-00013.parquet": {
+          "rows": 369901,
+          "bytes": 1054652254,
+          "sha256": "b6034939f331bd98243cda9fd58f6f8ddca88c043660a72ebadc7271e8593c57"
+        },
+        "part-00014.parquet": {
+          "rows": 369901,
+          "bytes": 1049285141,
+          "sha256": "96884f73f3bbc9d68648ffde1ac5f27f3b8798a4fb479321383839f8dea93ddb"
+        },
+        "part-00015.parquet": {
+          "rows": 369901,
+          "bytes": 1052246177,
+          "sha256": "c572d3437fdd533b9b764c39e7a5e09f26cfd9f912e1420c2c3315782209de91"
+        }
+      },
+      "file_order_sha256": "125367469d7561d302b4903b5a5ffc2bef9e74ec55abd9e466e501a7ab569754",
+      "export_verification": {
+        "script": "tools/kys_raw/verify_global_top10b.py",
+        "rows": 5918416,
+        "train_tokens": 10000000657,
+        "docset_equals_selection": true,
+        "duplicate_doc_ids": 0,
+        "order_equals_assembled_shuffle": true,
+        "text_sample_byte_equal_to_pool": "32000/32000",
+        "every_doc_retokenized_length_equals_tokens_llama2": true
+      },
+      "tokenization_verified": {
+        "script": "tools/kys_raw/tokenize_raw_text.sh (datatrove 0.5.0, 16 tasks, </s> per document)",
+        "datatrove_total_tokens": 10000000657,
+        "shards": 16,
+        "tokenized_ds_bytes_total": 20000001314
+      }
+    },
+    "raw_top10b_consensus": {
+      "family": "global_top10b",
+      "contains_anchor": false,
+      "comparator": "quality_base",
+      "role": "global Top-10B by q = (fasttext-ranking-v2 + fineweb-edu-ranking-v2 + modernbert-ranking-v2) / 3, float32 over the Quality-Base universe (no anchor)",
+      "score": "q = (fasttext-ranking-v2 + fineweb-edu-ranking-v2 + modernbert-ranking-v2) / 3, float32",
+      "anchor_docs": 0,
+      "anchor_tokens": 0,
+      "final_merged_docs": 5643567,
+      "expected_total_tokens": 10000003972,
+      "shards_after_tokenization": 16,
+      "overshoot": 3972,
+      "boundary_score": 0.8529359698295593,
+      "selection_order_sha256": "26d5a87b2be28fd765b5b701282b4488448b268520841a18be5d0232193818fd",
+      "docset_sha256": "10bd03d8b519d426d55558b069f1eaaa8d9daaa575eb235ffae5574415fe1457",
+      "orig_docset_sha256": "f1aee5298051ebeeeff5844e9ffd08ba8b6d22e45234c2948d89f8306101d9bc",
+      "shuffled_parts_sha256": {
+        "part_00000.parquet": "65a42ba458aa1aac3f3a95a00fca1ed880fe2fe92b983aed431739be312958b1",
+        "part_00001.parquet": "1e9aebd003655fb4bf2370651abf012894edc61260bae2e859226d5c36457d26",
+        "part_00002.parquet": "f2bad9cab6cb93c65cdbd5adb3b118fc498f08f885b51fcf978cc722a60770e4",
+        "part_00003.parquet": "afb9e530f2e61065ee99caecc801d63ba0c5ed0498d7f3a0b14d03b3c85ac578",
+        "part_00004.parquet": "25c6ab8ed7adec388b5548cae8276f57a2c507689923b7f214e8e5dd18305978",
+        "part_00005.parquet": "24331e100f745a37c667e0615dab44fb9e2b77ec2be45fa115f01f43106c2f93",
+        "part_00006.parquet": "7d244a8c113d5375b63d412e2a8609012a3ec0d9ab9d0a59182c29e173b3d34a",
+        "part_00007.parquet": "c25b5213c739795e4794987e770bc318fc16b09b9384646136b24d19cabd4372",
+        "part_00008.parquet": "5f8706d9736d2d42d7ade82d940ff047f098018575e9b6fedcd0efe30d87f683",
+        "part_00009.parquet": "9557f16a22be69706fd3dbe3cd20f85117bcc95717418de0cce0d89156038009",
+        "part_00010.parquet": "1d96c166d0db06db463df47a4e42a0147eea1362f891993d2d04fe293a7226b0",
+        "part_00011.parquet": "9feffe705a70a9b27a0147274c5a0a05421c0b580270b2cb8cdc1f3ee77b42f4"
+      },
+      "files": {
+        "part-00000.parquet": {
+          "rows": 352723,
+          "bytes": 1042017096,
+          "sha256": "c725fbfa5ffd5220975bd1a75c9125972ead6645f98f3cfc5bcd4f1ed09eecf0"
+        },
+        "part-00001.parquet": {
+          "rows": 352723,
+          "bytes": 1040516803,
+          "sha256": "5935f428797332dbb3e95c74bc1d997e1611cdbd0c77e5309501d7e7a251904f"
+        },
+        "part-00002.parquet": {
+          "rows": 352723,
+          "bytes": 1043514926,
+          "sha256": "8ee24817af5a4946cc817126a60eff7a37cfb82382620557a12d67dd16a89de0"
+        },
+        "part-00003.parquet": {
+          "rows": 352723,
+          "bytes": 1042603369,
+          "sha256": "714130106a69a894dc2ba21f25d1d6cec1d14ae31a6e2d26c17876a5f8a1e8a7"
+        },
+        "part-00004.parquet": {
+          "rows": 352723,
+          "bytes": 1040255015,
+          "sha256": "f6bd76a1280d1d64cfe86e82fedccfc66d1db2ebcdaf8b0fe192492a68aaf8ac"
+        },
+        "part-00005.parquet": {
+          "rows": 352723,
+          "bytes": 1039566973,
+          "sha256": "d55c40e300f02838a15ac99b44e4dbda36f330933853507f2cc929d68965c5a6"
+        },
+        "part-00006.parquet": {
+          "rows": 352723,
+          "bytes": 1041628225,
+          "sha256": "22b9007bcc6ce580ad0d5214f5136ee70e4322b556e7c61586fc239a11af9dc5"
+        },
+        "part-00007.parquet": {
+          "rows": 352723,
+          "bytes": 1041665740,
+          "sha256": "6d9688fc8f14582ea48384e1344928a1b7058a57bbdc98680942af6440cb570d"
+        },
+        "part-00008.parquet": {
+          "rows": 352723,
+          "bytes": 1041912169,
+          "sha256": "c4ca31e1379ee3101a836f4d2c94b0522474d3a1d9d3c04840b1689b106fdedc"
+        },
+        "part-00009.parquet": {
+          "rows": 352723,
+          "bytes": 1041090621,
+          "sha256": "9a10d1a86cda4807b301723fa33ee081f514c7878583110842ccf8a7ae6baa6e"
+        },
+        "part-00010.parquet": {
+          "rows": 352723,
+          "bytes": 1042421112,
+          "sha256": "aa959d60bac53fec764d0959e4b94f691f936a146be4f2078a23ad30d3280025"
+        },
+        "part-00011.parquet": {
+          "rows": 352723,
+          "bytes": 1042288289,
+          "sha256": "89af3db293f3442e3eb12484b16036cc1dd035fb938e6a4d25b3172b2046d580"
+        },
+        "part-00012.parquet": {
+          "rows": 352723,
+          "bytes": 1041212013,
+          "sha256": "da5e4b662f954af70e4eca236c756e1f23d947495752c0b20b2670c3fae0c0dd"
+        },
+        "part-00013.parquet": {
+          "rows": 352723,
+          "bytes": 1047647334,
+          "sha256": "a7dccf6d0ce1f435eab42889693e2510babf18158af944b2630faf621afb7e1d"
+        },
+        "part-00014.parquet": {
+          "rows": 352723,
+          "bytes": 1039377116,
+          "sha256": "2121669c2da45101335531eac9c073e332682f4372ca28c574dee419c21a90b2"
+        },
+        "part-00015.parquet": {
+          "rows": 352722,
+          "bytes": 1044994195,
+          "sha256": "347b940f9d182a89507379cc32a613b0033dcdfe38a44905ab723eaf767d58ad"
+        }
+      },
+      "file_order_sha256": "707506d2163cd9701296de74649ff5f30373d4ee23de135f426ed9e5bf2ed6d3",
+      "export_verification": {
+        "script": "tools/kys_raw/verify_global_top10b.py",
+        "rows": 5643567,
+        "train_tokens": 10000003972,
+        "docset_equals_selection": true,
+        "duplicate_doc_ids": 0,
+        "order_equals_assembled_shuffle": true,
+        "text_sample_byte_equal_to_pool": "32000/32000",
+        "every_doc_retokenized_length_equals_tokens_llama2": true
+      },
+      "tokenization_verified": {
+        "script": "tools/kys_raw/tokenize_raw_text.sh (datatrove 0.5.0, 16 tasks, </s> per document)",
+        "datatrove_total_tokens": 10000003972,
+        "shards": 16,
+        "tokenized_ds_bytes_total": 20000007944
+      }
+    }
+  },
+  "settings_overview": {
+    "raw_diversity_oriented": {
+      "family": "strategy_linked",
+      "contains_anchor": true,
+      "comparator": "diversity_oriented",
+      "path": "raw_text/raw_diversity_oriented/",
+      "published": true
+    },
+    "raw_disagreement_aware": {
+      "family": "strategy_linked",
+      "contains_anchor": true,
+      "comparator": "disagreement_aware",
+      "path": "raw_text/raw_disagreement_aware/",
+      "published": true
+    },
+    "raw_random": {
+      "family": "strategy_linked",
+      "contains_anchor": true,
+      "comparator": "wrap_inspired",
+      "path": "raw_text/raw_random/",
+      "published": true
+    },
+    "raw_rewire_inspired": {
+      "family": "strategy_linked",
+      "contains_anchor": true,
+      "comparator": "rewire_inspired",
+      "path": "raw_text/raw_rewire_inspired/",
+      "published": true
+    },
+    "raw_top10b_fineweb_edu": {
+      "family": "global_top10b",
+      "contains_anchor": false,
+      "comparator": "quality_base",
+      "path": "raw_text/raw_top10b_fineweb_edu/",
+      "published": true
+    },
+    "raw_top10b_modernbert": {
+      "family": "global_top10b",
+      "contains_anchor": false,
+      "comparator": "quality_base",
+      "path": "raw_text/raw_top10b_modernbert/",
+      "published": true
+    },
+    "raw_top10b_consensus": {
+      "family": "global_top10b",
+      "contains_anchor": false,
+      "comparator": "quality_base",
+      "path": "raw_text/raw_top10b_consensus/",
+      "published": true
+    }
+  },
+  "global_top10b": {
+    "description": "Three anchor-free raw baselines for the 1.5B grid. Each setting is ONE global Top-10B selection over the Quality-Base universe; the whole ~10B TRAIN-token corpus is selected by that score. No shared anchor, no rewriting, no floors, quotas, variance terms or domain restrictions.",
+    "layout": "raw_text/<setting>/part-000NN.parquet, 16 files; columns orig_doc_id (int64, raw-pool position), doc_id (int64, scored-pool id = selection key), source ('selected'), text; rows in the exact post-shuffle order",
+    "scored_pool": {
+      "repo": "blab-jhu/KYS-DCLM-Refinedweb-100M-Scored",
+      "revision": "dcbbc360838f3f7108ad8f2b810cc4814f9d0431",
+      "rows": 99949162
+    },
+    "universe": {
+      "rows": 99949162,
+      "val_holdout": 50000,
+      "eligible": 99899162,
+      "eligible_train_tokens": 95309940485,
+      "val_doc_ids_sha256": "c234317b706bed7de74d3f4b704bf5ad27cc9f5dcf12137b1954c09f3d8b1c14",
+      "definition": "all scored rows minus the 50,000-doc validation holdout (SeedSequence(42).spawn(8)[0]); the 5M analysis sample is not excluded"
+    },
+    "scorer_training_data": "The ModernBERT score is a Ridge head fit on 50,427 Claude-labelled documents (49,998 from DCLM-RefinedWeb); every one of those was removed from the pool before scoring (the 50,838-row first-4000-character match removal), so 0 are in any corpus. The ~5M analysis sample was not used to fit the head and was NOT removed (4,997,471 docs remain); each new selection holds it at its pool rate (5.00%), as does Quality-Base. Kept for comparability with the original 1.5B universe. Benchmark contamination was not tested. See reports/GLOBAL_TOP10B_SELECTION_REPORT.md \u00a72b.",
+    "rules": {
+      "train_tokens": "tokens-llama2 + 1",
+      "target": 10000000000,
+      "order": "score DESC (float64 compare), ties by SeedSequence(42).spawn(8)[1] permutation ASC",
+      "cutoff": "first cumulative >= target, last document whole"
+    },
+    "digest_conventions": {
+      "selection_order_sha256": "sha256 of selected doc_id (scored pool, int64 LE) in selection order",
+      "docset_sha256": "sha256 of selected doc_id sorted ascending (int64 LE)",
+      "orig_docset_sha256": "sha256 of selected orig_doc_id sorted ascending (int64 LE)"
+    },
+    "deterministic_rerun_identical": {
+      "fasttext": true,
+      "raw_top10b_fineweb_edu": true,
+      "raw_top10b_modernbert": true,
+      "raw_top10b_consensus": true
+    },
+    "fasttext_reference": {
+      "fasttext_global_top10b": {
+        "docs": 7253184,
+        "train_tokens": 10000000865,
+        "overshoot": 865,
+        "boundary_score": 0.9273948669433594,
+        "boundary_doc_id": 63690257,
+        "boundary_doc_train_tokens": 1551,
+        "boundary_tie_cluster_total": 15,
+        "boundary_tie_cluster_selected": 15,
+        "next_doc_id": 25926932,
+        "next_doc_score": 0.927394688129425,
+        "selection_order_sha256": "ffec677da4ca21f82ca9c86684afec411a222ace4fd046d0287f5864539244ba",
+        "docset_sha256": "ac0decb07c098140ee8788b71a6e61d0e8724f61c45d19f77e38c633ca2ad4a0",
+        "orig_docset_sha256": "d3baf235404959c3359efe052b682de8abafbb3efb39cc2395e49a53c2f77f70"
+      },
+      "fasttext_quality_base_reconstruction": {
+        "shared_docs": 4120164,
+        "shared_tokens": 5000002332,
+        "shared_overshoot": 2332,
+        "qb_docs": 3133023,
+        "qb_tokens": 5000000805,
+        "qb_overshoot": 805,
+        "docs": 7253187,
+        "train_tokens": 10000003137,
+        "docset_sha256": "90252ee58ad4b298adadb7dfd0dfd9ba5fe01ed595fa62cd5c1a53947e4c2a22",
+        "orig_docset_sha256": "59afc0f946f85ad2a29f4e69e20a49f75bd33fd9483934625bd36202614f4389",
+        "global_top10b_subset_of_quality_base": true,
+        "docs_in_quality_base_not_in_global_top10b": 3,
+        "shared_top_equals_published_anchor": true,
+        "published_anchor_docs": 4120164
+      }
+    },
+    "text_source": "DCLM-RefinedWeb 100M reservoir pool, by orig_doc_id (shard = id // 500000, row = id % 500000); each document re-tokenized at assembly and its length checked equal to tokens-llama2",
+    "shuffle": {
+      "function": "tools/kys_raw/pp_io.py bucketed_shuffle (byte-identical copy of the pp_io.py every arm used)",
+      "seed": 42,
+      "rows_per_shard": 500000,
+      "buckets": 16
+    },
+    "code": {
+      "repo": "https://github.com/imHuicongZhang/nanotron",
+      "branch": "huicong-dev",
+      "commit": "0246ad59632e1ff761e08f5f0497d40b12a6ed04",
+      "scripts": [
+        "tools/kys_raw/extract_scored_columns.py",
+        "tools/kys_raw/select_global_top10b.py",
+        "tools/kys_raw/report_global_top10b.py",
+        "tools/kys_raw/assemble_global_top10b.py",
+        "tools/kys_raw/verify_global_top10b.py",
+        "tools/kys_raw/publish_global_top10b.py"
+      ]
+    },
+    "reports": "reports/ (selection report, provenance report); selection/<setting>/ (doc-id arrays, see digest_conventions)"
+  }
+}
