@@ -223,7 +223,8 @@ clusters:
       nodes: 1
       gres: "gpu:h100:4"
       cpus_per_task: 32
-      time: "2-00:00:00"      # PROVISIONAL until the 4-GPU smoke test; never above 3-00:00:00
+      time: "2-00:00:00"      # smoke job 1115839 (2026-10-16, gh113): 16.2 s/it -> trunk segment 19.3 h, ep3 6.4 h;
+                              #   48 h fits a whole trunk even at the old 22.8 s/it (27.2 h). Site max 3-00:00:00.
     wandb:
       mode: online
       project: zhc-1p5b-10b-wsd

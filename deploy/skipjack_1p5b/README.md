@@ -20,7 +20,7 @@ Profile: `deploy/clusters.yaml` → `skipjack_1p5b_baselines`; `baseline_seed_as
 `capped_submit.py` places the 42 segments of a seed into **5 lanes**. Each segment depends (`afterok`) on its
 lane predecessor *and* on its scientific upstream, so at most one job per lane can run: **≤ 5 × 4 = 20 GPUs**,
 enforced by Slurm, held across restarts and requeues, and costing no idle allocation. Placement is greedy
-critical-path list scheduling (≈148 h per seed at 22.8 s/it vs ≈199 h for "two whole chains in one lane").
+critical-path list scheduling (≈106 h per seed at the measured 16.2 s/it; ≈148 h at the reference 22.8 vs ≈199 h for "two whole chains in one lane").
 The branch sources are unchanged: ep1/ep2/ep3 still resume from the fixed trunk steps 4292/8583/12875.
 
 Every project GPU job carries the `kys_` name prefix. `submit` refuses while any other `kys_` job is live
@@ -65,3 +65,9 @@ command exits; rerun it.
 pip install --target /tmp/pt pytest   # anywhere outside the training env
 PYTHONPATH=/tmp/pt $P -m pytest -q -p no:cacheprovider deploy/skipjack_1p5b/test_capped_submit.py
 ```
+
+## Monitoring
+
+`scrontab` is disabled on this cluster and `crontab` is blocked, so monitoring is a `nohup` loop of the read-only
+`monitor_once.sh <seed>` (squeue GPU total with an alarm above 20, plus the progress table) appended to
+`<data root>/logs/monitor_seed<S>.log`. The ceiling itself does not depend on it: it is the lane dependencies.
