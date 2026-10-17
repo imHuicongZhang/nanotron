@@ -192,6 +192,44 @@ clusters:
       mode: online
       entity: imwytro-johns-hopkins-university
 
+  skipjack_1p5b_baselines:
+    # The seven raw baselines, seeds 42/43/44, trained on skipjack itself (2026-10-16 owner workflow, which
+    # replaces the marc-cluster handoff). Hardware/parallelism values are skipjack_h100's; only paths,
+    # wandb and the job time are new. The /home/jhu/zhuicon1/projects_bvandur1 roots of the workflow are
+    # symlinks (-> /projects/bvandur1 -> /weka/projects/bvandur1); the resolved form is used everywhere so
+    # the tokenizer string in configs and .ds.metadata is one literal path.
+    # Project-wide GPU ceiling (20 H100 = five 4-GPU segments) is enforced by
+    # deploy/skipjack_1p5b/capped_submit.py, NOT by plan_submit.py: use that tool for every submission.
+    data_root: /weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw
+    tokenizer_path: /weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/tokenizer
+    init_root: /weka/projects/bvandur1/zhuicon1/checkpoints/1p5_baseline/init
+    ckpt_root: /weka/projects/bvandur1/zhuicon1/checkpoints/1p5_baseline/runs
+    repo_dir: /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys
+    env_activate: /weka/scratch/jhu/bvandur1/zhuicon1/envs/pretrain/bin/activate
+    python_include: /weka/scratch/jhu/bvandur1/zhuicon1/basic/miniconda3/envs/agents/include/python3.11
+    arch: sm_90
+    hbm_gib: 74.5             # 80 GB
+    gpus_per_node: 4
+    dp: 4
+    tp: 1
+    pp: 1
+    micro_batch_size: 32      # -> accum = 1024 / (32 * 4) = 8
+    recompute_layer: true
+    zero_stage: 0
+    slurm:
+      partition: h100
+      account: bvandur1_blabscify
+      qos: jhu2               # GrpTRES gres/gpu=32 shared with the lab; this project stays <= 20 (capped_submit.py)
+      nodes: 1
+      gres: "gpu:h100:4"
+      cpus_per_task: 32
+      time: "2-00:00:00"      # PROVISIONAL until the 4-GPU smoke test; never above 3-00:00:00
+    wandb:
+      mode: online
+      project: zhc-1p5b-10b-wsd
+      entity: imwytro-johns-hopkins-university
+      dir: /weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/wandb
+
   marc-cluster:
     # TEMPLATE for the external cluster that trains the raw-selected baselines. Every field is
     # null on purpose: the operator there fills them, then runs
@@ -342,6 +380,6 @@ seed_assignment:
 # marc-cluster (configs/1.5B-baseline/RUNBOOK.md); skipjack_h100 was used for the local probe,
 # sanity runs and the reference renders in configs/1.5B-baseline-seed42/rendered-skipjack_h100/.
 baseline_seed_assignment:
-  42: marc-cluster
-  43: marc-cluster
-  44: marc-cluster
+  42: skipjack_1p5b_baselines
+  43: skipjack_1p5b_baselines
+  44: skipjack_1p5b_baselines
