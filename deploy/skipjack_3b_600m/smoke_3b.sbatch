@@ -66,7 +66,8 @@ PY
 else
   echo "[smoke3b] using existing init $INIT_PARENT (manifest present)"
 fi
-for t in a div da b; do seed $t; done
+for t in a div da b c; do seed $t; done
 run a_trunk && run a_resume && run a_branch && run a_div && run a_da && run b_trunk || echo "[smoke3b] a phase failed; summarizing what ran"
+run c_trunk || echo "[smoke3b] optional layout C (mbs 32) failed (likely OOM); recorded, not a smoke failure"
 python deploy/skipjack_3b_600m/smoke_3b.py summarize --workdir "$WORK"
 echo "[smoke3b] $(date -Is) done; review $WORK/smoke_report.json, then the owner writes SMOKE_ACCEPTED"

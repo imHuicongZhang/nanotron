@@ -46,7 +46,7 @@ def build(setting: str, kind: str, layout: dict) -> dict:
     assert mbs * accum * R.DP == R.GLOBAL_BATCH_SEQ
     return {
         'general': {'project': R.WANDB_PROJECT, 'run': R.seg_name(setting, kind), 'seed': R.SEED},
-        'model': {'ddp_bucket_cap_mb': 25, 'dtype': 'bfloat16', 'init_method': {'std': 0.02},
+        'model': {'ddp_bucket_cap_mb': 25, 'dtype': 'bfloat16', 'init_method': {'std': R.INIT_STD},
                   'make_vocab_size_divisible_by': 1, 'model_config': dict(R.MODEL)},
         'tokenizer': {'tokenizer_name_or_path': str(R.TOKENIZER)},
         'tokens': {'train_steps': R.END_STEP[kind], 'val_check_interval': -1, 'limit_val_batches': 0,

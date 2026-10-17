@@ -29,8 +29,15 @@ FINAL = DATA_ROOT_600M / 'dataset' / '05_final'                               # 
 TRAIN_ROOT = DATA_ROOT_600M / 'training'                                     # tokenized/, tokenizer/, reports/, logs/, wandb/
 TOKENIZED = TRAIN_ROOT / 'tokenized'
 TOKENIZER = TRAIN_ROOT / 'tokenizer'
-TOKENIZER_SOURCE = Path('/weka/scratch/jhu/bvandur1/zhuicon1/tokenizers/llama2-unsloth-tokenizer')   # 600M counts used it
-TOKENIZER_JSON_SHA256 = '81bb383c6138159665cd350a59fbcb5aa1fe65712cf5ed9b6481bc802cdbd8e5'          # == 1.5B baseline tokenizer
+# The exact tokenizer of the 1.5B models: the directory the 1.5B training data was tokenized with, pinned by the
+# blab-jhu/KYS-Pre-Rewritten manifest.json. Its tokenizer.json is byte-identical to the one behind the 600M token counts
+# (tokenizers/llama2-unsloth-tokenizer) and to the published 1.5B HF exports (rewrite-1p5b-hf/*/tokenizer.json).
+TOKENIZER_SOURCE = Path('/weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/tokenizer')   # read only
+TOKENIZER_SHA256 = {
+    'tokenizer.json': '81bb383c6138159665cd350a59fbcb5aa1fe65712cf5ed9b6481bc802cdbd8e5',
+    'tokenizer_config.json': '2bffa41435e22dde97e37b2c5b97e13dbfcd1e41e921f2051bef14623b474fc2',
+    'tokenizer_report.json': '4dcd1212911e7acfd59068eab1b96ed8077584fecded75fe0335035d9913c8c1',
+}
 REPORTS = TRAIN_ROOT / 'reports'
 STATE_ROOT = REPORTS / 'capped_submit'
 LOG_DIR = TRAIN_ROOT / 'logs' / 'slurm'
@@ -71,22 +78,37 @@ assert HORIZONS == [9537, 19073, 28610] and BRANCH_POINTS == [8583, 17166, 25749
 assert all(b in TRUNK_ENDS for b in BRANCH_POINTS) and TRUNK_ENDS[-1] == BRANCH_POINTS[-1]
 assert max(e - s for s, e in zip([0] + TRUNK_ENDS[:-1], TRUNK_ENDS)) == 4292
 
-# ---- model (Llama-2 style, 2,936,855,040 parameters; verified with transformers LlamaForCausalLM on meta) ----
-MODEL = {
-    'is_llama_config': True, 'hidden_size': 2560, 'num_hidden_layers': 36, 'num_attention_heads': 20,
-    'num_key_value_heads': 20, 'intermediate_size': 6912, 'vocab_size': 32000, 'tie_word_embeddings': True,
+# ---- model: the 1.5B architecture with ONLY num_hidden_layers changed (28 -> 57) ------------------------------
+# MODEL_1P5B is model.model_config of the 1.5B configs (configs/1.5B-baseline-seed42/filled/*, identical to the published
+# checkpoints' model_config.json); assert_invariants_3b re-reads the baseline config and refuses any other difference.
+# 57 layers is the depth closest to 3e9 parameters: per layer 4*d^2 + 3*d*ffn + 2*d = 51,384,320; fixed (tied 32000 x 2048
+# embedding + final RMSNorm) = 65,538,048; total 57 x 51,384,320 + 65,538,048 = 2,994,444,288 (56 -> 2,943,059,968;
+# 58 -> 3,045,828,608). Verified with transformers LlamaForCausalLM on the meta device.
+MODEL_1P5B = {
+    'is_llama_config': True, 'hidden_size': 2048, 'num_hidden_layers': 28, 'num_attention_heads': 16,
+    'num_key_value_heads': 16, 'intermediate_size': 5632, 'vocab_size': 32000, 'tie_word_embeddings': True,
     'hidden_act': 'silu', 'max_position_embeddings': SEQ_LEN, 'rope_theta': 10000.0, 'rope_interleaved': False,
     'rms_norm_eps': 1.0e-05, 'attention_bias': False, 'bos_token_id': 1, 'eos_token_id': 2, 'pad_token_id': None,
     'pretraining_tp': 1, 'use_cache': False,
 }
-N_PARAMS = 2_936_855_040
-N_PARAMS_NON_EMBEDDING = 2_854_935_040
+N_LAYERS = 57
+MODEL = {**MODEL_1P5B, 'num_hidden_layers': N_LAYERS}
+N_PARAMS = 2_994_444_288
+N_PARAMS_NON_EMBEDDING = 2_928_908_288
+assert N_PARAMS == N_LAYERS * (4 * 2048 ** 2 + 3 * 2048 * 5632 + 2 * 2048) + 32000 * 2048 + 2048
+# Init (unchanged rule, nanotron StandardParametrizator, init_method.scaling_method default NUM_LAYERS):
+#   q/k/v, gate/up, tied embedding ~ N(0, 0.02); RMSNorm weights = 1;
+#   row-parallel o_proj and down_proj ~ N(0, 0.02 / sqrt(2 * L)): L=28 -> 0.0026726, L=57 -> 0.0018732.
+INIT_STD = 0.02
+BASELINE_MODEL_CONFIG = Path('/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys/configs/1.5B-baseline-seed42/filled/'
+                             'raw_diversity_oriented_seed42_trunk1.yaml')       # read only
 
 # ---- layout on 4 x H100 80GB (DP=4, TP=1, PP=1); mbs is fixed for all three settings ---------------------
 DP, TP, PP = 4, 1, 1
 LAYOUTS = {   # chosen by the smoke test; never mixed across settings (masked_mean is per micro-batch)
-    'A': {'zero_stage': 1, 'micro_batch_size': 16, 'recompute_layer': True},   # default, estimated ~50 GiB peak
-    'B': {'zero_stage': 0, 'micro_batch_size': 8, 'recompute_layer': True},    # fallback, estimated ~66 GiB peak
+    'A': {'zero_stage': 1, 'micro_batch_size': 16, 'recompute_layer': True},   # default, estimated ~52 GiB peak
+    'B': {'zero_stage': 0, 'micro_batch_size': 8, 'recompute_layer': True},    # fallback, estimated ~68 GiB peak
+    'C': {'zero_stage': 1, 'micro_batch_size': 32, 'recompute_layer': True},   # optional, ~70.5 GiB: the 1.5B grid's mbs 32
 }
 DEFAULT_LAYOUT = 'A'
 

@@ -30,18 +30,30 @@ eval "$(python - "$S" <<'PY'
 import sys; sys.path.insert(0, 'deploy/skipjack_3b_600m'); import registry_3b as R
 s = sys.argv[1]
 print(f'IN={R.FINAL / s / "shuffled"} OUT={R.TOKENIZED / s} TOK={R.TOKENIZER} TOKSRC={R.TOKENIZER_SOURCE} '
-      f'TOKSHA={R.TOKENIZER_JSON_SHA256} NPARTS={R.CORPUS_PARTS[s]} REPORTS={R.REPORTS} CFG={R.REPO}/configs/3B-rewrite-600m/seed{R.SEED}/{R.seg_name(s, "trunk1")}.yaml')
+      f'NPARTS={R.CORPUS_PARTS[s]} REPORTS={R.REPORTS} CFG={R.REPO}/configs/3B-rewrite-600m/seed{R.SEED}/{R.seg_name(s, "trunk1")}.yaml')
 PY
 )"
 LOG=$REPORTS/tokenize/$S
 echo "[tok3b] $(date -Is) host=$(hostname) job=${SLURM_JOB_ID:-} setting=$S head=$(git rev-parse HEAD)"
 
-# 1. tokenizer: one copy under TRAIN_ROOT, pinned by sha256 (the 600M token counts and the 1.5B grid used this file)
+# 1. tokenizer: one copy of the exact 1.5B tokenizer directory under TRAIN_ROOT, every file pinned by sha256
 mkdir -p "$(dirname "$TOK")"
 if [[ ! -f "$TOK/tokenizer.json" ]]; then
   ( flock 9; [[ -f "$TOK/tokenizer.json" ]] || { cp -a "$TOKSRC" "$TOK.tmp.$$" && mv "$TOK.tmp.$$" "$TOK"; } ) 9>"$(dirname "$TOK")/.tokenizer.lock"
 fi
-[[ "$(sha256sum "$TOK/tokenizer.json" | cut -d' ' -f1)" == "$TOKSHA" ]] || { echo "[tok3b] tokenizer sha256 mismatch"; exit 1; }
+python - "$TOK" <<'PY'
+import hashlib, sys
+from pathlib import Path
+sys.path.insert(0, 'deploy/skipjack_3b_600m'); import registry_3b as R
+tok = Path(sys.argv[1])
+have = sorted(p.name for p in tok.iterdir() if p.is_file())
+if have != sorted(R.TOKENIZER_SHA256):
+    sys.exit(f'[tok3b] {tok} holds {have}, expected exactly {sorted(R.TOKENIZER_SHA256)}')
+for name, want in R.TOKENIZER_SHA256.items():
+    if hashlib.sha256((tok / name).read_bytes()).hexdigest() != want:
+        sys.exit(f'[tok3b] {tok / name}: sha256 differs from the 1.5B tokenizer')
+print(f'[tok3b] tokenizer {tok}: {len(have)} files identical to the 1.5B tokenizer (sha256)')
+PY
 
 # 2. inputs are exactly the validated parts
 python - "$IN" "$S" "$NPARTS" <<'PY'

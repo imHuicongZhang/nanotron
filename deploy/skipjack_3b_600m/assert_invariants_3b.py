@@ -77,6 +77,13 @@ def check_config(path: Path) -> list[str]:
     env = path.with_suffix('.env').read_text()
     if env != G.env_text(setting, kind, lay, R.LAYOUTS[lay]):
         errs.append(f'{path.with_suffix(".env").name}: differs from generate_configs_3b.env_text()')
+    base = yaml.safe_load(R.BASELINE_MODEL_CONFIG.read_text())['model']      # the 1.5B architecture, read only
+    mine = dict(cfg['model'], model_config=dict(cfg['model']['model_config']))
+    if mine['model_config'].pop('num_hidden_layers') != R.N_LAYERS:
+        errs.append(f'{path.name}: num_hidden_layers is not {R.N_LAYERS}')
+    base['model_config'].pop('num_hidden_layers')
+    if mine != base:
+        errs.append(f'{path.name}: model block differs from the 1.5B config beyond num_hidden_layers')
     for p in _paths(cfg):
         if any(p.startswith(f) for f in R.FORBIDDEN_PREFIXES):
             errs.append(f'{path.name}: path {p} is inside a 1.5B/100M namespace')

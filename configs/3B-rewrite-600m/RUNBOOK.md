@@ -39,7 +39,7 @@ baseline jobs `cd` into it at start time.
 
 This is an array of 3 jobs (64 CPU / 320G / 12 h each, partition med) that reads `05_final/<s>/shuffled` only. Each job:
 1. checks the tokenizer sha256 and each part's sha256 against `validate_assembly_scope.json`;
-2. runs one datatrove task per part (65 / 54 / 54 shards);
+2. runs one datatrove task per part (65 / 54 / 54 shards), using a copy of the exact 1.5B tokenizer directory with all three files sha256-checked;
 3. rewrites `.ds.metadata` to the tokenizer directory;
 4. requires the summed tokens to equal corpus_train_tokens exactly (20,000,000,270 / 19,834,314,433 / 20,000,000,227);
 5. writes `reports/tokenize/<s>/epoch_stats.json` (exact windows per pass and passes at each horizon).
@@ -62,21 +62,22 @@ submits only the smoke test, never the grid):
     sbatch --output=/weka/projects/bvandur1/zhuicon1/rewrite-3b-600m/training/logs/slurm/rw3b_handoff_waiter.log \
            deploy/skipjack_3b_600m/handoff_waiter.sbatch          # stop: scancel -n rw3b_handoff_waiter
 
-## Stage 3: smoke test (4 H100, ~1-1.5 h, limit 4 h)
+## Stage 3: smoke test (4 H100, ~1.5 h, limit 4 h)
     $P deploy/skipjack_3b_600m/capped_submit_3b.py smoke             # gate + cap; job kys_3b_smoke
 
 Phases are in `smoke_3b.py`:
 - creates the shared init if absent and pins it in `init_manifest.json`;
 - layout A: 20 steps, then resume to 30, then a branch from 20 that decays to 0 at 30;
 - 3 steps each on DIV and DA;
-- layout B: 10 steps.
+- layout B: 10 steps;
+- optional layout C (ZeRO-1, mbs 32, the 1.5B micro-batch): 10 steps, run last. An out-of-memory there is recorded, not a smoke failure.
 
 `smoke_report.json` lists s/it, peak GiB, finite loss and grad norm, resume and branch checks, and any problems.
 After reviewing it, the owner writes `…/training/reports/SMOKE_ACCEPTED`:
 
     {"layout": "A", "s_per_it": <median s/it of the chosen layout>, "smoke_job": <id>, "accepted_by": "...", "date": "..."}
 
-If layout B is chosen: `$P deploy/skipjack_3b_600m/generate_configs_3b.py --layout B`, then rerun Stage 0's
+If layout B or C is chosen: `$P deploy/skipjack_3b_600m/generate_configs_3b.py --layout B` (or `--layout C`), then rerun Stage 0's
 `plan` / `test-only`. A smoke test shows stability, memory, throughput and mechanics. It doesn't validate the LR choice.
 
 ## Stage 4: training grid (27 segments, ≤ 20 GPUs)

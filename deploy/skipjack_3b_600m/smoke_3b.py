@@ -12,6 +12,7 @@ Phases (all on real tokenized data, one 4 x H100 node, run in order by smoke_3b.
   a_branch  layout A, starts from step dir 20 into a separate folder, decays 20 -> 30 to 0 -> branch mechanics
   a_div / a_da   layout A, 3 steps each on the other two corpora from the init           -> data iteration
   b_trunk   layout B (fallback), 10 steps                                                 -> memory / throughput
+  c_trunk   layout C (optional, mbs 32 = the 1.5B grid's micro-batch), 10 steps             -> does it fit?
 The smoke configs differ from production only in run names, folders, train_steps, checkpoint cadence and a 5-step
 warmup (so the decay branch is exercised within 30 steps). A smoke test does not establish the best learning rate.
 """
@@ -33,6 +34,7 @@ import generate_configs_3b as G  # noqa: E402
 import registry_3b as R  # noqa: E402
 
 PHASES = ['init', 'a_trunk', 'a_resume', 'a_branch', 'a_div', 'a_da', 'b_trunk']
+OPTIONAL = ['c_trunk']   # measured last; an OOM here is a finding, not a smoke failure
 
 
 def derive(work: Path):
@@ -63,7 +65,8 @@ def derive(work: Path):
     cfg('a_div', 'diversity-oriented', 'A', 3, trunk('div'), trunk('div'), load_opt=False)
     cfg('a_da', 'disagreement-aware', 'A', 3, trunk('da'), trunk('da'), load_opt=False)
     cfg('b_trunk', 'quality-first', 'B', 10, trunk('b'), trunk('b'), load_opt=False)
-    print(f'wrote {len(PHASES)} smoke configs to {work}/cfg (init source: {init})')
+    cfg('c_trunk', 'quality-first', 'C', 10, trunk('c'), trunk('c'), load_opt=False)
+    print(f'wrote {len(PHASES) + len(OPTIONAL)} smoke configs to {work}/cfg (init source: {init})')
 
 
 STEP_RE = re.compile(r'iteration: (\d+) / \d+ .*?time_per_iteration_ms: ([\d.]+)(K?) .*?grad_norm: ([\w.+-]+) \| '
@@ -72,10 +75,11 @@ STEP_RE = re.compile(r'iteration: (\d+) / \d+ .*?time_per_iteration_ms: ([\d.]+)
 
 def summarize(work: Path):
     rep = {'workdir': str(work), 'phases': {}, 'problems': []}
-    for ph in PHASES:
+    for ph in PHASES + OPTIONAL:
         log = work / 'logs' / f'{ph}.log'
         if not log.is_file():
-            rep['problems'].append(f'{ph}: no log')
+            if ph not in OPTIONAL:
+                rep['problems'].append(f'{ph}: no log')
             continue
         steps = []
         for m in STEP_RE.finditer(log.read_text(errors='replace')):
@@ -88,9 +92,9 @@ def summarize(work: Path):
         rec = {'steps_logged': len(steps), 'first': steps[0] if steps else None, 'last': steps[-1] if steps else None,
                's_per_it_median': statistics.median(timed) if timed else None,
                'peak_mib': peak, 'peak_gib': round(peak / 1024, 1) if peak else None}
-        if any(not math.isfinite(s['loss']) or not math.isfinite(s['grad_norm']) for s in steps):
+        if ph not in OPTIONAL and any(not math.isfinite(s['loss']) or not math.isfinite(s['grad_norm']) for s in steps):
             rep['problems'].append(f'{ph}: non-finite loss or grad_norm')
-        if peak and peak / 1024 > 74.5:
+        if peak and peak / 1024 > 74.5 and ph not in OPTIONAL:
             rep['problems'].append(f'{ph}: peak {peak / 1024:.1f} GiB above the 74.5 GiB budget')
         rep['phases'][ph] = rec
     a = rep['phases']
