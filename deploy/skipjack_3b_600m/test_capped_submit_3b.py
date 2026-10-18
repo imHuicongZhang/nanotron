@@ -42,7 +42,8 @@ def env(tmp_path, monkeypatch):
                  'SMOKE_ACCEPTED': smoke}.items():
         monkeypatch.setattr(C, k, v)
     gate = {'handoff': True, 'missing': []}
-    monkeypatch.setattr(C.handoff_gate, 'check', lambda require_approval: dict(gate))
+    gate['scopes'] = []
+    monkeypatch.setattr(C.handoff_gate, 'check', lambda require_approval, scope='launch': gate['scopes'].append(scope) or dict(gate))
     real_run = subprocess.run
 
     def run(argv, *a, **k):   # the corpus check needs tokenized data; stub only that call
@@ -140,3 +141,36 @@ def test_failed_trunk_halts_dependents_then_retry(env):
     run_to_end(slurm)
     assert slurm.peak <= 20
     assert (R.ckpt_dir('diversity-oriented', 'ep3') / str(R.HORIZONS[2]) / 'model_config.json').is_file()
+
+
+def test_smoke_needs_tokenization_and_lr_test(env, monkeypatch):
+    monkeypatch.setattr(R, 'REPORTS', env['tmp'] / 'reports')
+    slurm = FakeSlurm()
+    with pytest.raises(SystemExit, match='tokenization not finished'):
+        C.main(['smoke'], slurm=slurm)
+    assert env['gate']['scopes'] == ['smoke'] and not slurm.jobs
+    for s in R.SETTINGS:
+        (R.REPORTS / 'tokenize' / s).mkdir(parents=True)
+        (R.REPORTS / 'tokenize' / s / 'epoch_stats.json').write_text('{}')
+    real = C.subprocess.run
+    monkeypatch.setattr(C.subprocess, 'run', lambda argv, *a, **k: subprocess.CompletedProcess(argv, 1, 'F lr', '')
+                        if 'test_lr_resume_3b.py' in str(argv) else real(argv, *a, **k))
+    with pytest.raises(SystemExit, match='LR resume regression test failed'):
+        C.main(['smoke'], slurm=slurm)
+    monkeypatch.setattr(C.subprocess, 'run', lambda argv, *a, **k: subprocess.CompletedProcess(argv, 0, 'ok', '')
+                        if 'test_lr_resume_3b.py' in str(argv) else real(argv, *a, **k))
+    C.main(['smoke'], slurm=slurm)
+    assert [j['name'] for j in slurm.jobs.values()] == ['kys_3b_smoke']
+
+
+def test_smoke_authorization_never_opens_the_grid(tmp_path, monkeypatch):
+    H = C.handoff_gate
+    monkeypatch.setattr(H, 'APPROVAL', tmp_path / 'LAUNCH_APPROVED')
+    monkeypatch.setattr(H, 'SMOKE_AUTHORIZED', tmp_path / 'SMOKE_AUTHORIZED')
+    monkeypatch.setattr(H, 'BASELINE_STATE_ROOT', tmp_path / 'none')
+    monkeypatch.setattr(H, 'live_jobs', lambda: [])
+    (tmp_path / 'SMOKE_AUTHORIZED').write_text('{}')
+    smoke, launch = H.check(True, 'smoke'), H.check(True, 'launch')
+    assert not any('approval marker' in m for m in smoke['missing'])
+    assert any('approval marker' in m for m in launch['missing'])
+    assert not smoke['handoff'] and not launch['handoff']   # no SEED_COMPLETE here: held either way

@@ -34,8 +34,9 @@ def main(argv=None):
         total += n
         windows += n // win
         tail += n % win
-    assert total == R.CORPUS_TRAIN_TOKENS[args.setting], (total, R.CORPUS_TRAIN_TOKENS[args.setting])
-    rep = {'setting': args.setting, 'corpus_tokens': total, 'windows_per_pass': windows,
+    assert total == R.TOKENIZED_TOKENS[args.setting], (total, R.TOKENIZED_TOKENS[args.setting])
+    rep = {'setting': args.setting, 'corpus_tokens': total, 'manifest_corpus_train_tokens': R.CORPUS_TRAIN_TOKENS[args.setting],
+           'empty_text_documents': R.CORPUS_EMPTY_DOCS[args.setting], 'windows_per_pass': windows,
            'tokens_read_per_pass': windows * win, 'trained_tokens_per_pass': windows * R.SEQ_LEN,
            'dropped_tail_tokens_per_pass': tail, 'steps_per_pass': windows / R.GLOBAL_BATCH_SEQ, 'horizons': []}
     for k, h in enumerate(R.HORIZONS, 1):

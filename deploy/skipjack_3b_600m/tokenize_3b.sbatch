@@ -18,7 +18,8 @@
 # one </s> per document, no BOS, no re-shuffle; n_tasks = number of shuffled parts, so task i tokenizes exactly part i.
 # Reads dataset/05_final/<setting>/shuffled/ only (never writes there). Refuses a non-empty output folder.
 # Steps: tokenizer copy + sha256 -> part sha256 vs validate_assembly_scope.json -> tokenize (stall watchdog) ->
-# fix_ds_metadata -> assert_invariants_3b --corpus (exact corpus_train_tokens) -> epoch_stats_3b.py (windows/epoch).
+# fix_ds_metadata -> assert_invariants_3b --corpus (exact corpus_train_tokens - empty-text documents; registry_3b
+# CORPUS_EMPTY_DOCS) -> epoch_stats_3b.py (windows/epoch). A complete earlier run is reused (verification only).
 set -euo pipefail
 W=/weka/scratch/jhu/bvandur1/zhuicon1
 REPO=$W/projects/nanotron-kys-3b600m
@@ -74,11 +75,18 @@ for name in have:
 print(f'[tok3b] {s}: {n} parts match validate_assembly_scope.json sha256')
 PY
 
-# 3. tokenize
+# 3. tokenize (or reuse a complete earlier run: every datatrove task completed and one .ds per part)
 if [[ -e "$OUT" ]] && compgen -G "$OUT/*.ds" >/dev/null; then
-  echo "[tok3b] $OUT already holds .ds files; refusing to overwrite (move it aside after inspection to re-tokenize)"; exit 1
+  ndone=$(ls "$LOG/datatrove/completions" 2>/dev/null | wc -l); nds=$(ls "$OUT"/*.ds | wc -l)
+  if [[ "$ndone" == "$NPARTS" && "$nds" == "$NPARTS" ]]; then
+    echo "[tok3b] reusing complete tokenization in $OUT ($ndone/$NPARTS tasks completed, $nds .ds); verifying only"
+    REUSE=1
+  else
+    echo "[tok3b] $OUT holds $nds .ds with $ndone/$NPARTS completed tasks; refusing (move it aside after inspection)"; exit 1
+  fi
 fi
 mkdir -p "$OUT" "$LOG"
+if [[ -z "${REUSE:-}" ]]; then
 setsid python tools/preprocess_data_parquet.py \
     --tokenizer-name-or-path "$TOK/tokenizer.json" --eos-token "</s>" \
     --output-folder "$OUT" --logging-dir "$LOG/datatrove" --n-tasks "$NPARTS" --workers "${KYS3B_TOKENIZE_WORKERS:-16}" \
@@ -93,6 +101,7 @@ while kill -0 $TP 2>/dev/null; do
   fi
 done
 wait $TP
+fi
 
 # 4. metadata -> tokenizer DIRECTORY; 5. exact totals; 6. epoch geometry
 python tools/fix_ds_metadata.py --output-folder "$OUT" --tokenizer-dir "$TOK"

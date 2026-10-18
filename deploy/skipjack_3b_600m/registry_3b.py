@@ -52,6 +52,12 @@ FORBIDDEN_PREFIXES = ['/weka/projects/bvandur1/zhuicon1/data/1p5_baseline', '/we
 CORPUS_TRAIN_TOKENS = {'quality-first': 20_000_000_270, 'diversity-oriented': 19_834_314_433, 'disagreement-aware': 20_000_000_227}
 CORPUS_ROWS = {'quality-first': 32_341_160, 'diversity-oriented': 26_692_847, 'disagreement-aware': 26_743_280}
 CORPUS_PARTS = {'quality-first': 65, 'diversity-oriented': 54, 'disagreement-aware': 54}
+# Rows whose text became empty in the Stage 04 strip (stage04_assembly_20261016/STATUS.md, "empty after"; retained with
+# tokens_llama2 = 0). corpus_train_tokens counts one EOS for each; datatrove's reader skips a document without text
+# (the same recipe as every KYS corpus), so the tokenized stream holds exactly corpus_train_tokens - empty documents,
+# and datatrove reads CORPUS_ROWS - empty documents. Verified by tokenize job 1126253 (2026-10-17). Data unchanged.
+CORPUS_EMPTY_DOCS = {'quality-first': 27, 'diversity-oriented': 2, 'disagreement-aware': 8}
+TOKENIZED_TOKENS = {s: CORPUS_TRAIN_TOKENS[s] - CORPUS_EMPTY_DOCS[s] for s in CORPUS_TRAIN_TOKENS}
 SHARED_BASE_TRAIN_TOKENS = 10_000_000_186
 
 # ---- batch and schedule ---------------------------------------------------------------------------------

@@ -1,9 +1,14 @@
 # 3B rewrite-600m grid: resumable runbook
 
-**Status at preparation (2026-10-17):** HELD.
-- Nothing has been submitted: no GPU job, no tokenization job, no waiter.
-- The 1.5B baselines hold the 20-H100 budget. Their seed 42 is queued (42 segments, all pending). Seeds 43 and 44
-  haven't been submitted.
+**Status (2026-10-17, owner authorization of the same day):**
+- Tokenization: CPU jobs 1126253 (tokenized all three corpora; its exact-total check failed by the empty-text documents,
+  see Stage 1) and 1126433 (verify-only reuse of that output with the corrected accounting).
+- LR resume off-by-one fixed in this worktree (`src/nanotron/serialize/optimizer.py`, regression test
+  `deploy/skipjack_3b_600m/test_lr_resume_3b.py`; report `training/reports/lr_resume_fix_20261017/`).
+- Durable waiter `rw3b_handoff_waiter` running (Stage 2). It may submit only the smoke test, after the handoff.
+- `training/reports/SMOKE_AUTHORIZED` records the owner's smoke-only authorization. LAUNCH_APPROVED and SMOKE_ACCEPTED
+  are NOT written: full training stays owner-gated.
+- Recovery after a lost session: `training/reports/RECOVERY.md`.
 
 Every command below runs from the 3B worktree with the shared training environment, used read-only:
 
@@ -41,10 +46,14 @@ This is an array of 3 jobs (64 CPU / 320G / 12 h each, partition med) that reads
 1. checks the tokenizer sha256 and each part's sha256 against `validate_assembly_scope.json`;
 2. runs one datatrove task per part (65 / 54 / 54 shards), using a copy of the exact 1.5B tokenizer directory with all three files sha256-checked;
 3. rewrites `.ds.metadata` to the tokenizer directory;
-4. requires the summed tokens to equal corpus_train_tokens exactly (20,000,000,270 / 19,834,314,433 / 20,000,000,227);
+4. requires the summed tokens to equal corpus_train_tokens minus the empty-text documents exactly
+   (20,000,000,270 − 27 / 19,834,314,433 − 2 / 20,000,000,227 − 8; `registry_3b.TOKENIZED_TOKENS`). Stage 04's strip
+   left 27/2/8 retained rows with empty text; the manifest counts one EOS for each, datatrove skips them. datatrove's
+   documents-read count must equal rows − empty;
 5. writes `reports/tokenize/<s>/epoch_stats.json` (exact windows per pass and passes at each horizon).
 
-It refuses a non-empty output folder. On failure, inspect the log, move the partial folder aside (don't delete before
+A complete earlier run (all datatrove tasks completed, one .ds per part) is reused and only re-verified; any other
+non-empty output folder is refused. On failure, inspect the log, move the partial folder aside (don't delete before
 review), and resubmit with `--array=<i>`.
 
 ## Stage 2: handoff (wait for the full baseline workflow)
@@ -56,18 +65,32 @@ The gate (`handoff_gate.py`) passes only when **all** of these hold:
 - The seed list is re-read from the active `deploy/clusters.yaml` on every check.
 - The owner has written `…/training/reports/LAUNCH_APPROVED`.
 
-An empty queue or one finished seed never passes. Optional durable waiter (one CPU core for seconds every 6 h; it
-submits only the smoke test, never the grid):
+- For the smoke test only (`--scope smoke`), the owner's `SMOKE_AUTHORIZED` substitutes for LAUNCH_APPROVED.
+- GPU evaluation is evidenced by SEED_COMPLETE (the baseline's own "verified, uploaded, evaluated, GPUs released"
+  record) plus no live `kys_` job; the baseline tools define no machine-readable eval output.
+
+An empty queue or one finished seed never passes. Durable waiter (`handoff_waiter.py`; CPU, one tick every 2 h):
+- it queues its successor first (`--dependency=singleton`), so a crash never ends the chain;
+- the gate must pass on 2 consecutive ticks;
+- then `capped_submit_3b.py smoke`, which re-checks the gate, the 20-GPU cap, tokenization (`--corpus`,
+  epoch_stats) and the LR regression test;
+- it then follows the smoke job, writes `reports/handoff/smoke_finished.json` and stops. It never submits the grid.
 
     sbatch --output=/weka/projects/bvandur1/zhuicon1/rewrite-3b-600m/training/logs/slurm/rw3b_handoff_waiter.log \
-           deploy/skipjack_3b_600m/handoff_waiter.sbatch          # stop: scancel -n rw3b_handoff_waiter
+           deploy/skipjack_3b_600m/handoff_waiter.sbatch          # start (a second chain refuses to run)
+    $P deploy/skipjack_3b_600m/handoff_waiter.py status            # last tick, smoke_submitted / smoke_finished
+    touch /weka/projects/bvandur1/zhuicon1/rewrite-3b-600m/training/reports/handoff/STOP   # stop the chain
 
-## Stage 3: smoke test (4 H100, ~1.5 h, limit 4 h)
+## Stage 3: smoke test (4 H100, ~2 h, limit 4 h)
     $P deploy/skipjack_3b_600m/capped_submit_3b.py smoke             # gate + cap; job kys_3b_smoke
 
 Phases are in `smoke_3b.py`:
 - creates the shared init if absent and pins it in `init_manifest.json`;
-- layout A: 20 steps, then resume to 30, then a branch from 20 that decays to 0 at 30;
+- layout A: 20 steps, then resume to 30, then a branch from 20 that decays to 0 at 30, then 30 uninterrupted steps
+  (`a_straight`) as the reference for the resume;
+- every logged lr is checked against nanotron's scheduler (the shifted-resume signature fails the branch check), and
+  consumed_tokens against step × 2,097,152;
+- resume vs uninterrupted: loss difference at steps 21-30 within max(0.02, display rounding, 3 × the 1-20 noise);
 - 3 steps each on DIV and DA;
 - layout B: 10 steps;
 - optional layout C (ZeRO-1, mbs 32, the 1.5B micro-batch): 10 steps, run last. An out-of-memory there is recorded, not a smoke failure.

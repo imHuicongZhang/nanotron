@@ -367,4 +367,11 @@ def load_lr_scheduler(
 
     state_dict = torch.load(root_folder / lr_scheduler_filename(parallel_context, is_zero))
     lr_scheduler.load_state_dict(state_dict)
-    lr_scheduler._initial_step()  # NOTE: this is required to set the initial learning rate
+    # Set the learning rate for the next update from the restored index without stepping. `_initial_step()` called
+    # `step()`, which advanced `last_epoch` by one on every resume: a resumed update n used lambda(n) instead of
+    # lambda(n-1), cumulatively across resumes (deploy/skipjack_3b_600m/test_lr_resume_3b.py).
+    with torch.optim.lr_scheduler._enable_get_lr_call(lr_scheduler):
+        values = lr_scheduler.get_lr()
+    for param_group, lr in zip(lr_scheduler.optimizer.param_groups, values):
+        param_group["lr"] = lr
+    lr_scheduler._last_lr = [param_group["lr"] for param_group in lr_scheduler.optimizer.param_groups]

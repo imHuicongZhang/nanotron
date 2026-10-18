@@ -11,7 +11,8 @@ Checks:
   * all rendered configs share one layout (micro_batch_size must be identical across settings: Loss.forward's
     masked_mean is per micro-batch, so a different mbs is a different objective; tools/assert_invariants.py);
   * --corpus: the tokenized folder holds .ds shards whose .ds.metadata name the training tokenizer directory and
-    whose token totals sum to the manifest's corpus_train_tokens exactly (one EOS per document, no BOS);
+    whose token totals sum exactly to the manifest's corpus_train_tokens minus the empty-text documents
+    (registry_3b.TOKENIZED_TOKENS; one EOS per non-empty document, no BOS), and datatrove read rows - empty documents;
   * --check-resume (in-job, before torchrun): trunk1 has the seeded init at trunk/0, later trunk segments have a
     latest.txt at or past their first step, a branch's source step directory exists.
 Exit 0 = OK.
@@ -116,8 +117,14 @@ def check_corpus(path: Path) -> list[str]:
         errs.append(f'{folder}: metadata tokenizer strings {sorted(toks)} != {{{R.TOKENIZER}|2}} (run tools/fix_ds_metadata.py)')
     if len(shards) != R.CORPUS_PARTS[setting]:
         errs.append(f'{folder}: {len(shards)} shards, expected {R.CORPUS_PARTS[setting]} (one per shuffled part, in order)')
-    if total != R.CORPUS_TRAIN_TOKENS[setting]:
-        errs.append(f'{folder}: {total:,} tokens != manifest corpus_train_tokens {R.CORPUS_TRAIN_TOKENS[setting]:,}')
+    if total != R.TOKENIZED_TOKENS[setting]:
+        errs.append(f'{folder}: {total:,} tokens != manifest corpus_train_tokens {R.CORPUS_TRAIN_TOKENS[setting]:,} '
+                    f'- {R.CORPUS_EMPTY_DOCS[setting]} empty-text documents = {R.TOKENIZED_TOKENS[setting]:,}')
+    stats = R.REPORTS / 'tokenize' / setting / 'datatrove' / 'stats.json'
+    if stats.is_file():
+        read = json.loads(stats.read_text())[0]['stats']['documents']['total']
+        if read != R.CORPUS_ROWS[setting] - R.CORPUS_EMPTY_DOCS[setting]:
+            errs.append(f'{stats}: datatrove read {read:,} documents != rows {R.CORPUS_ROWS[setting]:,} - empty {R.CORPUS_EMPTY_DOCS[setting]}')
     return errs
 
 

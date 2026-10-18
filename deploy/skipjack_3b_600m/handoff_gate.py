@@ -3,6 +3,7 @@
 
     python deploy/skipjack_3b_600m/handoff_gate.py check [--json out.json]     # exit 0 = handoff reached
     python deploy/skipjack_3b_600m/handoff_gate.py check --require-approval     # also needs the owner's LAUNCH_APPROVED
+    python deploy/skipjack_3b_600m/handoff_gate.py check --require-approval --scope smoke   # LAUNCH_APPROVED or SMOKE_AUTHORIZED
 
 The baseline workflow (deploy/skipjack_1p5b/, active checkout ../nanotron-kys) runs seeds one at a time; a seed is
 finished only when its operator writes <1.5B state root>/seed<S>/SEED_COMPLETE after its 21 finals are verified,
@@ -15,7 +16,14 @@ or one finished seed, is therefore NOT the handoff. The gate requires ALL of:
   3. seed<S>/state.json exists and every one of its 21 branch finals (ep1-3 x 7 settings) has model_config.json on disk;
   4. no live job of this user whose name starts with `kys_` other than this grid's `kys_3b_` jobs (training retries,
      smoke tests and evaluation all carry the prefix; deploy/skipjack_1p5b/README.md);
-  5. with --require-approval: <3B reports>/LAUNCH_APPROVED exists (written by the owner, never by a tool).
+  5. with --require-approval: <3B reports>/LAUNCH_APPROVED exists (written by the owner, never by a tool); for
+     --scope smoke, <3B reports>/SMOKE_AUTHORIZED (the owner's recorded authorization of the bounded smoke test only)
+     also suffices. Neither authorizes the training grid, which further needs SMOKE_ACCEPTED (capped_submit_3b.py).
+
+Evaluation: the baseline tools define no machine-readable evaluation output (checkpoints/1p5_baseline/eval is the only
+eval folder and its layout is unspecified), so GPU evaluation is evidenced by the baseline's own completion record,
+SEED_COMPLETE ("verified, uploaded, evaluated, GPUs released"; capped_submit.py refuses the next seed without it), plus
+condition 4 (evaluation jobs carry the kys_ prefix). The eval folder's file count is recorded as evidence only.
 
 Nothing here writes to the baseline's files, submits, or cancels. Missing evidence is reported, never assumed.
 """
@@ -40,6 +48,8 @@ BASELINE_CLUSTER = 'skipjack_1p5b_baselines'
 BASELINE_STATE_ROOT = Path('/weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/reports/capped_submit')
 MIN_SEEDS = {42, 43, 44}
 APPROVAL = R.REPORTS / 'LAUNCH_APPROVED'
+SMOKE_AUTHORIZED = R.REPORTS / 'SMOKE_AUTHORIZED'
+BASELINE_EVAL_ROOT = Path('/weka/projects/bvandur1/zhuicon1/checkpoints/1p5_baseline/eval')
 
 
 def live_jobs() -> list[dict]:
@@ -48,7 +58,7 @@ def live_jobs() -> list[dict]:
     return [dict(zip(('id', 'name', 'state'), ln.split('|'))) for ln in out.splitlines() if ln.count('|') == 2]
 
 
-def check(require_approval: bool) -> dict:
+def check(require_approval: bool, scope: str = 'launch') -> dict:
     ev = {'checked_at': time.strftime('%Y-%m-%dT%H:%M:%S'), 'missing': [], 'seeds': {}}
     prof = yaml.safe_load(BASELINE_PROFILE.read_text())
     seeds = sorted(s for s, c in (prof.get('baseline_seed_assignment') or {}).items() if c == BASELINE_CLUSTER)
@@ -58,6 +68,8 @@ def check(require_approval: bool) -> dict:
     for s in seeds:
         d = BASELINE_STATE_ROOT / f'seed{s}'
         rec = {'SEED_COMPLETE': (d / 'SEED_COMPLETE').is_file(), 'state_json': (d / 'state.json').is_file()}
+        if rec['SEED_COMPLETE']:
+            rec['SEED_COMPLETE_mtime'] = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime((d / 'SEED_COMPLETE').stat().st_mtime))
         if not rec['SEED_COMPLETE']:
             ev['missing'].append(f'seed {s}: no {d}/SEED_COMPLETE')
         if not rec['state_json']:
@@ -76,9 +88,12 @@ def check(require_approval: bool) -> dict:
     ev['live_baseline_jobs'] = len(foreign)
     if foreign:
         ev['missing'].append(f'{len(foreign)} live kys_ baseline job(s), e.g. {foreign[0]["id"]} {foreign[0]["name"]} {foreign[0]["state"]}')
+    ev['baseline_eval_files'] = sum(1 for p in BASELINE_EVAL_ROOT.rglob('*') if p.is_file()) if BASELINE_EVAL_ROOT.is_dir() else None
     ev['approval'] = APPROVAL.is_file()
-    if require_approval and not ev['approval']:
-        ev['missing'].append(f'no owner approval marker {APPROVAL}')
+    ev['smoke_authorized'] = SMOKE_AUTHORIZED.is_file()
+    ev['scope'] = scope
+    if require_approval and not (ev['approval'] or (scope == 'smoke' and ev['smoke_authorized'])):
+        ev['missing'].append(f'no owner approval marker {APPROVAL}' + (f' or {SMOKE_AUTHORIZED}' if scope == 'smoke' else ''))
     ev['handoff'] = not ev['missing']
     return ev
 
@@ -87,9 +102,10 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('command', choices=['check'])
     ap.add_argument('--require-approval', action='store_true')
+    ap.add_argument('--scope', choices=['launch', 'smoke'], default='launch')
     ap.add_argument('--json', type=Path)
     args = ap.parse_args(argv)
-    ev = check(args.require_approval)
+    ev = check(args.require_approval, args.scope)
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)
         args.json.write_text(json.dumps(ev, indent=1))

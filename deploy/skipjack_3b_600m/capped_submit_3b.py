@@ -20,6 +20,9 @@ Gates (all re-evaluated on every smoke / guard / submit call, so nothing armed t
   * handoff_gate.check(require_approval=True): every baseline seed has SEED_COMPLETE, all 63 baseline finals are on disk,
     no non-3B kys_ job is live, and the owner wrote LAUNCH_APPROVED;
   * the cap: kys_* GPUs held + waiting + requested <= 20 (both grids carry the kys_ prefix, so both tools see all of it);
+  * smoke additionally (smoke_prerequisites): all three corpora tokenized and verified (assert_invariants_3b --all
+    --corpus, epoch_stats.json present) and the CPU LR resume regression test passes; the smoke gate accepts the owner's
+    SMOKE_AUTHORIZED in place of LAUNCH_APPROVED (smoke only);
   * submit additionally: SMOKE_ACCEPTED (owner-written JSON naming the layout and measured s/it) matches the rendered
     configs, assert_invariants_3b --all --corpus passes, and the 3B init matches its manifest.
 """
@@ -47,6 +50,7 @@ SEGMENT_SBATCH = HERE / 'segment_3b.sbatch'
 SMOKE_SBATCH = HERE / 'smoke_3b.sbatch'
 STATE_DIR = R.STATE_ROOT / f'seed{R.SEED}'
 SMOKE_ACCEPTED = R.REPORTS / 'SMOKE_ACCEPTED'
+PYTEST_PATH = R.TRAIN_ROOT / 'tools' / 'pytest_pkgs'   # pytest is not in the training env; installed --target here
 INIT = R.INIT_ROOT / f'_init_3B_seed{R.SEED}' / '0'
 INIT_MANIFEST = R.INIT_ROOT / f'_init_3B_seed{R.SEED}' / 'init_manifest.json'
 
@@ -113,10 +117,10 @@ def validate_time(s_per_it: float):
                  f'{(1.1 * need + 1800) / 3600:.1f} h); split the trunk further in registry_3b.TRUNK_ENDS')
 
 
-def gate(need_gpus: int, slurm, cap: bool = True) -> None:
+def gate(need_gpus: int, slurm, cap: bool = True, scope: str = 'launch') -> None:
     """Handoff + owner approval; with cap, also kys_* GPUs held + waiting + need <= 20 (smoke, eval). The grid itself
     is capped by its lanes instead (its own pending lane jobs would otherwise count as 'waiting' on every re-run)."""
-    ev = handoff_gate.check(require_approval=True)
+    ev = handoff_gate.check(require_approval=True, scope=scope)
     if not ev['handoff']:
         sys.exit('HELD — baseline handoff not reached:\n  ' + '\n  '.join(ev['missing']))
     if not cap:
@@ -124,6 +128,21 @@ def gate(need_gpus: int, slurm, cap: bool = True) -> None:
     held, waiting = cs.project_gpus(slurm.queue())
     if held + waiting + need_gpus > R.GPU_CEILING:
         sys.exit(f'cap: {held} held + {waiting} waiting + {need_gpus} new > {R.GPU_CEILING}; refusing')
+
+
+def smoke_prerequisites() -> None:
+    """Tokenized corpora verified, and the LR resume fix still demonstrated by its CPU regression test."""
+    missing = [s for s in R.SETTINGS if not (R.REPORTS / 'tokenize' / s / 'epoch_stats.json').is_file()]
+    if missing:
+        sys.exit(f'tokenization not finished/verified for {missing} (no reports/tokenize/<s>/epoch_stats.json)')
+    r = subprocess.run([sys.executable, HERE / 'assert_invariants_3b.py', '--all', '--corpus'], capture_output=True, text=True)
+    if r.returncode:
+        sys.exit(f'assert_invariants_3b --all --corpus failed:\n{r.stdout[-1500:]}')
+    r = subprocess.run([sys.executable, '-m', 'pytest', '-q', '-p', 'no:cacheprovider', '-W', 'ignore',
+                        str(HERE / 'test_lr_resume_3b.py')], capture_output=True, text=True,
+                       env={**__import__('os').environ, 'PYTHONPATH': str(PYTEST_PATH)})
+    if r.returncode:
+        sys.exit(f'LR resume regression test failed:\n{r.stdout[-1500:]}')
 
 
 def smoke_acceptance() -> dict:
@@ -158,7 +177,8 @@ def main(argv=None, slurm=None):
         print(f'guard: handoff reached and OK to add {args.need_gpus} GPUs (name the job {R.JOB_PREFIX}<what>)')
         return 0
     if args.command == 'smoke':
-        gate(R.GPUS_PER_SEGMENT, slurm)
+        gate(R.GPUS_PER_SEGMENT, slurm, scope='smoke')
+        smoke_prerequisites()
         if any(j['name'].startswith(R.JOB_PREFIX) for j in slurm.queue()):
             sys.exit('a kys_3b_ job is already live; one smoke at a time, never alongside the grid')
         work = R.REPORTS / 'smoke' / time.strftime('%Y%m%d_%H%M%S')

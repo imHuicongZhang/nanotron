@@ -2,7 +2,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --open-mode=append
-# Bounded 3B smoke test on one 4 x H100 node (~1-1.5 h, limit 4 h). Submit ONLY through
+# Bounded 3B smoke test on one 4 x H100 node (~2 h, limit 4 h). Submit ONLY through
 #   python deploy/skipjack_3b_600m/capped_submit_3b.py smoke
 # which checks the baseline handoff, the owner's LAUNCH_APPROVED and the 20-GPU cap, and names the job kys_3b_smoke.
 #
@@ -66,8 +66,8 @@ PY
 else
   echo "[smoke3b] using existing init $INIT_PARENT (manifest present)"
 fi
-for t in a div da b c; do seed $t; done
-run a_trunk && run a_resume && run a_branch && run a_div && run a_da && run b_trunk || echo "[smoke3b] a phase failed; summarizing what ran"
+for t in a straight div da b c; do seed $t; done
+run a_trunk && run a_resume && run a_branch && run a_straight && run a_div && run a_da && run b_trunk || echo "[smoke3b] a phase failed; summarizing what ran"
 run c_trunk || echo "[smoke3b] optional layout C (mbs 32) failed (likely OOM); recorded, not a smoke failure"
 python deploy/skipjack_3b_600m/smoke_3b.py summarize --workdir "$WORK"
 echo "[smoke3b] $(date -Is) done; review $WORK/smoke_report.json, then the owner writes SMOKE_ACCEPTED"

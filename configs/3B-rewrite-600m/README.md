@@ -85,9 +85,13 @@ Doubling the layers gives 2.943B, because the 65.5M fixed part does not scale wi
 | micro-batch × accum × DP | 32 × 8 × 4, ZeRO-0, full recompute (C, V) | A: 16 × 16 × 4, ZeRO-1 (default). B: 8 × 32 × 4, ZeRO-0. C: 32 × 8 × 4, ZeRO-1 (optional; the 1.5B micro-batch). All with full recompute; the smoke test chooses |
 | horizons | 9,999,220,736 / 20,000,538,624 / 29,999,759,360 | 20,000,538,624 / 39,998,980,096 / 59,999,518,720 |
 
-Pending decision (see `training/reports/prep_20261017/lr_schedule/LR_SCHEDULE.md`): nanotron's resume path
-(`load_state_dict` + `_initial_step`) shifts the scheduler index by +1 per resume. The options are to fix it in this
-worktree, or to keep 1.5B code parity.
+**Resume fix (2026-10-17, this worktree only).** nanotron's resume path (`load_state_dict` + `_initial_step`) shifted
+the scheduler index by +1 per resume, cumulatively (with one requeue: ep1 starts decaying at update 8584 instead of
+8585, the trunk dips below peak before 25749, ep3 spends its last 7 updates at LR 0). `load_lr_scheduler` now sets the
+next update's LR from the restored index without stepping, so every resumed or branched update n uses λ(n−1), exactly
+as one uninterrupted run. The decay rule itself (`lr_scheduler_builder`) is unchanged. Test:
+`deploy/skipjack_3b_600m/test_lr_resume_3b.py`; report: `training/reports/lr_resume_fix_20261017/`. The 1.5B
+baselines still run the unfixed code, so their branches end with 1/2/3 updates at LR 0 (plus 1 per requeue).
 
 ## Learning rate for the deeper same-width model: keep 4e-4 (not proven optimal)
 The previous width-based argument no longer applies, because the width is unchanged. Re-derived relative to the
