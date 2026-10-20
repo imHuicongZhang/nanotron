@@ -1,5 +1,11 @@
 # 3B rewrite-600m grid: resumable runbook
 
+> **2026-10-20: SUPERSEDED for launching.** The owner authorized a dedicated 8-GPU budget (2 × 4 H100) and full training
+> without a separate smoke test. GPU work goes only through `deploy/skipjack_3b_600m/train8_3b.py`: 28 jobs `rw3b_gpu_*`,
+> including the in-run startup validation `startup_3b.py`, monitored by `rw3b_train8_monitor`.
+> Stages 2–4 below (handoff waiter, smoke, `capped_submit_3b.py submit`) are retired.
+> Current procedure: `/weka/projects/bvandur1/zhuicon1/rewrite-3b-600m/training/reports/RECOVERY.md`.
+
 **Status (2026-10-17, owner authorization of the same day):**
 - Tokenization: CPU jobs 1126253 (tokenized all three corpora; its exact-total check failed by the empty-text documents,
   see Stage 1) and 1126433 (verify-only reuse of that output with the corrected accounting).
