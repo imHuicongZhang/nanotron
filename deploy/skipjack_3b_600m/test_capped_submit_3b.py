@@ -38,6 +38,7 @@ def env(tmp_path, monkeypatch):
     manifest.write_text(json.dumps(C.init_digest(init)))
     smoke = tmp_path / 'SMOKE_ACCEPTED'
     smoke.write_text(json.dumps({'layout': 'A', 's_per_it': 31.0}))
+    monkeypatch.setattr(C, 'RETIRED', False)   # the retired tool's logic is still tested
     for k, v in {'CFG_DIR': cfg, 'STATE_DIR': tmp_path / 'state' / 'seed42', 'INIT': init, 'INIT_MANIFEST': manifest,
                  'SMOKE_ACCEPTED': smoke}.items():
         monkeypatch.setattr(C, k, v)

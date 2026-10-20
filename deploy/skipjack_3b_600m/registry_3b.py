@@ -121,6 +121,18 @@ DEFAULT_LAYOUT = 'A'
 JOB_PREFIX = 'kys_3b_'          # kys_ so the 1.5B tool and this tool both count these GPUs against the shared 20
 GPU_CEILING = 20
 GPUS_PER_SEGMENT = 4
+
+# ---- dedicated 8-GPU budget (owner authorization 2026-10-20; supersedes the shared-20 handoff path above) -----------
+# Every 3B GPU job (startup validation, segments, retries, evaluation) is named rw3b_gpu_*: NOT kys_, so the 1.5B tool,
+# whose submit refuses while any other kys_ job is live, keeps working, and its 20-GPU budget is not consumed.
+# At most two 4-GPU jobs at once, enforced by two serial afterok lanes (train8_3b.py).
+TRAIN8_PREFIX = 'rw3b_gpu_'
+TRAIN8_GPU_CEILING = 8
+TRAIN8_LANES = TRAIN8_GPU_CEILING // GPUS_PER_SEGMENT
+TRAIN8_DIR = REPORTS / 'train8'
+TRAIN8_STATE = TRAIN8_DIR / f'seed{SEED}'
+STARTUP = f'3b_seed{SEED}_startup'      # bounded startup validation, run on quality-first trunk1 itself (steps 0 -> 30)
+STARTUP_STEPS = (20, 30)                 # save at 20, resume 20 -> 30 with optimizer + LR state
 WANDB_PROJECT = 'zhc-3b-600m-20b-wsd'
 WANDB_ENTITY = 'imwytro-johns-hopkins-university'
 

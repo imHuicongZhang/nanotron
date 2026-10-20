@@ -157,6 +157,12 @@ def smoke_acceptance() -> dict:
     return acc
 
 
+# Retired 2026-10-20: the owner moved the 3B grid to a dedicated 8-GPU budget with full training authorized and no
+# separate smoke cycle. GPU work is submitted only by train8_3b.py (jobs rw3b_gpu_*). The plan/test-only/status/usage
+# commands still work; init_digest / seed_trunk_3b are still used by startup_3b.py.
+RETIRED = True
+
+
 def main(argv=None, slurm=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('command', choices=['plan', 'test-only', 'usage', 'smoke', 'guard', 'submit', 'status'])
@@ -166,6 +172,9 @@ def main(argv=None, slurm=None):
     ap.add_argument('--retry', default='')
     ap.add_argument('--dry-run', action='store_true')
     args = ap.parse_args(argv)
+    if RETIRED and args.command in ('smoke', 'guard', 'submit'):
+        sys.exit(f'capped_submit_3b.py {args.command} is RETIRED (2026-10-20): 3B GPU work goes through train8_3b.py only '
+                 '(dedicated 8-GPU budget); see training/reports/RECOVERY.md')
     slurm = slurm or cs.Slurm()
     if args.lanes * R.GPUS_PER_SEGMENT > R.GPU_CEILING:
         sys.exit(f'{args.lanes} lanes exceed the {R.GPU_CEILING}-GPU ceiling')
