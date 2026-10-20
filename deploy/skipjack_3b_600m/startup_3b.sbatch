@@ -59,5 +59,9 @@ rc=0
 run s_trunk && run s_resume && run s_straight || { rc=$?; echo "[startup3b] a phase failed (rc $rc); summarizing what ran"; }
 rm -rf "$WORK/ckpt/straight"     # the reference's seeded step-0 copy; nothing else is saved there
 python deploy/skipjack_3b_600m/startup_3b.py summarize --workdir "$WORK" || rc=1
+if [[ $rc -eq 0 ]]; then   # the DONE marker train8_3b.py reconciles on (only a passing validation writes it)
+  PASSED="$(dirname "$WORK")/PASSED"
+  mkdir -p "$PASSED" && cp "$WORK/startup_report.json" "$PASSED/" && cp "$TRUNK/30/model_config.json" "$PASSED/model_config.json"
+fi
 echo "[startup3b] $(date -Is) done rc=$rc; report $WORK/startup_report.json"
 exit $rc
