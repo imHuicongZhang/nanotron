@@ -76,9 +76,12 @@ def health(job: dict, segs: dict) -> dict:
             's_per_it': statistics.median(tail) if len(tail) >= 10 else None, 'problems': probs}
 
 
-def project(segs: dict, plan: dict, done: set, running: dict, s_per_it: float, wait_h: float, now: float) -> dict:
+def project(segs: dict, plan: dict, done: set, running: dict, s_per_it: float, wait_h: float, now: float,
+            slurm_start: dict | None = None) -> dict:
     """End time (epoch s) of every job: lanes in plan order, each start after its lane predecessor and scientific
-    upstream, plus wait_h for every job that has not started yet."""
+    upstream, plus wait_h for every job that has not started yet; a pending job with a Slurm start estimate starts no
+    earlier than that estimate (and gets no extra wait)."""
+    slurm_start = slurm_start or {}
     end = {}
     order = sorted(segs, key=lambda n: (plan['segments'][n]['lane'], plan['segments'][n]['order']))
     lanes = {}
@@ -100,7 +103,8 @@ def project(segs: dict, plan: dict, done: set, running: dict, s_per_it: float, w
             else:
                 if s.science_dep and s.science_dep not in end:
                     continue
-                start = max(free[li], end.get(s.science_dep, now)) + wait_h * 3600
+                start = max(free[li], end.get(s.science_dep, now))
+                start = max(start, slurm_start[n]) if n in slurm_start else start + wait_h * 3600
                 end[n] = start + s.steps * s_per_it + 1800
             free[li] = end[n]
             idx[li] += 1
@@ -182,16 +186,24 @@ def tick(dry: bool) -> int:
     rec['s_per_it_measured'] = s_meas
     rec['done'] = sorted(done)
     proj = {}
+    starts = {}
+    for j in jobs:
+        if j['state'] == 'PENDING' and j['start'][:2] == '20':
+            try:
+                starts[j['name'][len(R.TRAIN8_PREFIX):]] = time.mktime(time.strptime(j['start'], '%Y-%m-%dT%H:%M:%S'))
+            except ValueError:
+                pass
     if plan:
         for label, spi, wait in (('measured_no_wait', s_meas, 0.0), (f'measured_wait{QUEUE_WAIT_H:g}h', s_meas, QUEUE_WAIT_H),
                                  ('design_32.2_no_wait', T.DESIGN_S_PER_IT, 0.0)):
             if not spi:
                 continue
-            e = project(segs, plan, done, running_step, spi, wait, now)
+            e = project(segs, plan, done, running_step, spi, wait, now, starts)
             proj[label] = {s: {f'{20 * (i + 1)}B': fmt(e[R.seg_name(s, f'ep{i + 1}')]) for i in range(3)} for s in R.SETTINGS}
             proj[label]['all'] = fmt(max(e.values()))
             proj[label]['meets_deadline'] = max(e.values()) <= DEADLINE.timestamp()
     rec['projection'] = proj
+    rec['slurm_start_estimates'] = {n: fmt(t) for n, t in starts.items()}
     st['ticks'] = st['ticks'][-500:] + [rec]
     st['last'] = rec
     if len(done) == len(segs):
