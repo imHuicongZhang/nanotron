@@ -60,14 +60,18 @@ FORBIDDEN_PREFIXES = ['/weka/projects/bvandur1/zhuicon1/data/1p5_baseline', '/we
                       '/weka/projects/bvandur1/zhuicon1/checkpoints/rewrite-1p5b', '/weka/projects/bvandur1/zhuicon1/rewrite-3b/']
 
 # ---- corpus (dataset/05_final/<setting>/_pretrain_manifest.json, validated 2026-10-17; quality-base 2026-10-30) ----
-CORPUS_TRAIN_TOKENS = {'quality-first': 20_000_000_270, 'diversity-oriented': 19_834_314_433, 'disagreement-aware': 20_000_000_227}
-CORPUS_ROWS = {'quality-first': 32_341_160, 'diversity-oriented': 26_692_847, 'disagreement-aware': 26_743_280}
-CORPUS_PARTS = {'quality-first': 65, 'diversity-oriented': 54, 'disagreement-aware': 54}
+CORPUS_TRAIN_TOKENS = {'quality-first': 20_000_000_270, 'diversity-oriented': 19_834_314_433, 'disagreement-aware': 20_000_000_227,
+                       'quality-base': 20_000_000_299}   # shared base 10,000,000,186 + next-10B fastText block 10,000,000,113
+CORPUS_ROWS = {'quality-first': 32_341_160, 'diversity-oriented': 26_692_847, 'disagreement-aware': 26_743_280,
+               'quality-base': 17_942_518}           # 10,527,887 + 7,414,631
+CORPUS_PARTS = {'quality-first': 65, 'diversity-oriented': 54, 'disagreement-aware': 54, 'quality-base': 36}
 # Rows whose text became empty in the Stage 04 strip (stage04_assembly_20261016/STATUS.md, "empty after"; retained with
 # tokens_llama2 = 0). corpus_train_tokens counts one EOS for each; datatrove's reader skips a document without text
 # (the same recipe as every KYS corpus), so the tokenized stream holds exactly corpus_train_tokens - empty documents,
 # and datatrove reads CORPUS_ROWS - empty documents. Verified by tokenize job 1126253 (2026-10-17). Data unchanged.
-CORPUS_EMPTY_DOCS = {'quality-first': 27, 'diversity-oriented': 2, 'disagreement-aware': 8}
+# quality-base is raw (no strip): 0 zero-token rows in base or block by the verified flat token array; the Stage 05
+# validator recounts empty text on every shuffled row, and tokenize_3b's exact-total check refuses any drift.
+CORPUS_EMPTY_DOCS = {'quality-first': 27, 'diversity-oriented': 2, 'disagreement-aware': 8, 'quality-base': 0}
 TOKENIZED_TOKENS = {s: CORPUS_TRAIN_TOKENS[s] - CORPUS_EMPTY_DOCS[s] for s in CORPUS_TRAIN_TOKENS}
 SHARED_BASE_TRAIN_TOKENS = 10_000_000_186
 
