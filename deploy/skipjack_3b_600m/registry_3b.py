@@ -1,4 +1,4 @@
-"""Single source of truth for the 3B rewrite-600m grid (one seed, three settings, trunk + 3 decay branches).
+"""Single source of truth for the 3B rewrite-600m grid (one seed, four settings, trunk + 3 decay branches).
 
 Everything scientific that the configs, the submitter, the invariant check and the runbook use is defined
 here once. Nothing in this file is shared with the 1.5B baseline grid (tools/kys_raw/registry.py).
@@ -20,8 +20,15 @@ from __future__ import annotations
 from pathlib import Path
 
 SEED = 42
-SETTINGS = ['quality-first', 'diversity-oriented', 'disagreement-aware']      # 05_final/<setting>/shuffled
-EXCLUDED = ['quality-base', 'wrap-inspired', 'rewire-inspired']              # never trained in this grid
+SETTINGS = ['quality-first', 'diversity-oriented', 'disagreement-aware']      # 05_final/<setting>/shuffled; the train8 lanes
+# Four-setting grid (owner, 2026-10-30): Quality-Base = the shared base + the next 10B along the same fastText order, raw
+# (dataset/05_final/quality-base, prepared locally on CPU). It is PREPARED, not submittable: train8_3b.py, capped_submit_3b.py
+# and the monitor iterate SETTINGS only, and its configs live in their own directory (cfg_dir) so the live 27-config gate
+# (assert_invariants_3b --all, run in-job and by the train8 preflight) is unchanged. Only dataset/run/output identifiers
+# differ from the rewritten arms (test_quality_base_3b.py). Moving it into SETTINGS is an owner decision at release.
+PREPARED_SETTINGS = ['quality-base']
+GRID_SETTINGS = SETTINGS + PREPARED_SETTINGS                                  # 4 settings x 3 annealed finals = 12
+EXCLUDED = ['wrap-inspired', 'rewire-inspired']                              # never trained in this grid
 
 # ---- paths (all new namespaces; none is shared with the 1.5B baselines) ----------------------------------
 DATA_ROOT_600M = Path('/weka/projects/bvandur1/zhuicon1/rewrite-3b-600m')
@@ -39,6 +46,10 @@ TOKENIZER_SHA256 = {
     'tokenizer_report.json': '4dcd1212911e7acfd59068eab1b96ed8077584fecded75fe0335035d9913c8c1',
 }
 REPORTS = TRAIN_ROOT / 'reports'
+# Stage 05 validation that pins every shuffled part's sha256 (tokenize_3b.sbatch step 2)
+ASSEMBLY_VALIDATION = {**{s: DATA_ROOT_600M / 'dataset' / 'reports' / 'stage04_assembly_20261016' / 'validate_assembly_scope.json'
+                          for s in SETTINGS},
+                       'quality-base': DATA_ROOT_600M / 'dataset' / 'reports' / 'quality_base_20261030' / 'validate_quality_base.json'}
 STATE_ROOT = REPORTS / 'capped_submit'
 LOG_DIR = TRAIN_ROOT / 'logs' / 'slurm'
 WANDB_DIR = TRAIN_ROOT / 'wandb'
@@ -48,7 +59,7 @@ CKPT_ROOT = CKPT_BASE / 'runs'                                               # s
 FORBIDDEN_PREFIXES = ['/weka/projects/bvandur1/zhuicon1/data/1p5_baseline', '/weka/projects/bvandur1/zhuicon1/checkpoints/1p5_baseline',
                       '/weka/projects/bvandur1/zhuicon1/checkpoints/rewrite-1p5b', '/weka/projects/bvandur1/zhuicon1/rewrite-3b/']
 
-# ---- corpus (dataset/05_final/<setting>/_pretrain_manifest.json, validated 2026-10-17) -------------------
+# ---- corpus (dataset/05_final/<setting>/_pretrain_manifest.json, validated 2026-10-17; quality-base 2026-10-30) ----
 CORPUS_TRAIN_TOKENS = {'quality-first': 20_000_000_270, 'diversity-oriented': 19_834_314_433, 'disagreement-aware': 20_000_000_227}
 CORPUS_ROWS = {'quality-first': 32_341_160, 'diversity-oriented': 26_692_847, 'disagreement-aware': 26_743_280}
 CORPUS_PARTS = {'quality-first': 65, 'diversity-oriented': 54, 'disagreement-aware': 54}
@@ -138,6 +149,7 @@ WANDB_ENTITY = 'imwytro-johns-hopkins-university'
 
 # ---- site (same account/QoS/partition as the 1.5B baselines; the 20-GPU cap is this project's, not the QoS's)
 REPO = Path('/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-3b600m')     # this worktree, never the active 1.5B checkout
+CFG_ROOT = REPO / 'configs' / '3B-rewrite-600m'
 SITE = {
     'repo_dir': str(REPO),
     'env_activate': '/weka/scratch/jhu/bvandur1/zhuicon1/envs/pretrain/bin/activate',   # read-only use of the shared env
@@ -155,6 +167,12 @@ def slug(setting: str) -> str:
 
 def seg_name(setting: str, kind: str, seed: int = SEED) -> str:
     return f'3b_{slug(setting)}_seed{seed}_{kind}'
+
+
+def cfg_dir(setting: str, seed: int = SEED) -> Path:
+    """Rendered configs: the live grid's directory, or a separate one for a prepared (not yet submittable) setting."""
+    assert setting in GRID_SETTINGS, setting
+    return CFG_ROOT / (f'seed{seed}' if setting in SETTINGS else f'seed{seed}_prepared')
 
 
 def ckpt_dir(setting: str, kind: str, seed: int = SEED) -> Path:

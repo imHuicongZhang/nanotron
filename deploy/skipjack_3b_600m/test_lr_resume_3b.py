@@ -14,6 +14,7 @@ stores last_epoch == S. lr_scheduler_builder is extracted from helpers.py (that 
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -31,7 +32,8 @@ import registry_3b as R  # noqa: E402
 from lr_schedule_report import _builder  # noqa: E402
 from nanotron.serialize import optimizer as S  # noqa: E402
 
-CFG = str(R.REPO / 'configs' / '3B-rewrite-600m' / f'seed{R.SEED}' / '3b_quality_first_seed42_{}.yaml')
+_SETTING = os.environ.get('KYS3B_LR_SETTING', 'quality-first')   # any grid setting (test_quality_base_3b runs quality-base)
+CFG = str(R.cfg_dir(_SETTING) / f'{R.seg_name(_SETTING, "KIND")}.yaml').replace('KIND', '{}')
 REQUEUE = ('trunk2', 7000)  # trunk2 dies after update 7000 and restarts from checkpoint 7000
 
 

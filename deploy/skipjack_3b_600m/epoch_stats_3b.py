@@ -23,7 +23,7 @@ import registry_3b as R  # noqa: E402
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
-    ap.add_argument('--setting', choices=R.SETTINGS, required=True)
+    ap.add_argument('--setting', choices=R.GRID_SETTINGS, required=True)
     ap.add_argument('--json', type=Path)
     args = ap.parse_args(argv)
     folder = R.TOKENIZED / args.setting

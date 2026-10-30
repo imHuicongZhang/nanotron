@@ -2,7 +2,9 @@
 """Refuse a 3B rewrite-600m config that differs from what registry_3b.py specifies.
 
     python deploy/skipjack_3b_600m/assert_invariants_3b.py --config <seg>.yaml [--corpus] [--check-resume]
-    python deploy/skipjack_3b_600m/assert_invariants_3b.py --all [--corpus]       # every rendered config
+    python deploy/skipjack_3b_600m/assert_invariants_3b.py --all [--corpus]       # every config of the live grid (SETTINGS)
+    python deploy/skipjack_3b_600m/assert_invariants_3b.py --prepared [--corpus]  # the prepared settings' configs
+    python deploy/skipjack_3b_600m/assert_invariants_3b.py --grid [--corpus]      # all four settings (live + prepared)
 
 Checks:
   * the config equals generate_configs_3b.build() for its (setting, kind) under the layout recorded in its .env:
@@ -30,12 +32,25 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import generate_configs_3b as G  # noqa: E402
 import registry_3b as R  # noqa: E402
 
-CFG_DIR = R.REPO / 'configs' / '3B-rewrite-600m' / f'seed{R.SEED}'
+CFG_DIR = R.cfg_dir(R.SETTINGS[0])          # the live grid; --all checks exactly this directory
+
+
+def config_paths(settings) -> list[Path]:
+    """Every rendered config of `settings`, from their cfg_dir; refuses a missing or extra config."""
+    paths = []
+    for d in sorted({R.cfg_dir(s) for s in settings}):
+        mine = [s for s in settings if R.cfg_dir(s) == d]
+        want = sorted(d / f'{R.seg_name(s, k)}.yaml' for s in mine for k in R.KINDS)
+        have = sorted(d.glob('*.yaml'))
+        if have != want:
+            sys.exit(f'{d}: {len(have)} configs, expected exactly {len(want)} for {mine}')
+        paths += have
+    return paths
 
 
 def identify(cfg: dict) -> tuple[str, str]:
     run = cfg['general']['run']
-    for s in R.SETTINGS:
+    for s in R.GRID_SETTINGS:
         for k in R.KINDS:
             if run == R.seg_name(s, k):
                 return s, k
@@ -152,12 +167,17 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('--config', type=Path)
     ap.add_argument('--all', action='store_true', help=f'check every config in {CFG_DIR}')
+    ap.add_argument('--prepared', action='store_true', help='check every config of registry_3b.PREPARED_SETTINGS')
+    ap.add_argument('--grid', action='store_true', help='check every config of all four settings')
     ap.add_argument('--corpus', action='store_true')
     ap.add_argument('--check-resume', action='store_true')
     args = ap.parse_args(argv)
     paths = sorted(CFG_DIR.glob('*.yaml')) if args.all else [args.config]
     if args.all and len(paths) != len(R.SETTINGS) * len(R.KINDS):
         sys.exit(f'{CFG_DIR}: {len(paths)} configs, expected {len(R.SETTINGS) * len(R.KINDS)}')
+    if args.prepared or args.grid:
+        paths = config_paths(R.PREPARED_SETTINGS if args.prepared else R.GRID_SETTINGS)
+    multi = args.all or args.prepared or args.grid
     errs = []
     for p in paths:
         errs += check_config(p)
@@ -165,8 +185,8 @@ def main(argv=None):
             errs += check_corpus(p)
         if args.check_resume:
             errs += check_resume(p)
-    if args.all:
-        lays = {layout_of(p) for p in paths}
+    if multi:
+        lays = {layout_of(p) for p in paths} | ({layout_of(sorted(CFG_DIR.glob('*.yaml'))[0])} if args.prepared else set())
         if len(lays) != 1:
             errs.append(f'configs mix layouts {sorted(lays)}; one layout for the whole grid')
     if errs:

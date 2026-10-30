@@ -13,6 +13,7 @@
 # CPU only. Tokenize one final 600M corpus (array index -> setting) into nanotron .ds shards, then verify it.
 #
 #   sbatch --output=<TRAIN_ROOT>/logs/slurm/%x.%A_%a.log deploy/skipjack_3b_600m/tokenize_3b.sbatch
+#   sbatch --array=3 --output=... deploy/skipjack_3b_600m/tokenize_3b.sbatch        # quality-base (prepared setting)
 #
 # Same recipe as every KYS corpus (tools/kys_raw/tokenize_raw_text.sh): datatrove DocumentTokenizer, llama-2 tokenizer,
 # one </s> per document, no BOS, no re-shuffle; n_tasks = number of shuffled parts, so task i tokenizes exactly part i.
@@ -25,13 +26,14 @@ W=/weka/scratch/jhu/bvandur1/zhuicon1
 REPO=$W/projects/nanotron-kys-3b600m
 source $W/envs/pretrain/bin/activate
 cd "$REPO"
-SETTINGS=(quality-first diversity-oriented disagreement-aware)
+SETTINGS=(quality-first diversity-oriented disagreement-aware quality-base)   # = registry_3b.GRID_SETTINGS order
 S=${SETTINGS[${SLURM_ARRAY_TASK_ID:?run as an array job}]}
 eval "$(python - "$S" <<'PY'
 import sys; sys.path.insert(0, 'deploy/skipjack_3b_600m'); import registry_3b as R
 s = sys.argv[1]
 print(f'IN={R.FINAL / s / "shuffled"} OUT={R.TOKENIZED / s} TOK={R.TOKENIZER} TOKSRC={R.TOKENIZER_SOURCE} '
-      f'NPARTS={R.CORPUS_PARTS[s]} REPORTS={R.REPORTS} CFG={R.REPO}/configs/3B-rewrite-600m/seed{R.SEED}/{R.seg_name(s, "trunk1")}.yaml')
+      f'NPARTS={R.CORPUS_PARTS[s]} REPORTS={R.REPORTS} CFG={R.cfg_dir(s) / (R.seg_name(s, "trunk1") + ".yaml")} '
+      f'VALJSON={R.ASSEMBLY_VALIDATION[s]}')
 PY
 )"
 LOG=$REPORTS/tokenize/$S
@@ -57,11 +59,14 @@ print(f'[tok3b] tokenizer {tok}: {len(have)} files identical to the 1.5B tokeniz
 PY
 
 # 2. inputs are exactly the validated parts
-python - "$IN" "$S" "$NPARTS" <<'PY'
+python - "$IN" "$S" "$NPARTS" "$VALJSON" <<'PY'
 import hashlib, json, sys
 from pathlib import Path
 d, s, n = Path(sys.argv[1]), sys.argv[2], int(sys.argv[3])
-want = json.load(open('/weka/projects/bvandur1/zhuicon1/rewrite-3b-600m/dataset/reports/stage04_assembly_20261016/validate_assembly_scope.json'))['results'][s]['shuffled']['part_sha256']
+rep = json.load(open(sys.argv[4]))
+if rep.get('problems'):
+    sys.exit(f'{sys.argv[4]}: the assembly validation reported problems; refusing to tokenize')
+want = rep['results'][s]['shuffled']['part_sha256']
 have = sorted(p.name for p in d.glob('part_*.parquet'))
 if have != sorted(want) or len(have) != n:
     sys.exit(f'{d}: {len(have)} parts, validator recorded {len(want)} (expected {n})')
@@ -71,8 +76,8 @@ for name in have:
         while chunk := f.read(64 << 20):
             h.update(chunk)
     if h.hexdigest() != want[name]:
-        sys.exit(f'{d / name}: sha256 differs from validate_assembly_scope.json')
-print(f'[tok3b] {s}: {n} parts match validate_assembly_scope.json sha256')
+        sys.exit(f'{d / name}: sha256 differs from {sys.argv[4]}')
+print(f'[tok3b] {s}: {n} parts match {sys.argv[4]} sha256')
 PY
 
 # 3. tokenize (or reuse a complete earlier run: every datatrove task completed and one .ds per part)
