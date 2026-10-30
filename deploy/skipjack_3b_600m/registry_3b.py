@@ -17,6 +17,7 @@ writes with save_final_state.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 SEED = 42
@@ -31,11 +32,17 @@ GRID_SETTINGS = SETTINGS + PREPARED_SETTINGS                                  # 
 EXCLUDED = ['wrap-inspired', 'rewire-inspired']                              # never trained in this grid
 
 # ---- paths (all new namespaces; none is shared with the 1.5B baselines) ----------------------------------
-DATA_ROOT_600M = Path('/weka/projects/bvandur1/zhuicon1/rewrite-3b-600m')
+# Defaults are the Skipjack layout. Elsewhere (e.g. a download of blab-jhu/KYS-3B-pretraining-data) set the KYS3B_* env
+# overrides, or use portable_configs_3b.py, which sets them and checks that only path-valued config keys change.
+def _env_path(var: str, default: Path) -> Path:
+    return Path(os.environ[var]) if os.environ.get(var) else default
+
+
+DATA_ROOT_600M = _env_path('KYS3B_DATA_ROOT', Path('/weka/projects/bvandur1/zhuicon1/rewrite-3b-600m'))
 FINAL = DATA_ROOT_600M / 'dataset' / '05_final'                               # <setting>/shuffled/part_*.parquet
 TRAIN_ROOT = DATA_ROOT_600M / 'training'                                     # tokenized/, tokenizer/, reports/, logs/, wandb/
-TOKENIZED = TRAIN_ROOT / 'tokenized'
-TOKENIZER = TRAIN_ROOT / 'tokenizer'
+TOKENIZED = _env_path('KYS3B_TOKENIZED', TRAIN_ROOT / 'tokenized')            # <setting>/NNNNN_unshuffled.ds{,.index,.metadata}
+TOKENIZER = _env_path('KYS3B_TOKENIZER', TRAIN_ROOT / 'tokenizer')
 # The exact tokenizer of the 1.5B models: the directory the 1.5B training data was tokenized with, pinned by the
 # blab-jhu/KYS-Pre-Rewritten manifest.json. Its tokenizer.json is byte-identical to the one behind the 600M token counts
 # (tokenizers/llama2-unsloth-tokenizer) and to the published 1.5B HF exports (rewrite-1p5b-hf/*/tokenizer.json).
@@ -52,8 +59,8 @@ ASSEMBLY_VALIDATION = {**{s: DATA_ROOT_600M / 'dataset' / 'reports' / 'stage04_a
                        'quality-base': DATA_ROOT_600M / 'dataset' / 'reports' / 'quality_base_20261030' / 'validate_quality_base.json'}
 STATE_ROOT = REPORTS / 'capped_submit'
 LOG_DIR = TRAIN_ROOT / 'logs' / 'slurm'
-WANDB_DIR = TRAIN_ROOT / 'wandb'
-CKPT_BASE = Path('/weka/projects/bvandur1/zhuicon1/checkpoints/rewrite3b_600m')
+WANDB_DIR = _env_path('KYS3B_WANDB_DIR', TRAIN_ROOT / 'wandb')
+CKPT_BASE = _env_path('KYS3B_CKPT_BASE', Path('/weka/projects/bvandur1/zhuicon1/checkpoints/rewrite3b_600m'))
 INIT_ROOT = CKPT_BASE / 'init'                                               # _init_3B_seed42/0
 CKPT_ROOT = CKPT_BASE / 'runs'                                               # seed42/<setting>/<trunk|epN>/<setting>/seed42/<step>
 FORBIDDEN_PREFIXES = ['/weka/projects/bvandur1/zhuicon1/data/1p5_baseline', '/weka/projects/bvandur1/zhuicon1/checkpoints/1p5_baseline',
@@ -123,6 +130,8 @@ assert N_PARAMS == N_LAYERS * (4 * 2048 ** 2 + 3 * 2048 * 5632 + 2 * 2048) + 320
 INIT_STD = 0.02
 BASELINE_MODEL_CONFIG = Path('/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys/configs/1.5B-baseline-seed42/filled/'
                              'raw_diversity_oriented_seed42_trunk1.yaml')       # read only
+if not BASELINE_MODEL_CONFIG.is_file():   # off Skipjack: this branch's byte-identical copy (same commit 42c130ab)
+    BASELINE_MODEL_CONFIG = Path(__file__).resolve().parents[2] / 'configs' / '1.5B-baseline-seed42' / 'filled' / BASELINE_MODEL_CONFIG.name
 
 # ---- layout on 4 x H100 80GB (DP=4, TP=1, PP=1); mbs is fixed for all three settings ---------------------
 DP, TP, PP = 4, 1, 1
@@ -152,7 +161,7 @@ WANDB_PROJECT = 'zhc-3b-600m-20b-wsd'
 WANDB_ENTITY = 'imwytro-johns-hopkins-university'
 
 # ---- site (same account/QoS/partition as the 1.5B baselines; the 20-GPU cap is this project's, not the QoS's)
-REPO = Path('/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-3b600m')     # this worktree, never the active 1.5B checkout
+REPO = Path(__file__).resolve().parents[2]     # this checkout (on Skipjack the 3B worktree), never the active 1.5B checkout
 CFG_ROOT = REPO / 'configs' / '3B-rewrite-600m'
 SITE = {
     'repo_dir': str(REPO),

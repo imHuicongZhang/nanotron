@@ -169,6 +169,8 @@ def main(argv=None):
     ap.add_argument('--all', action='store_true', help=f'check every config in {CFG_DIR}')
     ap.add_argument('--prepared', action='store_true', help='check every config of registry_3b.PREPARED_SETTINGS')
     ap.add_argument('--grid', action='store_true', help='check every config of all four settings')
+    ap.add_argument('--dir', type=Path, help='check the four-setting grid rendered into this directory '
+                    '(portable_configs_3b.py output; run with the KYS3B_* overrides it prints)')
     ap.add_argument('--corpus', action='store_true')
     ap.add_argument('--check-resume', action='store_true')
     args = ap.parse_args(argv)
@@ -177,7 +179,11 @@ def main(argv=None):
         sys.exit(f'{CFG_DIR}: {len(paths)} configs, expected {len(R.SETTINGS) * len(R.KINDS)}')
     if args.prepared or args.grid:
         paths = config_paths(R.PREPARED_SETTINGS if args.prepared else R.GRID_SETTINGS)
-    multi = args.all or args.prepared or args.grid
+    if args.dir:
+        paths = sorted(args.dir.glob('*.yaml'))
+        if len(paths) != len(R.GRID_SETTINGS) * len(R.KINDS):
+            sys.exit(f'{args.dir}: {len(paths)} configs, expected {len(R.GRID_SETTINGS) * len(R.KINDS)}')
+    multi = args.all or args.prepared or args.grid or bool(args.dir)
     errs = []
     for p in paths:
         errs += check_config(p)
