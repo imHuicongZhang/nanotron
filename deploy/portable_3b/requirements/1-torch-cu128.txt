@@ -1,0 +1,5 @@
+# Step 1 of deploy/portable_3b/install_env.sh. torch 2.8.0 built for CUDA 12.8, from the official PyTorch wheel index:
+# the "+cu128" local version is not on PyPI, so this file names its own index. pip also resolves torch's own
+# dependencies here (nvidia-*-cu12, triton, sympy, ...); step 2 then pins each of them to the frozen versions.
+--index-url https://download.pytorch.org/whl/cu128
+torch==2.8.0+cu128

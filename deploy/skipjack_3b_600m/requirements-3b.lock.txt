@@ -1,3 +1,5 @@
+# FROZEN RECORD, not an install file: `pip install -r` of it fails on a clean host (torch==2.8.0+cu128 exists only on the
+# PyTorch index). Install with deploy/portable_3b/install_env.sh, whose requirements/ pin exactly these versions.
 # pip freeze of the Skipjack pretrain env that tokenized the corpora and runs the 3B grid (captured 2026-10-30).
 # Python 3.11.11, torch CUDA 12.8, H100 (sm_90). Install this repo itself with: pip install -e . (it is not pinned here).
 # flash-attn is the prebuilt v2.8.3 cu12/torch2.8/cp311 wheel below; building from source needs the CUDA toolkit and Python.h.

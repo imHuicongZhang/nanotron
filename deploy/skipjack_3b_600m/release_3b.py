@@ -8,17 +8,19 @@ Stages run in order; each writes <reports>/release_3b/<stage>.json and is skippe
 so a failed or timed-out job is resumed by resubmitting it (upload_large_folder resumes file by file).
 
   gate            tokenization verified for all four settings (epoch_stats.json), both assembly validations without
-                  problems, and from this checkout: assert_invariants_3b --grid --corpus, test_quality_base_3b,
-                  test_lr_resume_3b, test_portable_3b
+                  problems, and from this checkout: assert_invariants_3b --grid --corpus, the Skipjack tests and the
+                  portable tests (deploy/portable_3b/test_*.py: operator, render, init, LR continuity, install)
   code            this checkout must be clean and on BRANCH; secret scan of the branch diff; push BRANCH to origin as a
                   new branch or a fast-forward (never force); fresh clone of the pushed branch, HEAD == pushed commit,
                   and the config/invariant/LR-resume/portable tests rerun from that clone
   stage           hardlink tree (contents byte-identical, nothing rewritten) of the four shuffled corpora, tokenized
                   shards, tokenizer and provenance reports; sha256 of every file; cross-checks against the validation
                   reports, the pinned tokenizer, rows/parts/tokens/documents; RELEASE_MANIFEST, HANDOFF_RELEASE, README
-  remote_check    dataset repo visibility is PRIVATE (below); every remote file is either one of ours with the same size and sha256
-                  (reused) or the job stops (nothing is overwritten)
-  upload          upload_large_folder, then RELEASE_MANIFEST.json + HANDOFF_RELEASE.json + README.md in one commit; stops
+  remote_check    dataset repo visibility is VISIBILITY (below); every remote data file is one of ours with the same size
+                  and sha256 (reused) or the job stops (nothing is overwritten); the release's own top files (TOP) and
+                  receipts/ are metadata this pipeline replaces
+  upload          upload_large_folder (only files not yet on the Hub are sent), then TOP in one commit when their CONTENT
+                  (git blob sha1) differs, deleting a stale receipts/UPLOAD_RECEIPT.json in that same commit; stops
                   (record with the exact error) on repeated 401/403 (e.g. a storage quota) or on rate limiting that
                   lasts longer than RATE_LIMIT_MAX_S, instead of upload_large_folder's endless requeue
   verify_remote   exhaustive: every expected path exists remotely with the same size and sha256 (LFS sha256, or the file
@@ -51,6 +53,8 @@ sys.path.insert(0, str(HERE))
 import registry_3b as R  # noqa: E402
 
 REPO_ID = 'blab-jhu/KYS-3B-pretraining-data'
+PORTABLE_TESTS = ('portable_3b/test_portable_3b_operator', 'portable_3b/test_portable_3b_render',
+                  'portable_3b/test_portable_3b_init', 'portable_3b/test_portable_3b_lr', 'portable_3b/test_install_3b')
 PRIVATE = False      # public: authorized by the owner 2026-10-30, superseding the earlier private-only instruction
 VISIBILITY = 'private' if PRIVATE else 'public'
 FATAL_MAX = 3                 # 401/403 responses tolerated before upload stops (quota and permission errors do not heal)
@@ -127,6 +131,12 @@ def write_json(p: Path, obj) -> None:
     tmp.replace(p)
 
 
+def git_blob_sha1(path) -> str:
+    """The git object id of a file's content (what the Hub reports as blob_id for a non-LFS file)."""
+    data = Path(path).read_bytes()
+    return hashlib.sha1(b'blob %d\0' % len(data) + data).hexdigest()
+
+
 def sha256(path) -> str:
     h = hashlib.sha256()
     with open(path, 'rb') as f:
@@ -151,9 +161,10 @@ def run_checks(repo: Path) -> dict:
     out = {}
     cmds = {'invariants_grid_corpus': [PRETRAIN_PY, 'deploy/skipjack_3b_600m/assert_invariants_3b.py', '--grid', '--corpus'],
             'invariants_all': [PRETRAIN_PY, 'deploy/skipjack_3b_600m/assert_invariants_3b.py', '--all'],
-            **{t: [PRETRAIN_PY, '-m', 'pytest', '-q', '-p', 'no:cacheprovider', f'deploy/skipjack_3b_600m/{t}.py']
-               for t in ('test_quality_base_3b', 'test_lr_resume_3b', 'test_portable_3b', 'test_capped_submit_3b',
-                         'test_train8_3b', 'test_release_3b')}}
+            **{t: [PRETRAIN_PY, '-m', 'pytest', '-q', '-p', 'no:cacheprovider', '-W', 'ignore', f'deploy/{t}.py']
+               for t in ('skipjack_3b_600m/test_quality_base_3b', 'skipjack_3b_600m/test_lr_resume_3b',
+                         'skipjack_3b_600m/test_capped_submit_3b', 'skipjack_3b_600m/test_train8_3b',
+                         'skipjack_3b_600m/test_release_3b', *PORTABLE_TESTS)}}
     for name, argv in cmds.items():
         r = sh(argv, cwd=repo, env=clean_env(), check=False)
         out[name] = {'rc': r.returncode, 'tail': (r.stdout + r.stderr).strip().splitlines()[-3:]}
@@ -410,9 +421,24 @@ def handoff_release(manifest: dict, code: dict, manifest_sha: str) -> dict:
         'tokenizer': {'files': {n: f'tokenizer/{n}' for n in R.TOKENIZER_SHA256}, 'sha256': R.TOKENIZER_SHA256,
                       'source': 'the 1.5B KYS tokenizer (llama-2, unsloth/llama-2-7b), byte-identical; one </s> per document, no BOS'},
         'initialization': {'available': False,
-                           'reason': 'not yet created; it needs one GPU job and is created by the first trunk1 run',
-                           'procedure': 'deploy/skipjack_3b_600m/init_3b.sh + startup_3b.py derive-init (RELEASE.md, "Initialization")',
+                           'reason': 'not created: it needs the GPUs of one segment; the operator creates it once',
+                           'procedure': 'deploy/portable_3b/create_init.sh <CONFIG_ROOT>/site.env: the 1-step init run of '
+                                        '<CONFIG_ROOT>/init/init.yaml (startup.derive_init of the rendered quality-first '
+                                        'trunk1), then kys3b.py finalize-init -> <INIT_ROOT>/_init_3B_seed42/{0,init_manifest.json}; '
+                                        'every setting\'s trunk1 is seeded from it (initlib.seed_trunk, digest-checked)',
                            'shared_by': R.GRID_SETTINGS, 'seed': R.SEED, 'init_std': R.INIT_STD},
+        'portable': {'readme': 'deploy/portable_3b/README.md', 'operator_template': 'deploy/portable_3b/operator.template.yaml',
+                     'entry_point': 'deploy/portable_3b/kys3b.py', 'install': 'deploy/portable_3b/install_env.sh',
+                     'launchers': ['deploy/portable_3b/run_segment.sh', 'deploy/portable_3b/launch_torchrun.sh',
+                                   'deploy/portable_3b/create_init.sh'],
+                     'science': 'deploy/portable_3b/science_3b.py (also the source of the committed Skipjack configs)',
+                     'operator_supplies': ['paths', 'python env', 'W&B entity + project (online)',
+                                           'data_parallel_size / micro_batch_size / zero_stage / recompute_layer',
+                                           'nnodes / nproc_per_node / rendezvous', 'scheduler (slurm or none)'],
+                     'batch_rule': 'micro_batch_size x accumulation x data_parallel_size = 1024 sequences exactly; '
+                                   'tp = pp = 1; one deployment for all four settings and all segments',
+                     'skipjack_only': 'deploy/skipjack_3b_600m/ (historical Skipjack deployment; never imported by '
+                                      'deploy/portable_3b)'},
         'totals': {s: {k: d[k] for k in ('assembled_rows', 'assembled_train_tokens', 'empty_text_documents',
                                           'tokenized_tokens', 'tokenized_documents', 'n_parts', 'shortfall_vs_20B')}
                    for s, d in manifest['settings'].items()},
@@ -420,12 +446,12 @@ def handoff_release(manifest: dict, code: dict, manifest_sha: str) -> dict:
                               'tokenized_shards': [x['ds'] for x in d['tokenized_shards']]}
                           for s, d in manifest['settings'].items()},
         'notes': ['tokenized shard i is shuffled part i, in order; nanotron reads every *.ds of the folder',
-                  'run tools/fix_ds_metadata.py on each tokenized/<setting>/ after download (line 1 of .ds.metadata '
-                  'records the Skipjack tokenizer path); binaries are unchanged',
+                  'after download run kys3b.py relocate-metadata (tools/fix_ds_metadata.py on each tokenized/<setting>/: '
+                  'line 1 of .ds.metadata records the Skipjack tokenizer path); the .ds / .index binaries are unchanged',
                   'tokenized = assembled train tokens - empty-text documents (datatrove skips a document without text)',
                   'diversity-oriented: accepted shortfall of 165,685,567 tokens vs 20B, unchanged',
-                  'W&B: online; the operator supplies their own entity and project (portable_configs_3b.py '
-                  '--wandb-entity/--wandb-project); the committed Skipjack .env files name the Skipjack owner\'s entity'],
+                  'W&B: online to the operator\'s own entity and project (required in the operator config; the Skipjack '
+                  'entity is refused); share the project with Huicong through W&B; no credential is part of the release'],
     }
 
 
@@ -461,16 +487,23 @@ only the depth changed), trained for 20B / 40B / 60B tokens (WSD; finals at step
 
 * `corpora/<setting>/part_*.parquet`: the final shuffled corpus (seed 42), in training order, unchanged.
 * `tokenized/<setting>/NNNNN_unshuffled.ds{{,.index,.metadata}}`: nanotron/datatrove shards, shard i = part i. After
-  downloading run `tools/fix_ds_metadata.py --output-folder tokenized/<setting> --tokenizer-dir tokenizer` (line 1 of
-  each `.metadata` records the path the shards were written under).
+  downloading run `kys3b.py relocate-metadata` (line 1 of each `.metadata` records the path the shards were written
+  under; only that text line changes, the `.ds` / `.index` binaries do not).
 * `tokenizer/`: the exact 1.5B llama-2 tokenizer (sha256 in `HANDOFF_RELEASE.json`).
 * `reports/`: assembly/selection validation, tokenization statistics, LR-resume regression, `GRID_MANIFEST.json`.
 * `RELEASE_MANIFEST.json`: size and sha256 of every file, ordered parts and shards with rows/tokens/documents.
 * `HANDOFF_RELEASE.json`: code commit, grid, model, tokenizer and initialization provenance, totals.
 * `receipts/UPLOAD_RECEIPT.json`: the verified content revision and the verification results.
 
-No initialization checkpoint is included: none exists yet. It is created on GPU by the first trunk1 run
-(`deploy/skipjack_3b_600m/init_3b.sh`; see `RELEASE.md` in the code branch) and shared by all four settings.
+No initialization checkpoint is included: none exists yet. The operator creates it once on GPU
+(`deploy/portable_3b/create_init.sh`), and all four settings start from it.
+
+## Training with this data
+
+Use `deploy/portable_3b/` of the code branch: `README.md` there lists the install, the operator config
+(`operator.template.yaml`: your paths, environment, W&B entity/project, deployment and scheduler; nothing is
+defaulted) and the command sequence. `kys3b.py check --corpus` verifies a download against `RELEASE_MANIFEST.json`
+(`--hash` also hashes every token binary).
 
 ## Provenance and licensing
 
@@ -493,7 +526,8 @@ been reviewed for this release, so check each upstream source before reusing the
 
 def _remote_files(a, revision=None) -> tuple[dict, str, bool]:
     info = a.repo_info(REPO_ID, repo_type='dataset', revision=revision, files_metadata=True)
-    files = {s.rfilename: {'bytes': s.size, 'lfs_sha256': (s.lfs.sha256 if s.lfs else None)} for s in info.siblings}
+    files = {s.rfilename: {'bytes': s.size, 'lfs_sha256': (s.lfs.sha256 if s.lfs else None), 'blob_id': s.blob_id}
+             for s in info.siblings}
     return files, info.sha, bool(info.private)
 
 
@@ -518,9 +552,12 @@ def st_remote_check() -> dict:
         raise SystemExit(f'{REPO_ID} is {"private" if private else "public"}, expected {VISIBILITY}; refusing to upload')
     exp = _expected()
     tmp = WORK / 'remote_check_tmp'
-    reuse, conflict, unexpected = [], [], []
+    reuse, conflict, unexpected, replace = [], [], [], []
     for rel, m in remote.items():
-        if rel == '.gitattributes' or rel.startswith('receipts/'):
+        if rel == '.gitattributes':
+            continue
+        if rel in TOP or rel.startswith('receipts/'):      # this pipeline's own metadata of an earlier release
+            replace.append(rel)
             continue
         if rel not in exp:
             unexpected.append(rel)
@@ -530,7 +567,7 @@ def st_remote_check() -> dict:
             reuse.append(rel)
     shutil.rmtree(tmp, ignore_errors=True)
     return {'ok': not conflict and not unexpected, 'revision_before': rev, 'private': private, 'reused': len(reuse),
-            'conflicts': conflict, 'unexpected': unexpected}
+            'conflicts': conflict, 'unexpected': unexpected, 'metadata_to_replace': sorted(replace)}
 
 
 class _Breaker(logging.Handler):
@@ -576,7 +613,7 @@ def _other_uploaders() -> list[str]:
 
 
 def st_upload() -> dict:
-    from huggingface_hub import CommitOperationAdd
+    from huggingface_hub import CommitOperationAdd, CommitOperationDelete
     a = api()
     if _remote_files(a)[2] != PRIVATE:
         raise SystemExit(f'{REPO_ID} is not {VISIBILITY}; refusing to upload')
@@ -590,13 +627,15 @@ def st_upload() -> dict:
     finally:
         hf_log.removeHandler(breaker)
     remote, _, _ = _remote_files(a)
-    ops = [CommitOperationAdd(path_in_repo=n, path_or_fileobj=str(STAGE / n)) for n in TOP]
-    exp = _expected()
-    if all(n in remote and remote[n]['bytes'] == exp[n]['bytes'] for n in TOP):
+    stale = sorted(r for r in remote if r.startswith('receipts/'))
+    if all(n in remote and remote[n]['blob_id'] == git_blob_sha1(STAGE / n) for n in TOP) and not stale:
         commit = None
     else:
+        ops = [CommitOperationAdd(path_in_repo=n, path_or_fileobj=str(STAGE / n)) for n in TOP]
+        ops += [CommitOperationDelete(path_in_repo=r) for r in stale]
         commit = a.create_commit(REPO_ID, operations=ops, repo_type='dataset',
-                                 commit_message='KYS 3B four-setting release: manifest, handoff, dataset card').oid
+                                 commit_message=f'KYS 3B four-setting release: manifest, handoff, dataset card for code '
+                                                f'{(record("code") or {}).get("commit", "?")[:12]}').oid
     remote, rev, private = _remote_files(a)
     return {'ok': private == PRIVATE, 'top_commit': commit, 'revision': rev, 'private': private,
             'rate_limited_429': breaker.n_rate}

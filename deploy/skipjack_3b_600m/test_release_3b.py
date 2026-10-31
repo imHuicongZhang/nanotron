@@ -104,3 +104,48 @@ def test_card():
     assert 'license: other' in c and 'Private.' not in c
     for s in ('DCLM-RefinedWeb', 'Common Crawl', 'Qwen/Qwen2.5-7B-Instruct', 'Llama 2 Community License'):
         assert s in c
+
+
+def test_metadata_update_compares_content_and_drops_stale_receipt(tmp_path, monkeypatch):
+    """Republishing for a new code commit changes HANDOFF/README content but not necessarily their size: the top files
+    are compared by git blob sha1 and recommitted, and the previous receipt is deleted in the same commit."""
+    seen = {}
+    for n in RL.TOP:
+        (tmp_path / n).write_text(f'new {n} 0123456789abcdef')
+    old = {n: {'bytes': (tmp_path / n).stat().st_size, 'lfs_sha256': None, 'blob_id': '0' * 40} for n in RL.TOP}
+    old['receipts/UPLOAD_RECEIPT.json'] = {'bytes': 10, 'lfs_sha256': None, 'blob_id': '1' * 40}
+
+    class FakeApi:
+        def upload_large_folder(self, ignore_patterns, **kw):
+            seen['upload_ignore'] = list(ignore_patterns)
+
+        def create_commit(self, repo_id, operations, **kw):
+            seen['ops'] = [(type(op).__name__, op.path_in_repo) for op in operations]
+            return type('C', (), {'oid': 'c' * 40})()
+
+    monkeypatch.setattr(RL, 'STAGE', tmp_path)
+    monkeypatch.setattr(RL, 'api', FakeApi)
+    monkeypatch.setattr(RL, '_remote_files', lambda a, revision=None: (old, 'r' * 40, RL.PRIVATE))
+    assert RL.st_upload()['top_commit'] == 'c' * 40
+    assert sorted(seen['ops']) == sorted([('CommitOperationAdd', n) for n in RL.TOP] +
+                                         [('CommitOperationDelete', 'receipts/UPLOAD_RECEIPT.json')])
+    same = {n: {**old[n], 'blob_id': RL.git_blob_sha1(tmp_path / n)} for n in RL.TOP}       # already published
+    monkeypatch.setattr(RL, '_remote_files', lambda a, revision=None: (same, 'r' * 40, RL.PRIVATE))
+    seen.clear()
+    assert RL.st_upload()['top_commit'] is None and 'ops' not in seen
+
+
+def test_remote_check_treats_own_metadata_as_replaceable(tmp_path, monkeypatch):
+    data = {'tokenized/quality-base/00000_unshuffled.ds': {'bytes': 4, 'sha256': 'a' * 64}}
+    remote = {'tokenized/quality-base/00000_unshuffled.ds': {'bytes': 4, 'lfs_sha256': 'a' * 64, 'blob_id': 'x'},
+              **{n: {'bytes': 1, 'lfs_sha256': None, 'blob_id': 'y'} for n in RL.TOP},
+              'receipts/UPLOAD_RECEIPT.json': {'bytes': 1, 'lfs_sha256': None, 'blob_id': 'z'}, '.gitattributes': {}}
+    monkeypatch.setattr(RL, 'api', lambda: None)
+    monkeypatch.setattr(RL, '_remote_files', lambda a, revision=None: (remote, 'r' * 40, RL.PRIVATE))
+    monkeypatch.setattr(RL, '_expected', lambda: {**data, **{n: {'bytes': 2, 'sha256': 'b' * 64} for n in RL.TOP}})
+    monkeypatch.setattr(RL, 'WORK', tmp_path)
+    r = RL.st_remote_check()
+    assert r['ok'] and r['reused'] == 1 and r['conflicts'] == [] and \
+        r['metadata_to_replace'] == sorted([*RL.TOP, 'receipts/UPLOAD_RECEIPT.json'])
+    remote['tokenized/quality-base/00000_unshuffled.ds']['lfs_sha256'] = 'c' * 64              # a data file differs
+    assert RL.st_remote_check()['conflicts'] == ['tokenized/quality-base/00000_unshuffled.ds']

@@ -29,7 +29,6 @@ Gates (all re-evaluated on every smoke / guard / submit call, so nothing armed t
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import subprocess
 import sys
@@ -43,7 +42,8 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / 'skipjack_1p5b'))
 import capped_submit as cs  # noqa: E402  (the 1.5B tool, unchanged; its logic is reused, its grid is not)
 import handoff_gate  # noqa: E402
-import registry_3b as R  # noqa: E402
+import registry_3b as R  # noqa: E402  (puts deploy/portable_3b on sys.path)
+import initlib  # noqa: E402
 
 CFG_DIR = R.REPO / 'configs' / '3B-rewrite-600m' / f'seed{R.SEED}'
 SEGMENT_SBATCH = HERE / 'segment_3b.sbatch'
@@ -76,34 +76,12 @@ def load_segments() -> dict[str, cs.Segment]:
     return segs
 
 
-def init_digest(init: Path) -> dict:
-    files = sorted(p for p in init.rglob('*') if p.is_file())
-    h = hashlib.sha256()
-    for p in files:
-        if p.parts[-2:-1] != ('lr_scheduler',) and 'optimizer' not in p.parts:   # weights + config only
-            h.update(p.relative_to(init).as_posix().encode())
-            with open(p, 'rb') as f:
-                while chunk := f.read(16 << 20):
-                    h.update(chunk)
-    return {'files': len(files), 'weights_sha256': h.hexdigest()}
+init_digest = initlib.init_digest     # one implementation, shared with the portable tools (deploy/portable_3b/initlib.py)
 
 
 def seed_trunk_3b(c: dict, seed: int, s: cs.Segment) -> bool:
-    """Shared init -> <trunk>/0 + latest.txt (only if latest.txt is absent): identical weights for all three settings."""
-    trunk = s.ckpt
-    if (trunk / 'latest.txt').is_file():
-        return False
-    if trunk.exists() and any(p.is_dir() and p.name.isdigit() for p in trunk.iterdir()):
-        sys.exit(f'{trunk} holds step directories but no latest.txt; refusing to seed over a progressed trunk')
-    want = json.loads(INIT_MANIFEST.read_text())
-    if init_digest(INIT) != {'files': want['files'], 'weights_sha256': want['weights_sha256']}:
-        sys.exit(f'{INIT} does not match {INIT_MANIFEST}; refusing to seed')
-    trunk.mkdir(parents=True, exist_ok=True)
-    subprocess.run(['cp', '-a', str(INIT), str(trunk / '0')], check=True)
-    if init_digest(trunk / '0')['weights_sha256'] != want['weights_sha256']:
-        sys.exit(f'{trunk}/0 differs from the init after copying')
-    (trunk / 'latest.txt').write_text('0\n')
-    return True
+    """Shared init -> <trunk>/0 + latest.txt (only if latest.txt is absent): identical weights for all settings."""
+    return initlib.seed_trunk(s.ckpt, INIT, INIT_MANIFEST)
 
 
 cs.seed_trunk = seed_trunk_3b

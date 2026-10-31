@@ -3,6 +3,7 @@
 #SBATCH --ntasks=1
 #SBATCH --requeue
 #SBATCH --open-mode=append
+# SKIPJACK-ONLY (Skipjack worktree, partition, paths). Other sites: deploy/portable_3b/run_segment.sh / README.md.
 # One 3B rewrite-600m segment (trunk1-6 or ep1-3) on one 4 x H100 node. Same requeue-safe structure as
 # deploy/slurm/kys_segment.sbatch (unchanged, still used by the 1.5B grid); only the invariant check and the
 # repository differ. Partition, account, QoS, gres, time, name, output and dependencies come from

@@ -1,0 +1,5 @@
+# CPU tests of the release (deploy/portable_3b/test_*.py, deploy/skipjack_3b_600m/test_*.py); not needed for training.
+pytest==9.1.1
+pluggy==1.7.0
+iniconfig==2.3.1
+pygments==2.21.0

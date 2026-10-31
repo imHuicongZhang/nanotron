@@ -2,6 +2,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --open-mode=append
+# SKIPJACK-ONLY (Skipjack worktree, partition, paths). Other sites: deploy/portable_3b/run_segment.sh / README.md.
 # Bounded startup validation of the 3B grid, run on quality-first trunk1 itself (steps 0 -> 30, kept as real progress).
 # Submitted ONLY by deploy/skipjack_3b_600m/train8_3b.py as rw3b_gpu_3b_seed42_startup (lane 0 head, 4 x H100). The
 # production quality-first trunk1 job depends on it (afterok), so a failed check stops that lane; train8_monitor stops
@@ -37,7 +38,7 @@ python deploy/skipjack_3b_600m/assert_invariants_3b.py --all --corpus
 PYTHONPATH=/weka/projects/bvandur1/zhuicon1/rewrite-3b-600m/training/tools/pytest_pkgs \
   python -m pytest -q -p no:cacheprovider -W ignore deploy/skipjack_3b_600m/test_lr_resume_3b.py
 bash deploy/skipjack_3b_600m/init_3b.sh "$WORK/init"
-python deploy/skipjack_3b_600m/startup_3b.py derive --workdir "$WORK"
+python deploy/skipjack_3b_600m/startup_3b.py derive --config configs/3B-rewrite-600m/seed42/3b_quality_first_seed42_trunk1.yaml --workdir "$WORK"
 python deploy/skipjack_3b_600m/startup_3b.py seed-trunk --config configs/3B-rewrite-600m/seed42/3b_quality_first_seed42_trunk1.yaml
 python deploy/skipjack_3b_600m/startup_3b.py seed-trunk --config "$WORK/cfg/s_straight.yaml"
 
@@ -58,7 +59,8 @@ run() {   # run <phase>: torchrun one startup config with an nvidia-smi sampler
 rc=0
 run s_trunk && run s_resume && run s_straight || { rc=$?; echo "[startup3b] a phase failed (rc $rc); summarizing what ran"; }
 rm -rf "$WORK/ckpt/straight"     # the reference's seeded step-0 copy; nothing else is saved there
-python deploy/skipjack_3b_600m/startup_3b.py summarize --workdir "$WORK" || rc=1
+python deploy/skipjack_3b_600m/startup_3b.py summarize --config configs/3B-rewrite-600m/seed42/3b_quality_first_seed42_trunk1.yaml --workdir "$WORK" \
+    --mem-budget-gib 74.5 || rc=1
 if [[ $rc -eq 0 ]]; then   # the DONE marker train8_3b.py reconciles on (only a passing validation writes it)
   PASSED="$(dirname "$WORK")/PASSED"
   mkdir -p "$PASSED" && cp "$WORK/startup_report.json" "$PASSED/" && cp "$TRUNK/30/model_config.json" "$PASSED/model_config.json"

@@ -39,18 +39,10 @@ GRIDS = {
 
 
 def _builder():
-    import ast, functools, logging, math, typing
-    import torch
-    sys.path.insert(0, str(WT / 'src'))
-    from nanotron.config import LRSchedulerArgs
-    tree = ast.parse((WT / 'src/nanotron/helpers.py').read_text())
-    fn = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'lr_scheduler_builder'][0]
-    ns = {'LambdaLR': torch.optim.lr_scheduler.LambdaLR, 'math': math, 'log_rank': lambda *a, **k: None,
-          'logger': logging.getLogger(), 'logging': logging, 'Optimizer': torch.optim.Optimizer,
-          'LRSchedulerArgs': LRSchedulerArgs, 'partial': functools.partial}
-    ns.update({k: getattr(typing, k) for k in ('Optional', 'List', 'Dict', 'Union', 'Any', 'Tuple', 'Callable')})
-    exec(compile(ast.Module([fn], []), 'nanotron.helpers.lr_scheduler_builder', 'exec'), ns)
-    return ns['lr_scheduler_builder'], LRSchedulerArgs
+    """nanotron's lr_scheduler_builder of this checkout (deploy/portable_3b/lrsched.py extracts it from helpers.py)."""
+    sys.path.insert(0, str(HERE.parent / 'portable_3b'))
+    import lrsched
+    return lrsched.builder(str(WT))
 
 
 def replay(out: Path):

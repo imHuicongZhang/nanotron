@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SKIPJACK-ONLY (hard-coded Skipjack worktree; other sites: deploy/portable_3b/create_init.sh).
 # Create the shared 3B init (<INIT_ROOT>/_init_3B_seed42/{0,init_manifest.json}) exactly once, on a 4 x H100 node inside an
 # rw3b_gpu_* job (startup_3b.sbatch or segment_3b.sbatch for trunk1). Serialized by flock, so whichever job starts first
 # creates it and the other reuses it; an existing init is never overwritten (a half-written one stops the job).
@@ -18,7 +19,8 @@ if [[ -f "$INIT_PARENT/init_manifest.json" ]]; then
 fi
 [[ -e "$INIT_PARENT" ]] && { echo "[init3b] $INIT_PARENT exists without init_manifest.json; inspect it, never overwrite"; exit 1; }
 mkdir -p "$SCRATCH/logs"
-python deploy/skipjack_3b_600m/startup_3b.py derive-init --out "$SCRATCH/init.yaml" --ckpt "$SCRATCH/ckpt"
+python deploy/skipjack_3b_600m/startup_3b.py derive-init --config configs/3B-rewrite-600m/seed42/3b_quality_first_seed42_trunk1.yaml \
+    --out "$SCRATCH/init.yaml" --ckpt "$SCRATCH/ckpt"
 set -a; source configs/3B-rewrite-600m/seed42/3b_quality_first_seed42_trunk1.env; set +a
 export WANDB_RUN_GROUP=init WANDB_JOB_TYPE=init WANDB_MODE=offline
 python -u -m torch.distributed.run --nproc_per_node 4 --nnodes 1 --rdzv_backend c10d \

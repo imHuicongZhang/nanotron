@@ -1,0 +1,51 @@
+# KYS 3B grid: operator configuration. Copy this file, replace EVERY <<...>> value, then:
+#     $PYTHON deploy/portable_3b/kys3b.py validate --operator <your copy>
+# `validate` / `render` refuse any placeholder left, any missing or unknown key, a wrong type, a relative path, a path
+# or W&B entity or Slurm account of the publisher's (Skipjack) site, and any deployment whose
+#     micro_batch_size x gradient accumulation x data_parallel_size  !=  1024 sequences (x 2048 tokens).
+# Nothing here has a default: the release contains no GPU model, GPU count, path, account or W&B identity.
+# Scientific settings (model, tokenizer, seed, LR schedule, branch points, data) are NOT configurable here.
+
+paths:                    # absolute paths on YOUR cluster; directories are created when first needed
+  CODE_ROOT: "<<absolute path of this nanotron checkout (branch release/kys-3b-600m)>>"
+  DATA_ROOT: "<<absolute path of your download of blab-jhu/KYS-3B-pretraining-data (contains tokenized/ tokenizer/ RELEASE_MANIFEST.json)>>"
+  CONFIG_ROOT: "<<absolute path where the rendered configs, launch files and plan are written>>"
+  INIT_ROOT: "<<absolute path for the shared seed-42 initialization (_init_3B_seed42/ is created here)>>"
+  CHECKPOINT_ROOT: "<<absolute path for all training checkpoints (one folder per trunk and per branch)>>"
+  LOG_ROOT: "<<absolute path for launcher and scheduler logs>>"
+  REPORT_ROOT: "<<absolute path for check / prepare / startup reports>>"
+  WANDB_DIR: "<<absolute path for local W&B run files, on shared storage>>"
+
+environment:
+  PYTHON: "<<absolute path of the python of the env built by deploy/portable_3b/install_env.sh, i.e. ENV/bin/python>>"
+
+wandb:                    # online logging to YOUR account; run `wandb login` with your own key on the training hosts
+  WANDB_ENTITY: "<<your W&B user or team>>"
+  WANDB_PROJECT: "<<your W&B project>>"
+
+deployment:               # identical for all four settings and every segment (checkpoints of a chain keep it)
+  data_parallel_size: "<<int: data-parallel world size = launch.nnodes x launch.nproc_per_node (tensor/pipeline parallel are fixed at 1)>>"
+  micro_batch_size: "<<int: sequences per GPU per micro-batch; 1024 must be divisible by micro_batch_size x data_parallel_size>>"
+  zero_stage: "<<0 or 1>>"
+  recompute_layer: "<<true or false: activation recomputation per layer (less memory, more compute)>>"
+
+launch:                   # torchrun settings; ${VAR} references are resolved on the node at launch time
+  nnodes: "<<int: nodes per segment>>"
+  nproc_per_node: "<<int: GPUs per node>>"
+  rdzv_backend: c10d
+  rdzv_endpoint: "<<host:port reachable from all nodes, e.g. ${MASTER_ADDR}:29500 (the rendered Slurm files set MASTER_ADDR to the first node)>>"
+  rdzv_id: "<<unique id per launch, e.g. ${SLURM_JOB_ID}>>"
+
+scheduler:
+  type: "<<slurm or none (none: you start run_segment.sh / launch_torchrun.sh yourself)>>"
+  slurm:                  # with type none, delete this block or set `slurm: null`
+    account: "<<your Slurm account>>"
+    partition: "<<your GPU partition>>"
+    qos: null             # or your QOS
+    time: "<<wall time per job, [D-]HH:MM:SS>>"
+    gpus_per_node: "<<int: must equal launch.nproc_per_node>>"
+    cpus_per_task: "<<int: CPUs for the per-node task>>"
+    mem: null             # or e.g. 500G
+    constraint: null      # or a node feature
+    requeue: "<<true or false>>"
+    extra_sbatch: []      # e.g. ["--exclusive"]

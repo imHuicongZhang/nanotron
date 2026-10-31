@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-"""Render the runnable configs (setting x 6 trunk segments + 3 decay branches) of the 3B rewrite-600m grid.
+"""SKIPJACK-ONLY: render the Skipjack configs (setting x 6 trunk segments + 3 decay branches) of the 3B grid.
 
     python deploy/skipjack_3b_600m/generate_configs_3b.py [--layout A|B] [--out configs/3B-rewrite-600m/seed42]
     python deploy/skipjack_3b_600m/generate_configs_3b.py --settings quality-base     # prepared setting -> seed42_prepared/
 
-Every value comes from registry_3b.py; the output is fully rendered (no {{PLACEHOLDERS}}) because the grid
-runs only on skipjack. Re-rendering a live setting (registry_3b.SETTINGS) is refused once a submission state
+Every value comes from registry_3b.py (science from deploy/portable_3b/science_3b.py); the output is fully rendered
+with Skipjack paths. Other sites: deploy/portable_3b/kys3b.py render --operator <operator.yaml>. Re-rendering a live setting (registry_3b.SETTINGS) is refused once a submission state
 exists (the plan would no longer match the configs it scheduled), unless --force is given before anything was
 submitted. A prepared setting (registry_3b.PREPARED_SETTINGS) is not in any submission plan; it is rendered into
 registry_3b.cfg_dir(setting) with the layout recorded in the live grid's configs, so the grid keeps one layout.
@@ -30,50 +30,13 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import registry_3b as R  # noqa: E402
 
-TRUNK_CKPT_INTERVAL = 1000       # at most ~9 h lost on a crash at ~31 s/it; segment ends are saved regardless
-BRANCH_CKPT_INTERVAL = 100000    # branches save only their final state (a restart re-runs the branch)
-
 
 def build(setting: str, kind: str, layout: dict) -> dict:
-    if kind.startswith('trunk'):
-        decay_start, decay_steps = R.BRANCH_POINTS[-1], R.HORIZONS[-1] - R.BRANCH_POINTS[-1]
-        resume = str(R.ckpt_dir(setting, kind))
-        interval = TRUNK_CKPT_INTERVAL
-    else:
-        i = int(kind[-1]) - 1
-        decay_start, decay_steps = R.BRANCH_POINTS[i], R.HORIZONS[i] - R.BRANCH_POINTS[i]
-        resume = str(R.ckpt_dir(setting, 'trunk1') / str(decay_start))
-        interval = BRANCH_CKPT_INTERVAL
-    mbs = layout['micro_batch_size']
-    accum = R.GLOBAL_BATCH_SEQ // (mbs * R.DP)
-    assert mbs * accum * R.DP == R.GLOBAL_BATCH_SEQ
-    return {
-        'general': {'project': R.WANDB_PROJECT, 'run': R.seg_name(setting, kind), 'seed': R.SEED},
-        'model': {'ddp_bucket_cap_mb': 25, 'dtype': 'bfloat16', 'init_method': {'std': R.INIT_STD},
-                  'make_vocab_size_divisible_by': 1, 'model_config': dict(R.MODEL)},
-        'tokenizer': {'tokenizer_name_or_path': str(R.TOKENIZER)},
-        'tokens': {'train_steps': R.END_STEP[kind], 'val_check_interval': -1, 'limit_val_batches': 0,
-                   'limit_test_batches': 0, 'micro_batch_size': mbs, 'batch_accumulation_per_replica': accum,
-                   'sequence_length': R.SEQ_LEN},
-        'data_stages': [{'name': 'S0_rewrite600m_20B', 'start_training_step': 1,
-                         'data': {'dataset': {'dataset_folder': [str(R.TOKENIZED / setting)]},
-                                  'num_loading_workers': 1, 'seed': R.SEED}}],
-        'checkpoints': {'load_optimizer': kind != 'trunk1', 'load_lr_scheduler': kind != 'trunk1',
-                        'checkpoint_interval': interval, 'save_initial_state': False, 'save_final_state': True,
-                        'checkpoints_path': str(R.ckpt_dir(setting, kind)), 'resume_checkpoint_path': resume},
-        'optimizer': {'weight_decay': 0.1, 'clip_grad': 1.0, 'accumulate_grad_in_fp32': True,
-                      'learning_rate_scheduler': {'learning_rate': R.PEAK_LR, 'lr_warmup_steps': R.WARMUP_STEPS,
-                                                  'lr_warmup_style': 'linear', 'lr_decay_starting_step': decay_start,
-                                                  'lr_decay_style': 'linear', 'lr_decay_steps': decay_steps,
-                                                  'min_decay_lr': 0.0},
-                      'optimizer_factory': {'adam_beta1': 0.9, 'adam_beta2': 0.95, 'adam_eps': 1.0e-8,
-                                            'name': 'adamW', 'torch_adam_is_fused': True},
-                      'zero_stage': layout['zero_stage']},
-        'logging': {'iteration_step_info_interval': 1},
-        'parallelism': {'dp': R.DP, 'tp': R.TP, 'pp': R.PP, 'expert_parallel_size': 1, 'pp_engine': '1f1b',
-                        'tp_mode': 'REDUCE_SCATTER', 'tp_linear_async_communication': True,
-                        'recompute_layer': layout['recompute_layer']},
-    }
+    """The Skipjack config of one segment: science_3b.build_config with the Skipjack paths, W&B project and the 4-GPU
+    layout (the same builder renders the portable configs, so only those inputs can differ)."""
+    return R.SCI.build_config(setting, kind, tokenized_root=R.TOKENIZED, tokenizer_dir=R.TOKENIZER, runs_root=R.CKPT_ROOT,
+                              project=R.WANDB_PROJECT, dp=R.DP, micro_batch_size=layout['micro_batch_size'],
+                              zero_stage=layout['zero_stage'], recompute_layer=layout['recompute_layer'])
 
 
 HEADER = """\

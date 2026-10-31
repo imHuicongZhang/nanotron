@@ -1,69 +1,56 @@
 # KYS 3B four-setting release (code)
 
-Branch `release/kys-3b-600m` of `imHuicongZhang/nanotron`. The data is in the private HF dataset
+Branch `release/kys-3b-600m` of `imHuicongZhang/nanotron`. The data is in the **public** HF dataset
 `blab-jhu/KYS-3B-pretraining-data`; its `HANDOFF_RELEASE.json` names the code commit it was verified against.
 Trained models go to `blab-jhu/KYS-3B-pretraining-models` (nothing is uploaded there yet).
 
-## Grid (unchanged scientific definition; single source: `registry_3b.py`)
+**Running the grid on another cluster: `deploy/portable_3b/README.md`** (install, operator config, command
+sequence). Everything else in `deploy/skipjack_3b_600m/` is the historical Skipjack deployment.
+
+## Grid (scientific definition; single source: `deploy/portable_3b/science_3b.py`)
 
 | | |
 |---|---|
 | settings | quality-first, diversity-oriented, disagreement-aware (rewritten), quality-base (raw shared base + next 10B by the same fastText order) |
-| model | the 1.5B llama architecture with only `num_hidden_layers` 28 -> 57 (2,994,444,288 params, tied embeddings), bf16 |
+| model | the 1.5B llama architecture with only `num_hidden_layers` 28 -> 57 (2,994,444,288 params, tied embeddings, vocab 32000, hidden 2048, 16 attention / KV heads, FFN 5632), bf16 |
 | tokenizer | the 1.5B llama-2 tokenizer, sha256-pinned in `TOKENIZER_SHA256` |
-| seed / init | 42; one shared init for all settings (std 0.02, scaled output projections), see below |
-| batch | 1024 x 2048 = 2,097,152 tokens/step; layout A = DP 4, ZeRO-1, mbs 16, accum 16, recompute on |
+| seed / init | 42; one shared init for all four settings (std 0.02, scaled output projections) |
+| batch | 1024 x 2048 = 2,097,152 tokens per update = micro_batch_size x accumulation x data-parallel size x 2048; tp = pp = 1 |
 | LR (WSD) | AdamW (0.9, 0.95, 1e-8), wd 0.1, clip 1.0; warmup 1000 linear to 4e-4; constant; linear decay to 0 |
-| horizons | 20B / 40B / 60B = finals 9537 / 19073 / 28610, decay from branch points 8583 / 17166 / 25749 |
-| segments | trunk1..trunk6 (ends 4292 ... 25749; trunk1 weights-only from the init, later segments resume optimizer + LR), ep1..ep3 branch from the trunk step dirs and decay in their own namespace |
+| horizons | 20B / 40B / 60B = finals 9537 / 19073 / 28610 (20,000,538,624 / 39,998,980,096 / 59,999,518,720 tokens), decay from branch points 8583 / 17166 / 25749 |
+| segments | trunk1..trunk6 (ends 4292 ... 25749; trunk1 weights-only from the init, later segments and trunk1 past step 0 resume optimizer + LR + data position), ep1..ep3 branch from the fixed trunk step dirs and decay in their own namespace (never written back into the trunk) |
 | grid | 4 settings x 9 segments = 36 configs, 12 annealed finals |
 
-The LR-resume fix (`src/nanotron/serialize/optimizer.py`, off-by-one on resume) is included; regression test
-`test_lr_resume_3b.py` (replays the scheduler across every segment boundary against an uninterrupted run).
+The LR-resume fix (`src/nanotron/serialize/optimizer.py`, off-by-one on resume) is included; regression tests
+`deploy/skipjack_3b_600m/test_lr_resume_3b.py` (committed configs) and `deploy/portable_3b/test_portable_3b_lr.py`
+(portable configs of all four settings, with a negative control on the unfixed resume).
 
-## Portable vs Skipjack-specific
+## Portable vs Skipjack-only
 
-* Portable: the rendered YAML configs' scientific content, `registry_3b.py` constants, `generate_configs_3b.py`,
-  `assert_invariants_3b.py`, `epoch_stats_3b.py`, `portable_configs_3b.py`, `tools/fix_ds_metadata.py`,
+* **Portable** (`deploy/portable_3b/`, never imports `deploy/skipjack_3b_600m/`): `science_3b.py` (the contract),
+  `kys3b.py` (render / check / init / prepare / finish from one operator config), `operator.template.yaml`,
+  `startup.py`, `initlib.py`, `lrsched.py`, `run_segment.sh`, `launch_torchrun.sh`, `create_init.sh`,
+  `install_env.sh` + `requirements/`, `check_env.py`; plus `tools/fix_ds_metadata.py`, `tools/hash_init_checkpoint.py`,
   `tools/kys_eval/convert_to_hf.py`.
-* Skipjack only: `registry_3b.SITE`, `CPU_SLURM`, every `*.sbatch` header (partition/account/QoS/GPU limits), the
-  submit/monitor/lane tools (`train8_3b.py`, `capped_submit_3b.py`, `train8_monitor.*`, `handoff_*`), the hard-coded
-  worktree path in `init_3b.sh` and the sbatch files, and the committed configs' absolute paths.
-
-## Running elsewhere
-
-    pip install -r deploy/skipjack_3b_600m/requirements-3b.lock.txt && pip install -e .
-    hf download blab-jhu/KYS-3B-pretraining-data --repo-type dataset --revision <rev> --local-dir $DATA \
-        --include 'tokenized/*' 'tokenizer/*' 'RELEASE_MANIFEST.json'
-    for s in quality-first diversity-oriented disagreement-aware quality-base; do
-        python tools/fix_ds_metadata.py --output-folder $DATA/tokenized/$s --tokenizer-dir $DATA/tokenizer; done
-    wandb login                                                                                # your own key
-    python deploy/skipjack_3b_600m/portable_configs_3b.py --data $DATA --ckpt $CKPT --out $CFG \
-        --wandb-entity $YOUR_ENTITY --wandb-project $YOUR_PROJECT                              # prints the KYS3B_* exports
-    export KYS3B_...=...                                                                       # as printed
-    python deploy/skipjack_3b_600m/assert_invariants_3b.py --dir $CFG --corpus                 # 36 configs + exact token totals
-
-W&B: runs log online to the entity and project you pass. Both are required, and the Skipjack owner's entity is refused.
-They are written to every `.env` (`WANDB_ENTITY`, `WANDB_PROJECT`, `WANDB_MODE=online`) and to `general.project`. The
-committed Skipjack `.env` files name the Skipjack owner's entity, so don't source them elsewhere. No W&B credential is
-part of this branch or the dataset.
-
-`fix_ds_metadata.py` is required: nanotron loads the tokenizer named in line 1 of every `.ds.metadata`, which records
-the Skipjack path the shards were written under (`.../training/tokenizer|2`). It rewrites only that text line; the
-`.ds` / `.index` binaries are untouched.
-
-Each segment is `torchrun --nproc_per_node 4 run_train.py --config-file <cfg>` with the segment's `.env` sourced
-(W&B variables and the layout check). Order: trunk1 -> trunk2 -> ... -> trunk6; ep1 after trunk2, ep2 after trunk4,
-ep3 after trunk6 (`registry_3b.DEPENDS`). On Skipjack `segment_3b.sbatch` adds the resume-config rewrite
-(`startup_3b.py resume-config`) and the checks; reuse that logic.
+* **Skipjack-only** (`deploy/skipjack_3b_600m/`): `registry_3b.py` (Skipjack paths, Slurm site, 4-GPU layouts, W&B
+  owner, live 3-setting lanes; science imported from `science_3b.py`), the committed configs under
+  `configs/3B-rewrite-600m/` (Skipjack absolute paths), every `*.sbatch`, `init_3b.sh` (hard-coded Skipjack worktree),
+  `train8_*`, `capped_submit_3b.py`, `handoff_*`, `smoke_*`, `release_3b.py`, `startup_3b.py` (a Skipjack CLI over
+  `portable_3b/startup.py`), `generate_configs_3b.py`, `assert_invariants_3b.py`, `epoch_stats_3b.py`,
+  `requirements-3b.lock.txt` (the frozen env; install from `portable_3b/requirements/` instead).
+The committed Skipjack configs are byte-identical to what `generate_configs_3b.py` renders through `science_3b`, and
+`test_portable_3b_render.py` asserts that every portable config has the same science as them.
 
 ## Initialization
 
-No init checkpoint has been created yet (it needs a GPU). `init_3b.sh` creates it once, before trunk1 of the first
-setting: `startup_3b.py derive-init` writes a 1-step config from trunk1 with `save_initial_state`, nanotron saves
-step 0, and the result plus `init_manifest.json` (`capped_submit_3b.init_digest`: per-file sha256) is moved to
-`<CKPT_BASE>/init/_init_3B_seed42/`. Every setting's trunk1 starts weights-only from that same directory
-(`startup_3b.py seed-trunk`), so all four settings share one init. `tools/hash_init_checkpoint.py` re-hashes it.
+Not created yet (it needs the GPUs of one segment). Portable procedure: `deploy/portable_3b/create_init.sh` runs the
+1-step init config `<CONFIG_ROOT>/init/init.yaml`, which `kys3b.py render` derives from the rendered quality-first
+trunk1 config (`startup.derive_init`: only run name, train_steps 1, the init checkpoint folder, load flags off,
+`save_initial_state` on); `kys3b.py finalize-init` hashes step 0 (`initlib.init_digest`) and moves it with
+`init_manifest.json` to `<INIT_ROOT>/_init_3B_seed42/` (never overwritten). Every setting's trunk1 is seeded from that
+directory by `kys3b.py prepare` (digest-checked copy to `trunk/0` + `latest.txt`, never over progress).
+`tools/hash_init_checkpoint.py` gives a layout-independent hash for comparing inits across sites.
+On Skipjack the same functions run through `init_3b.sh` / `startup_3b.py derive-init --config <trunk1.yaml>`.
 
 ## Evaluation and conversion
 
@@ -74,15 +61,14 @@ step 0, and the result plus `init_manifest.json` (`capped_submit_3b.init_digest`
 
 ## Known issues
 
-* The Skipjack train8 lanes stopped at their first GPU job (startup 1187792, DIV trunk1 1187793): the nanotron dataset
-  helpers (`src/nanotron/data/nemo_dataset/Makefile`) are JIT-built with `g++`, whose include path comes from
-  `python3 -m pybind11 --includes` (`/usr/include/python3.11`, no `Python.h` on the compute nodes) and whose output
-  suffix comes from `python3-config` on PATH (resolved to a CPython 3.14 one). `segment_3b.sbatch` exports
-  `C_INCLUDE_PATH`, which `g++` does not read for C++. Elsewhere: use an environment whose `python3`/`python3-config`
-  are the training Python 3.11 with its headers installed (or set `CPLUS_INCLUDE_PATH`), or pre-build the helpers.
-* `test_train8_3b.py` and `test_capped_submit_3b.py` fail to collect in one pytest invocation (module name clash,
-  pre-existing); run them separately.
-* quality-base is a prepared setting (`registry_3b.PREPARED_SETTINGS`, configs in `seed42_prepared/`) so the live
-  three-setting Skipjack lanes and their 27-config gate stay unchanged; `--grid` / `--dir` check all four.
+* Fixed in this release, not yet exercised on a GPU node: the nanotron dataset helper (`src/nanotron/data/nemo_dataset`)
+  was JIT-built with whatever `python3` / `python3-config` were first on PATH, which on Skipjack picked a CPython 3.14
+  suffix and a header-less include dir and stopped the train8 lanes at their first GPU job (startup 1187792, DIV
+  trunk1 1187793). The Makefile now takes `PYTHON` (compile_helper passes `sys.executable`) and `install_env.sh`
+  pre-builds it with the env's interpreter. The interpreter must ship `Python.h` (the Skipjack pretrain env does not).
+* `test_train8_3b.py` and `test_capped_submit_3b.py` interfere when run in one pytest invocation (pre-existing, also at
+  08ebf6c7); run them separately, as the release gate does.
+* quality-base is a prepared setting in the Skipjack registry (`PREPARED_SETTINGS`, configs in `seed42_prepared/`) so
+  the live three-setting Skipjack lanes and their 27-config gate stay unchanged; the portable grid trains all four.
 * diversity-oriented has 19,834,314,433 train tokens (accepted 165,685,567 shortfall vs 20B); its epoch statistics are
   in the dataset repo.

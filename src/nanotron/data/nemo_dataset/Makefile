@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# PYTHON is the interpreter that will import the module (compile_helper passes sys.executable). Using the bare
+# `python3` / `python3-config` of PATH picked another interpreter's headers and extension suffix inside a venv
+# (e.g. a system python3-config naming a cpython-314 suffix), so the training process could not import the result.
+PYTHON ?= python3
 CXXFLAGS += -O3 -Wall -shared -std=c++11 -fPIC -fdiagnostics-color
-CPPFLAGS += $(shell python3 -m pybind11 --includes)
+CPPFLAGS += $(shell $(PYTHON) -m pybind11 --includes)
 LIBNAME = helpers
-LIBEXT = $(shell python3-config --extension-suffix)
+LIBEXT = $(shell $(PYTHON) -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))")
 
 default: $(LIBNAME)$(LIBEXT)
 

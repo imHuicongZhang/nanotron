@@ -1,5 +1,9 @@
 # 3B rewrite-600m grid: design record (revised 2026-10-17, NOT launched)
 
+> Historical Skipjack design record. The released grid has FOUR settings (quality-base added 2026-10-30); its
+> scientific values are now defined once in `deploy/portable_3b/science_3b.py` (imported by `registry_3b.py`, which
+> keeps only Skipjack paths/site). Running it elsewhere: `deploy/portable_3b/README.md`.
+
 Three settings (quality-first, diversity-oriented, disagreement-aware) trained on the validated 600M-based
 corpora at 3B scale. The grid uses seed 42, one shared init, and a WSD trunk with three decay branches.
 - Code: worktree `projects/nanotron-kys-3b600m`, branch `rewrite3b-600m-train`.

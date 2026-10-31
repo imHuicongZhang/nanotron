@@ -14,6 +14,7 @@
 import math
 import os
 import subprocess
+import sys
 from typing import List, Tuple, Union
 
 from nanotron import logging
@@ -27,11 +28,9 @@ def compile_helper():
     is invoked on a single process."""
 
     path = os.path.abspath(os.path.dirname(__file__))
-    ret = subprocess.run(["make", "-C", path])
+    ret = subprocess.run(["make", "-C", path, f"PYTHON={sys.executable}"])
     if ret.returncode != 0:
         log_rank("Making C++ dataset helpers module failed, exiting.", logger=logger, level=logging.ERROR, rank=0)
-        import sys
-
         sys.exit(1)
 
 
