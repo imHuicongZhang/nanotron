@@ -6,6 +6,8 @@ Asserts:
   * the dataset visibility the publisher enforces is public (owner authorization 2026-10-30);
   * the upload breaker stops, with the exact error recorded, on the third 401/403 (job 1385487's storage-quota 403
     message), and on 429s that continue past RATE_LIMIT_MAX_S, but not on 429s with gaps or on unrelated warnings;
+  * upload_large_folder gets a copy of TOP (it appends its default ignore patterns in place, which put '.git' into the
+    final commit's paths in job 1389362);
   * the dataset card states the visibility, the upstream provenance, and makes no license claim of its own.
 """
 from __future__ import annotations
@@ -70,6 +72,28 @@ def test_rate_limit_streak(breaker, tmp_path):
             _emit(breaker, RATE_429, logging.WARNING)
             breaker.clock[0] += 300
     assert 'rate limited' in json.loads((tmp_path / 'upload.json').read_text())['error']
+
+
+def test_upload_does_not_mutate_top(tmp_path, monkeypatch):
+    seen = {}
+
+    class FakeApi:
+        def upload_large_folder(self, ignore_patterns, **kw):
+            ignore_patterns += ['.git', '.git/*']                  # what huggingface_hub 1.13 does
+            seen['ignore'] = ignore_patterns
+
+        def create_commit(self, repo_id, operations, **kw):
+            seen['ops'] = [op.path_in_repo for op in operations]
+            return type('C', (), {'oid': 'c' * 40})()
+
+    for n in RL.TOP:
+        (tmp_path / n).write_text('{}')
+    monkeypatch.setattr(RL, 'STAGE', tmp_path)
+    monkeypatch.setattr(RL, 'api', FakeApi)
+    monkeypatch.setattr(RL, '_remote_files', lambda a, revision=None: ({}, 'r' * 40, RL.PRIVATE))
+    monkeypatch.setattr(RL, '_expected', lambda: {n: {'bytes': 2} for n in RL.TOP})
+    assert RL.st_upload()['ok']
+    assert isinstance(RL.TOP, tuple) and seen['ops'] == list(RL.TOP) and '.git' in seen['ignore']
 
 
 def test_card():

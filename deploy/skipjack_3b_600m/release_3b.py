@@ -70,7 +70,7 @@ WORK = R.TRAIN_ROOT / 'release_3b'
 STAGE = WORK / 'stage'
 REC = R.REPORTS / 'release_3b'
 STAGES = ['gate', 'code', 'stage', 'remote_check', 'upload', 'verify_remote', 'fresh_download', 'receipt']
-TOP = ['RELEASE_MANIFEST.json', 'HANDOFF_RELEASE.json', 'README.md']      # written by `stage`, committed last
+TOP = ('RELEASE_MANIFEST.json', 'HANDOFF_RELEASE.json', 'README.md')      # written by `stage`, committed last
 DATA = R.DATA_ROOT_600M / 'dataset'
 SELECTION_QB = DATA / '01_selection' / 'quality-base' / '_manifest.json'
 REPORT_FILES = {   # published path under reports/ -> local file (provenance and validation only)
@@ -585,7 +585,7 @@ def st_upload() -> dict:
     hf_log.addHandler(breaker)
     try:
         a.upload_large_folder(repo_id=REPO_ID, repo_type='dataset', folder_path=str(STAGE), private=PRIVATE,
-                              ignore_patterns=TOP, num_workers=int(os.environ.get('KYS3B_UPLOAD_WORKERS', 8)),
+                              ignore_patterns=list(TOP), num_workers=int(os.environ.get('KYS3B_UPLOAD_WORKERS', 8)),
                               print_report=False)
     finally:
         hf_log.removeHandler(breaker)
