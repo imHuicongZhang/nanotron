@@ -1,13 +1,18 @@
 #!/usr/bin/env python
-"""Render the four-setting 3B grid (36 configs + .env) for a machine other than Skipjack, changing ONLY paths.
+"""Render the four-setting 3B grid (36 configs + .env) for a machine other than Skipjack, changing ONLY paths and the
+W&B destination.
 
     python deploy/skipjack_3b_600m/portable_configs_3b.py --data <download of blab-jhu/KYS-3B-pretraining-data> \
-        --ckpt <checkpoint root> [--wandb <dir>] --out <dir>
+        --ckpt <checkpoint root> --wandb-entity <your entity> --wandb-project <your project> [--wandb <dir>] --out <dir>
+
+W&B: the operator's own entity and project are required (no default; the Skipjack owner's entity is refused), and
+logging stays online (WANDB_MODE=online, as on Skipjack). Log in with your own `wandb login`; no credential is
+packaged here. The project also becomes general.project in every YAML.
 
 <data> is the dataset repo layout: tokenized/<setting>/ and tokenizer/. The configs are rendered by
 generate_configs_3b.build/env_text with the KYS3B_* path overrides of registry_3b.py set, in the layout recorded in the
 committed Skipjack configs, and then compared with those committed configs: every difference must be one of the path
-keys below (and in the .env only WANDB_DIR), otherwise nothing is written. Scientific settings (architecture, tokenizer
+or W&B keys below (in the .env only WANDB_DIR / WANDB_ENTITY / WANDB_PROJECT), otherwise nothing is written. Scientific settings (architecture, tokenizer
 contents, seed, batch, LR schedule, branch points, finals, resume rules) are therefore identical by construction.
 
 Before training, point the downloaded tokenized metadata at the same tokenizer directory (nanotron reads line 1 of every
@@ -29,8 +34,8 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 PATH_KEYS = {'tokenizer.tokenizer_name_or_path', 'data_stages.0.data.dataset.dataset_folder.0',
-             'checkpoints.checkpoints_path', 'checkpoints.resume_checkpoint_path'}
-ENV_PATH_KEYS = {'WANDB_DIR'}
+             'checkpoints.checkpoints_path', 'checkpoints.resume_checkpoint_path', 'general.project'}
+ENV_PATH_KEYS = {'WANDB_DIR', 'WANDB_ENTITY', 'WANDB_PROJECT'}
 
 
 def _flat(x, pre=''):
@@ -48,9 +53,19 @@ def _env(text: str) -> dict:
     return dict(ln[len('export '):].split('=', 1) for ln in text.splitlines() if ln.startswith('export '))
 
 
-def overrides(data: Path, ckpt: Path, wandb: Path | None) -> dict:
+def overrides(data: Path, ckpt: Path, wandb: Path | None, entity: str, project: str) -> dict:
     return {'KYS3B_TOKENIZED': str(data / 'tokenized'), 'KYS3B_TOKENIZER': str(data / 'tokenizer'),
-            'KYS3B_CKPT_BASE': str(ckpt), 'KYS3B_WANDB_DIR': str(wandb or ckpt / 'wandb')}
+            'KYS3B_CKPT_BASE': str(ckpt), 'KYS3B_WANDB_DIR': str(wandb or ckpt / 'wandb'),
+            'KYS3B_WANDB_ENTITY': entity, 'KYS3B_WANDB_PROJECT': project}
+
+
+def check_wandb(entity: str, project: str) -> None:
+    import registry_3b as R
+    for name, v in (('--wandb-entity', entity), ('--wandb-project', project)):
+        if not v or not v.strip() or any(c.isspace() for c in v) or '=' in v:
+            sys.exit(f'{name} must be a non-empty W&B name without spaces or "=" (got {v!r})')
+    if entity == R.SKIPJACK_WANDB_ENTITY:
+        sys.exit(f'--wandb-entity {entity} is the Skipjack owner\'s entity; use your own')
 
 
 def _child(out: Path) -> None:
@@ -88,6 +103,8 @@ def compare(meta: dict, out: Path) -> list[str]:
             bad |= {f'env:{x}' for x in set(ea) | set(eb) if ea.get(x) != eb.get(x)} - {f'env:{x}' for x in ENV_PATH_KEYS}
             if bad:
                 errs.append(f'{n}: non-path keys differ from {d}: {sorted(bad)}')
+            if ea.get('WANDB_MODE') != 'online':
+                errs.append(f'{n}: WANDB_MODE is {ea.get("WANDB_MODE")!r}, expected online')
     return errs
 
 
@@ -95,10 +112,14 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('--data', type=Path, required=True, help='local copy of the dataset repo (tokenized/, tokenizer/)')
     ap.add_argument('--ckpt', type=Path, required=True, help='checkpoint root (init/ and runs/ are created under it)')
-    ap.add_argument('--wandb', type=Path, default=None)
+    ap.add_argument('--wandb', type=Path, default=None, help='WANDB_DIR (default <ckpt>/wandb)')
+    ap.add_argument('--wandb-entity', required=True, help='your W&B entity (user or team); runs log online there')
+    ap.add_argument('--wandb-project', required=True, help='your W&B project (also general.project in the YAML)')
     ap.add_argument('--out', type=Path, required=True)
     args = ap.parse_args(argv)
-    ov = overrides(args.data.resolve(), args.ckpt.resolve(), args.wandb and args.wandb.resolve())
+    check_wandb(args.wandb_entity, args.wandb_project)
+    ov = overrides(args.data.resolve(), args.ckpt.resolve(), args.wandb and args.wandb.resolve(),
+                   args.wandb_entity, args.wandb_project)
     meta = render(ov, args.out)
     errs = compare(meta, args.out)
     if errs:
@@ -108,6 +129,7 @@ def main(argv=None):
     print(f'wrote {2 * len(meta["settings"]) * len(meta["kinds"])} files to {args.out} (layout {meta["layout"]}); '
           f'only {sorted(PATH_KEYS | ENV_PATH_KEYS)} differ from the committed configs')
     print('export ' + ' '.join(f'{k}={v}' for k, v in ov.items()))
+    print(f'W&B: online, entity {args.wandb_entity}, project {args.wandb_project} (run `wandb login` with your own key)')
 
 
 if __name__ == '__main__':

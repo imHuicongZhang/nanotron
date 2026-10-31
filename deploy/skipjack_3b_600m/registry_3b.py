@@ -157,8 +157,11 @@ TRAIN8_DIR = REPORTS / 'train8'
 TRAIN8_STATE = TRAIN8_DIR / f'seed{SEED}'
 STARTUP = f'3b_seed{SEED}_startup'      # bounded startup validation, run on quality-first trunk1 itself (steps 0 -> 30)
 STARTUP_STEPS = (20, 30)                 # save at 20, resume 20 -> 30 with optimizer + LR state
-WANDB_PROJECT = 'zhc-3b-600m-20b-wsd'
-WANDB_ENTITY = 'imwytro-johns-hopkins-university'
+# W&B destination (always online). The defaults are the Skipjack owner's; elsewhere portable_configs_3b.py requires the
+# operator's own entity and project (--wandb-entity/--wandb-project -> KYS3B_WANDB_ENTITY/KYS3B_WANDB_PROJECT).
+SKIPJACK_WANDB_ENTITY = 'imwytro-johns-hopkins-university'
+WANDB_PROJECT = os.environ.get('KYS3B_WANDB_PROJECT') or 'zhc-3b-600m-20b-wsd'
+WANDB_ENTITY = os.environ.get('KYS3B_WANDB_ENTITY') or SKIPJACK_WANDB_ENTITY
 
 # ---- site (same account/QoS/partition as the 1.5B baselines; the 20-GPU cap is this project's, not the QoS's)
 REPO = Path(__file__).resolve().parents[2]     # this checkout (on Skipjack the 3B worktree), never the active 1.5B checkout

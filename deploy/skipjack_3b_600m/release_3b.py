@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Publish the four-setting 3B handoff: code branch on GitHub, data on the private HF dataset. CPU only; never trains.
+"""Publish the four-setting 3B handoff: code branch on GitHub, data on the public HF dataset. CPU only; never trains.
 
     python deploy/skipjack_3b_600m/release_3b.py run [--through <stage>]    # what release_3b.sbatch runs
     python deploy/skipjack_3b_600m/release_3b.py status
@@ -16,22 +16,27 @@ so a failed or timed-out job is resumed by resubmitting it (upload_large_folder 
   stage           hardlink tree (contents byte-identical, nothing rewritten) of the four shuffled corpora, tokenized
                   shards, tokenizer and provenance reports; sha256 of every file; cross-checks against the validation
                   reports, the pinned tokenizer, rows/parts/tokens/documents; RELEASE_MANIFEST, HANDOFF_RELEASE, README
-  remote_check    dataset repo is private; every remote file is either one of ours with the same size and sha256
+  remote_check    dataset repo visibility is PRIVATE (below); every remote file is either one of ours with the same size and sha256
                   (reused) or the job stops (nothing is overwritten)
-  upload          upload_large_folder (private), then RELEASE_MANIFEST.json + HANDOFF_RELEASE.json + README.md in one commit
+  upload          upload_large_folder, then RELEASE_MANIFEST.json + HANDOFF_RELEASE.json + README.md in one commit; stops
+                  (record with the exact error) on repeated 401/403 (e.g. a storage quota) or on rate limiting that
+                  lasts longer than RATE_LIMIT_MAX_S, instead of upload_large_folder's endless requeue
   verify_remote   exhaustive: every expected path exists remotely with the same size and sha256 (LFS sha256, or the file
-                  downloaded and hashed), no unexpected files, still private; records the content revision
+                  downloaded and hashed), no unexpected files, visibility unchanged; records the content revision
   fresh_download  sampled, at that revision into an empty directory and cache: tokenizer files (sha256, encode check),
                   first and last parquet part of each setting (sha256, rows, text), one tokenized shard triple of each
                   setting (sha256, tokens, documents)
   receipt         UPLOAD_RECEIPT.json (local) and receipts/UPLOAD_RECEIPT.json on the Hub describing the content revision;
                   the final revision must differ from it by that one file
+
+`run` refuses to start while another rw3b_release job is running, so there is only ever one uploader.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import logging
 import os
 import re
 import shutil
@@ -46,6 +51,12 @@ sys.path.insert(0, str(HERE))
 import registry_3b as R  # noqa: E402
 
 REPO_ID = 'blab-jhu/KYS-3B-pretraining-data'
+PRIVATE = False      # public: authorized by the owner 2026-10-30, superseding the earlier private-only instruction
+VISIBILITY = 'private' if PRIVATE else 'public'
+FATAL_MAX = 3                 # 401/403 responses tolerated before upload stops (quota and permission errors do not heal)
+RATE_LIMIT_MAX_S = 3600       # stop once 429s have continued this long (a gap of RATE_LIMIT_GAP_S ends a streak)
+RATE_LIMIT_GAP_S = 900
+JOB_NAME = 'rw3b_release'
 MODEL_REPO_ID = 'blab-jhu/KYS-3B-pretraining-models'      # trained models later; nothing is uploaded there here
 CODE_REMOTE = 'git@github.com:imHuicongZhang/nanotron.git'
 CODE_HTTPS = 'https://github.com/imHuicongZhang/nanotron.git'
@@ -142,7 +153,7 @@ def run_checks(repo: Path) -> dict:
             'invariants_all': [PRETRAIN_PY, 'deploy/skipjack_3b_600m/assert_invariants_3b.py', '--all'],
             **{t: [PRETRAIN_PY, '-m', 'pytest', '-q', '-p', 'no:cacheprovider', f'deploy/skipjack_3b_600m/{t}.py']
                for t in ('test_quality_base_3b', 'test_lr_resume_3b', 'test_portable_3b', 'test_capped_submit_3b',
-                         'test_train8_3b')}}
+                         'test_train8_3b', 'test_release_3b')}}
     for name, argv in cmds.items():
         r = sh(argv, cwd=repo, env=clean_env(), check=False)
         out[name] = {'rc': r.returncode, 'tail': (r.stdout + r.stderr).strip().splitlines()[-3:]}
@@ -412,7 +423,9 @@ def handoff_release(manifest: dict, code: dict, manifest_sha: str) -> dict:
                   'run tools/fix_ds_metadata.py on each tokenized/<setting>/ after download (line 1 of .ds.metadata '
                   'records the Skipjack tokenizer path); binaries are unchanged',
                   'tokenized = assembled train tokens - empty-text documents (datatrove skips a document without text)',
-                  'diversity-oriented: accepted shortfall of 165,685,567 tokens vs 20B, unchanged'],
+                  'diversity-oriented: accepted shortfall of 165,685,567 tokens vs 20B, unchanged',
+                  'W&B: online; the operator supplies their own entity and project (portable_configs_3b.py '
+                  '--wandb-entity/--wandb-project); the committed Skipjack .env files name the Skipjack owner\'s entity'],
     }
 
 
@@ -427,7 +440,7 @@ pretty_name: KYS 3B pretraining data (four settings)
 
 # KYS 3B pretraining data — four settings, seed 42
 
-Private. Training data for the KYS 3B grid: a 57-layer, 2,994,444,288-parameter llama model (the 1.5B architecture with
+Training data for the KYS 3B grid: a 57-layer, 2,994,444,288-parameter llama model (the 1.5B architecture with
 only the depth changed), trained for 20B / 40B / 60B tokens (WSD; finals at steps 9537 / 19073 / 28610). Code:
 [{CODE_URL}/tree/{BRANCH}]({CODE_URL}/tree/{BRANCH}) at `{code['commit']}`. Trained models will be published to
 `{MODEL_REPO_ID}`.
@@ -458,6 +471,23 @@ only the depth changed), trained for 20B / 40B / 60B tokens (WSD; finals at step
 
 No initialization checkpoint is included: none exists yet. It is created on GPU by the first trunk1 run
 (`deploy/skipjack_3b_600m/init_3b.sh`; see `RELEASE.md` in the code branch) and shared by all four settings.
+
+## Provenance and licensing
+
+This release does not set its own license (`license: other`). The terms of the inputs below apply. They have not
+been reviewed for this release, so check each upstream source before reusing the data.
+
+* **Source text**: a 600M-document sample of DCLM-RefinedWeb (DataComp-LM), web text derived from Common Crawl. All raw
+  documents (the shared base and the whole quality-base block) are the source text unchanged (checked by the stage-04
+  validation, `reports/stage04_assembly/`).
+* **Rewritten text** (the 10B strategy block of quality-first / diversity-oriented / disagreement-aware): generated by
+  `Qwen/Qwen2.5-7B-Instruct` (vLLM, bf16) from those DCLM documents, with the 1.5B KYS prompt set byte for byte.
+* **Selection signals**: the DCLM fastText quality ranking and the KYS ModernBERT quality scorer
+  (`blab-jhu/KYS-Modernbert-Quality-Scorer@0afde2e6`).
+* **Tokenizer** (`tokenizer/`): the Llama-2 tokenizer files (via `unsloth/llama-2-7b`). Llama-2 materials are
+  distributed under Meta's Llama 2 Community License.
+* Selection and assembly evidence, including a recorded `-dirty` selection-code tag and its reproduction check:
+  `reports/stage04_assembly/PROVENANCE_SELECTION.md`.
 """
 
 
@@ -484,8 +514,8 @@ def _expected() -> dict:
 def st_remote_check() -> dict:
     a = api()
     remote, rev, private = _remote_files(a)
-    if not private:
-        raise SystemExit(f'{REPO_ID} is not private; refusing to upload')
+    if private != PRIVATE:
+        raise SystemExit(f'{REPO_ID} is {"private" if private else "public"}, expected {VISIBILITY}; refusing to upload')
     exp = _expected()
     tmp = WORK / 'remote_check_tmp'
     reuse, conflict, unexpected = [], [], []
@@ -503,14 +533,62 @@ def st_remote_check() -> dict:
             'conflicts': conflict, 'unexpected': unexpected}
 
 
+class _Breaker(logging.Handler):
+    """upload_large_folder logs a failed worker task and requeues it forever (a 403 storage quota looped for 3.5 h in job
+    1385487). Record the exact error and exit on 401/403, or on 429s that last longer than RATE_LIMIT_MAX_S."""
+    FATAL = re.compile(r'\b40[13] (Forbidden|Unauthorized|Client Error)|storage limit', re.I)
+    RATE = re.compile(r'\b429\b|Rate limited', re.I)
+
+    def __init__(self):
+        super().__init__(logging.WARNING)
+        self.fatal, self.n_rate, self.streak, self.last_rate = [], 0, None, 0.0
+
+    def emit(self, rec: logging.LogRecord) -> None:
+        msg, now = rec.getMessage(), time.time()
+        if self.FATAL.search(msg):
+            self.fatal.append(msg)
+        elif self.RATE.search(msg):
+            self.n_rate += 1
+            if self.streak is None or now - self.last_rate > RATE_LIMIT_GAP_S:
+                self.streak = now
+            self.last_rate = now
+        else:
+            return
+        if len(self.fatal) >= FATAL_MAX:
+            self.stop('quota or permission error', self.fatal[-1])
+        elif self.streak is not None and now - self.streak > RATE_LIMIT_MAX_S:
+            self.stop(f'rate limited (429) continuously for {round(now - self.streak)} s', msg)
+
+    def stop(self, why: str, msg: str) -> None:
+        err = [ln for ln in msg.splitlines() if ln.strip()]
+        write_json(REC / 'upload.json', {'ok': False, 'error': why, 'message': err[:8], 'n_fatal': len(self.fatal),
+                                         'rate_limited_429': self.n_rate, 'stage': 'upload',
+                                         'finished': time.strftime('%Y-%m-%dT%H:%M:%S'),
+                                         'job': os.environ.get('SLURM_JOB_ID')})
+        log(f'upload: STOPPED ({why}): {" | ".join(err[:3])}')
+        os._exit(3)
+
+
+def _other_uploaders() -> list[str]:
+    r = sh(['squeue', '-h', '-u', os.environ.get('USER', ''), '-n', JOB_NAME, '-t', 'RUNNING,CONFIGURING', '-o', '%i'],
+           check=False)
+    return [j for j in r.stdout.split() if j != os.environ.get('SLURM_JOB_ID')]
+
+
 def st_upload() -> dict:
     from huggingface_hub import CommitOperationAdd
     a = api()
-    if not _remote_files(a)[2]:
-        raise SystemExit(f'{REPO_ID} is not private; refusing to upload')
-    a.upload_large_folder(repo_id=REPO_ID, repo_type='dataset', folder_path=str(STAGE), private=True,
-                          ignore_patterns=TOP, num_workers=int(os.environ.get('KYS3B_UPLOAD_WORKERS', 8)),
-                          print_report=False)
+    if _remote_files(a)[2] != PRIVATE:
+        raise SystemExit(f'{REPO_ID} is not {VISIBILITY}; refusing to upload')
+    breaker = _Breaker()
+    hf_log = logging.getLogger('huggingface_hub')
+    hf_log.addHandler(breaker)
+    try:
+        a.upload_large_folder(repo_id=REPO_ID, repo_type='dataset', folder_path=str(STAGE), private=PRIVATE,
+                              ignore_patterns=TOP, num_workers=int(os.environ.get('KYS3B_UPLOAD_WORKERS', 8)),
+                              print_report=False)
+    finally:
+        hf_log.removeHandler(breaker)
     remote, _, _ = _remote_files(a)
     ops = [CommitOperationAdd(path_in_repo=n, path_or_fileobj=str(STAGE / n)) for n in TOP]
     exp = _expected()
@@ -520,7 +598,8 @@ def st_upload() -> dict:
         commit = a.create_commit(REPO_ID, operations=ops, repo_type='dataset',
                                  commit_message='KYS 3B four-setting release: manifest, handoff, dataset card').oid
     remote, rev, private = _remote_files(a)
-    return {'ok': private, 'top_commit': commit, 'revision': rev, 'private': private}
+    return {'ok': private == PRIVATE, 'top_commit': commit, 'revision': rev, 'private': private,
+            'rate_limited_429': breaker.n_rate}
 
 
 def st_verify_remote() -> dict:
@@ -539,7 +618,7 @@ def st_verify_remote() -> dict:
                 bad.append(rel)
     shutil.rmtree(tmp, ignore_errors=True)
     unexpected = sorted(set(remote) - set(exp) - {'.gitattributes'} - {r for r in remote if r.startswith('receipts/')})
-    return {'ok': private and not missing and not bad and not unexpected, 'content_revision': rev, 'private': private,
+    return {'ok': private == PRIVATE and not missing and not bad and not unexpected, 'content_revision': rev, 'private': private,
             'checked': len(exp), 'checked_by_lfs_sha256': len(exp) - len(missing) - downloaded,
             'checked_by_download': downloaded, 'missing': missing, 'mismatched': bad, 'unexpected': unexpected,
             'remote_total_bytes': sum(remote[r]['bytes'] for r in exp if r in remote)}
@@ -600,6 +679,7 @@ def st_receipt() -> dict:
     receipt = {
         'ready': ready,
         'dataset': {'repo': REPO_ID, 'url': f'https://huggingface.co/datasets/{REPO_ID}', 'private': vr['private'],
+                    'visibility': VISIBILITY,
                     'content_revision': vr['content_revision'], 'n_files': vr['checked'], 'total_bytes': vr['remote_total_bytes'],
                     'release_manifest_sha256': record('stage')['top_files']['RELEASE_MANIFEST.json']['sha256']},
         'code': {k: code[k] for k in ('repo', 'branch', 'commit', 'branch_url', 'commit_url')},
@@ -609,7 +689,7 @@ def st_receipt() -> dict:
             'exhaustive': {'local': 'sha256 of every file; parquet sha256 = assembly validation; tokenizer sha256 pinned; '
                                     'rows/parts/train tokens/tokenized tokens/documents = registry (stage)',
                            'remote': f'all {vr["checked"]} files: path, size and sha256 ({vr["checked_by_lfs_sha256"]} by '
-                                     f'LFS sha256, {vr["checked_by_download"]} downloaded and hashed); no unexpected files; private',
+                                     f'LFS sha256, {vr["checked_by_download"]} downloaded and hashed); no unexpected files; {VISIBILITY}',
                            'code': 'grid invariants (36 configs + four corpora exact), QB/LR-resume/portable/submitter tests '
                                    'from this checkout and from a fresh clone of the pushed branch'},
             'sampled': {'fresh_download': recs['fresh_download']['sampled_files'], 'checks': recs['fresh_download']['checks']},
@@ -625,7 +705,7 @@ def st_receipt() -> dict:
     remote, final, private = _remote_files(a)
     before, _, _ = _remote_files(a, revision=vr['content_revision'])
     delta = sorted(set(remote) ^ set(before)) + sorted(r for r in before if r in remote and remote[r] != before[r])
-    ok = private and delta == ['receipts/UPLOAD_RECEIPT.json'] and \
+    ok = private == PRIVATE and delta == ['receipts/UPLOAD_RECEIPT.json'] and \
         remote['receipts/UPLOAD_RECEIPT.json']['bytes'] == (REC / 'UPLOAD_RECEIPT.json').stat().st_size
     return {'ok': ok, 'final_revision': final, 'content_revision': vr['content_revision'], 'commit_url': info.commit_url,
             'delta_vs_content_revision': delta, 'private': private, 'receipt_sha256': sha256(REC / 'UPLOAD_RECEIPT.json')}
@@ -646,6 +726,9 @@ def main(argv=None):
             r = record(s)
             print(f'{s:15s} {"-" if r is None else ("ok" if r.get("ok") else "FAILED")}')
         return 0
+    if others := _other_uploaders():
+        log(f'another {JOB_NAME} job is running ({", ".join(others)}); refusing to start a second uploader')
+        return 2
     for s in STAGES[:STAGES.index(args.through) + 1]:
         r = record(s)
         if r and r.get('ok'):

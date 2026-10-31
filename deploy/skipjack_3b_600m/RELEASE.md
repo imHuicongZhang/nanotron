@@ -37,9 +37,16 @@ The LR-resume fix (`src/nanotron/serialize/optimizer.py`, off-by-one on resume) 
         --include 'tokenized/*' 'tokenizer/*' 'RELEASE_MANIFEST.json'
     for s in quality-first diversity-oriented disagreement-aware quality-base; do
         python tools/fix_ds_metadata.py --output-folder $DATA/tokenized/$s --tokenizer-dir $DATA/tokenizer; done
-    python deploy/skipjack_3b_600m/portable_configs_3b.py --data $DATA --ckpt $CKPT --out $CFG   # prints the KYS3B_* exports
+    wandb login                                                                                # your own key
+    python deploy/skipjack_3b_600m/portable_configs_3b.py --data $DATA --ckpt $CKPT --out $CFG \
+        --wandb-entity $YOUR_ENTITY --wandb-project $YOUR_PROJECT                              # prints the KYS3B_* exports
     export KYS3B_...=...                                                                       # as printed
     python deploy/skipjack_3b_600m/assert_invariants_3b.py --dir $CFG --corpus                 # 36 configs + exact token totals
+
+W&B: runs log online to the entity and project you pass. Both are required, and the Skipjack owner's entity is refused.
+They are written to every `.env` (`WANDB_ENTITY`, `WANDB_PROJECT`, `WANDB_MODE=online`) and to `general.project`. The
+committed Skipjack `.env` files name the Skipjack owner's entity, so don't source them elsewhere. No W&B credential is
+part of this branch or the dataset.
 
 `fix_ds_metadata.py` is required: nanotron loads the tokenizer named in line 1 of every `.ds.metadata`, which records
 the Skipjack path the shards were written under (`.../training/tokenizer|2`). It rewrites only that text line; the
