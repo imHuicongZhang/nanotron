@@ -52,15 +52,34 @@ The list lives in `tools/kys_raw/registry.py`. Every tool reads it from there.
 
 ## Order of work
 
-1. Seeds run one after another: 42, then 43, then 44. Each seed starts only after the previous seed's 21 finals are
-   uploaded.
-2. Within a seed, the 7 chains run in parallel. Each chain has 6 segments:
+**What runs now is the rebuttal set: nine chains.** Each of these settings runs at seeds 42, 43 and 44:
+`raw_diversity_oriented`, `raw_disagreement_aware` and `signal-disagreement-lambda0`. That is 54 segments and 27
+annealed finals. The other five raw settings (`raw_random`, `raw_rewire_inspired`, `raw_top10b_fineweb_edu`,
+`raw_top10b_modernbert`, `raw_top10b_consensus`) are **not** part of it and must not be queued: always pass
+`--settings` to `plan_submit.py`, and tokenize only the two raw settings above. The full commands are in WORKFLOW §1b.
+
+Launch order on a 32-GPU allocation, with four GPUs per chain:
+- **Wave 1, eight chains at once, all at dp 4 / mbs 32 / accum 8:** `raw_diversity_oriented` and
+  `raw_disagreement_aware` at seeds 42, 43 and 44, plus `signal-disagreement-lambda0` at seeds 42 and 43. The seeds
+  run concurrently; this replaces the serial-seed rule below for the rebuttal set.
+- **Wave 2:** `signal-disagreement-lambda0` seed 44, once wave 1 leaves the GPUs free.
+  - On one 8-GPU node, use dp 8 / mbs 32 / accum 4. The launcher supports this: one node per job, and the GPU count
+    is the config's `dp`. It needs a `marc-cluster-8gpu` entry rendered into `filled-dp8/`.
+  - Otherwise, use four GPUs at dp 4 like wave 1.
+  - dp 8 is not supported across two 4-GPU nodes.
+
+The structure below is that of the full grid; the rebuttal set uses it unchanged for its nine chains.
+
+1. Full grid only: seeds run one after another: 42, then 43, then 44. Each seed starts only after the previous seed's
+   24 finals are uploaded.
+2. Within a seed, the 8 chains run in parallel. Each chain has 6 segments:
    - `trunk1` 1→4292, `trunk2` →8583, `trunk3` →12875: the stable phase, chained through `latest.txt`;
    - `ep1` 4292→4768, `ep2` 8583→9537, `ep3` 12875→14305: linear decay to 0, each resuming from its trunk step
      directory.
 3. Dependencies (`afterok`): trunk2 after trunk1, trunk3 after trunk2, ep1 after trunk1, ep2 after trunk2, ep3 after
    trunk3.
-4. Totals: 7 settings × 3 seeds = 21 chains, 126 segments, 63 annealed finals.
+4. Totals: full grid 8 settings × 3 seeds = 24 chains, 144 segments, 72 annealed finals. Rebuttal set: 9 chains,
+   54 segments, 27 annealed finals.
 
 ## Tokenizing from raw_text
 
@@ -106,7 +125,8 @@ An eighth setting in `tools/kys_raw/registry.py` (family `lambda_grid`). It is *
 λ = 0 arm of the Disagreement-Aware rewritten grid: the shared 5B anchor plus the 5B rewritten half chosen by
 `u = q + 0·√var3`, i.e. pure quality. The published `disagreement_aware` arm is λ = 0.5, and it is this setting's
 comparator. It runs on the identical schedule, batch (mbs 32 / accum 8 / dp 4), init checkpoints and seeds, so
-the rest of this runbook applies unchanged. It adds 3 chains (18 segments, 9 annealed finals).
+the rest of this runbook applies unchanged. (Exception in the rebuttal set: seed 44 may run at dp 8 / accum 4 on one
+8-GPU node; see Order of work.) It adds 3 chains (18 segments, 9 annealed finals).
 
 - **Configs:** `configs/1.5B-baseline-seed<S>/signal-disagreement-lambda0_seed<S>_<segment>.{yaml,env}` and
   `templates/`, produced by `generate_configs.py` → `render_placeholders.py`. They are identical to
@@ -165,7 +185,7 @@ tokenized data and checkpoints from that run are deleted, so this entry re-creat
    ```bash
    python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed <S>
    ```
-   This re-renders the 42 templates of that seed into `configs/1.5B-baseline-seed<S>/filled/`, derives accum and
+   This re-renders the 48 templates of that seed (or the `--settings` subset) into `configs/1.5B-baseline-seed<S>/filled/`, derives accum and
    checks the memory fit. Never edit rendered configs by hand. Placeholders in the shipped configs:
    `{{DATA_ROOT}} {{TOKENIZER_PATH}} {{CKPT_ROOT}} {{WANDB_ENTITY}} {{WANDB_DIR}} {{CLUSTER}} {{RECOMPUTE_LAYER}}`.
 3. **Parallelism.** Global batch 1024 × 2048; dp = GPUs per node; **mbs 32** with `recompute_layer: true` on 80 GB
@@ -188,7 +208,8 @@ tokenized data and checkpoints from that run are deleted, so this entry re-creat
    Loss at steps 1 / 10 / 20 was 10.8 / 8.83 / 8.18–8.19 in all four (agreement to about 0.01 at three significant
    figures; no bitwise claim).
    - Wall time at 22.8 s/it: 27.2 h per trunk segment, 3.0 / 6.0 / 9.1 h for ep1 / ep2 / ep3.
-   - Per chain: 15,735 steps, 99.7 node-hours. Whole grid (21 chains): 2,093 node-hours.
+   - Per chain: 15,735 steps, 99.7 node-hours. Whole grid (24 chains): 2,392 node-hours. Rebuttal set (9 chains):
+     897 node-hours.
    - **`slurm.time` must exceed the longest stretch without a checkpoint** (about 9.5 h at 22.8 s/it) with margin,
      so ≥ 12 h. `plan_submit.py --s-per-it` enforces this.
 5. **Invariants.** `fill_placeholders.py` runs `assert_invariants.py --skip-corpus --skip-env` on every config.
@@ -229,7 +250,10 @@ Use your own wandb project, or `mode: offline` with `wandb.dir` on shared storag
 
 ## Evaluation
 
-Use `github.com/imHuicongZhang/kys-eval`: 63 cells, reference check first, `run_grid`, then `aggregate`. The commands
+Use `github.com/imHuicongZhang/kys-eval` at `main` `c8aa8ff` or later, which covers `signal-disagreement-lambda0`
+(paired with `disagreement_aware`). The full grid is 72 cells; the rebuttal set is 27, selected with
+`--settings raw_diversity_oriented raw_disagreement_aware signal-disagreement-lambda0`. Run the reference check
+first, then `run_grid`, then `aggregate`. The commands
 are in WORKFLOW §14 and the kys-eval README. Upload `results/` and `reports/` to `rewrite-1p5b/seed<S>/eval/`.
 
 ## Contact

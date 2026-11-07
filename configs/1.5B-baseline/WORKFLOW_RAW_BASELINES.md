@@ -7,8 +7,13 @@ the raw text of the seven raw corpora, the tokenizer and, under `signal-disagree
 already-tokenized eighth corpus (§2d; added in revision `8a394d84`, so `4ba8df66` and earlier lack it).
 **Init:** `huggingface.co/wytro/Know-Your-Sources-init`, revision `87e13356`.
 **Outputs go to:** `huggingface.co/blab-jhu/KYS-1.5B-Raw-Selected-Baselines`.
-**Evaluation:** `github.com/imHuicongZhang/kys-eval`, branch `main`, at or after `50bb288`.
+**Evaluation:** `github.com/imHuicongZhang/kys-eval`, branch `main`, at or after `c8aa8ff` (the first commit that
+covers `signal-disagreement-lambda0`; 72-cell grid).
 **Comparators:** `huggingface.co/wytro/KYS-1.5B-Rewritten-v2`, revision `b22c8733`.
+
+**What to run now: the rebuttal set, §1b** (nine chains: `raw_diversity_oriented`, `raw_disagreement_aware` and
+`signal-disagreement-lambda0`, each at seeds 42, 43 and 44). The other five raw settings are not part of it and must
+not be queued.
 
 This document is the single entry point. It is self-contained. The other files are detailed references:
 `RUNBOOK.md`, `README.md` (this directory), `INSTALL.md` and the kys-eval README.
@@ -53,7 +58,8 @@ files are byte-unchanged.
 | strategy-linked audit: each raw strategy half rebuilt from `wytro/Know-Your-Sources@9e5ff241` alone; anchors vs the arms' anchors | all four equal the published corpora; anchors identical; no overlap or duplicates |
 | consumer tokenization of the four strategy-linked corpora (files checked against `manifest.json` sha256) | datatrove totals = `expected_total_tokens` exactly; every document is text + `</s>`, no `<s>` |
 | `signal-disagreement-lambda0` (2026-11-06; RUNBOOK "Additional setting"): anchor ids vs `raw_disagreement_aware`'s anchor; `pp_io.bucketed_shuffle(seed 42)` recomputed; 6,000 rows re-tokenized; 26 tokenized shards vs their parquet files; 18 configs rendered against the data | anchor identical (4,120,164); shuffle order reproduced exactly; `train_tokens` = text tokens in all rows; total 10,000,002,556; full `assert_invariants.py` passes on 18/18 |
-| kys-eval `selftest` (7 settings, 63 cells) | pass (run in the preparation Python env, not a fresh `./install.sh` venv) |
+| kys-eval `selftest` at `c8aa8ff` (8 settings, 72 cells; `signal-disagreement-lambda0` paired with `disagreement_aware`) | pass (run in the preparation Python env, not a fresh `./install.sh` venv) |
+| rebuttal set (§1b, 2026-11-07): the 54 configs of its nine chains rendered against this cluster's data at dp 4; `signal-disagreement-lambda0` seed 44 also at dp 8 (mbs 32 / accum 4); a dry run of `fill_placeholders.py` + `plan_submit.py` with an 8-GPU `marc-cluster-8gpu` entry for that chain | full `assert_invariants.py` passes on 54/54 (dp 4) and 6/6 (dp 8), corpus totals exact; the dp-8 plan requests `--gres=gpu:8 --nodes=1` and leaves seed 44's dp-4 configs untouched; nothing submitted |
 
 **Still pending, and Marc's to run** (hardware- and site-dependent): the INSTALL.md environment and smoke checks
 §3.1–3.4 on his nodes; measured s/it and peak memory; `fill_placeholders.py` / `plan_submit.py --test-only` against
@@ -142,8 +148,84 @@ from random initialization, and exits 0. Two guards prevent this:
 - `afterok` dependencies make it unschedulable;
 - `assert_invariants.py --check-resume`, run inside every job before `torchrun`, refuses to start.
 
-**Seeds run one after another.** Start seed 43 only after all 24 ep finals of seed 42 exist and are uploaded, and
-seed 44 likewise. Within a seed the eight chains are independent and should run in parallel.
+**Seeds run one after another — for the full grid only.** Start seed 43 only after all 24 ep finals of seed 42 exist
+and are uploaded, and seed 44 likewise. Within a seed the eight chains are independent and should run in parallel.
+**The rebuttal set (§1b) replaces this rule: its three seeds run concurrently.**
+
+---
+
+## 1b. Execution plan: the rebuttal set (nine chains) — run this, not the full grid
+
+**What runs:** nine setting-seed chains, 54 segments, 27 annealed finals. Schedule, segments, init checkpoints and
+mbs are exactly those of §1.
+
+| setting | seeds | GPUs per chain | parallelism |
+|---|---|---:|---|
+| `raw_diversity_oriented` | 42, 43, 44 | 4 | dp 4 / mbs 32 / accum 8 |
+| `raw_disagreement_aware` | 42, 43, 44 | 4 | dp 4 / mbs 32 / accum 8 |
+| `signal-disagreement-lambda0` | 42, 43 | 4 | dp 4 / mbs 32 / accum 8 |
+| `signal-disagreement-lambda0` | 44 | 8 if one node has 8 GPUs, otherwise 4 | dp 8 / mbs 32 / accum 4, otherwise dp 4 / mbs 32 / accum 8 |
+
+**Not part of the rebuttal set, and must not be queued:** `raw_random`, `raw_rewire_inspired`,
+`raw_top10b_fineweb_edu`, `raw_top10b_modernbert`, `raw_top10b_consensus`. Their templates and configs stay in the
+repo; the full grid (§1) is unchanged. So:
+- always pass `--settings` to `plan_submit.py`. Without it, the script plans all eight settings of the seed;
+- tokenize only `raw_diversity_oriented` and `raw_disagreement_aware` (§5), and run the `signal-disagreement-lambda0`
+  check and `fix_ds_metadata.py` (§5). The other five raw corpora are not needed.
+
+**Launch order on a 32-GPU allocation: 8 job slots of 4 GPUs, one chain per slot.**
+
+*Wave 1: eight chains at once, all at dp 4 with the `marc-cluster` entry.* That is `raw_diversity_oriented` and
+`raw_disagreement_aware` at seeds 42, 43 and 44, plus `signal-disagreement-lambda0` at seeds 42 and 43.
+
+```bash
+W1=raw_diversity_oriented,raw_disagreement_aware,signal-disagreement-lambda0
+python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed 42 --settings $W1
+python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed 43 --settings $W1
+python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed 44 --settings raw_diversity_oriented,raw_disagreement_aware
+# for each line below: first without --submit (plan), then with --test-only (§9), then with --submit
+python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 --s-per-it <measured> --settings $W1 --submit
+python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 43 --s-per-it <measured> --settings $W1 --submit
+python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 44 --s-per-it <measured> \
+    --settings raw_diversity_oriented,raw_disagreement_aware --submit
+```
+
+Each chain's six segments are separate jobs (§9). After a trunk segment finishes, its branch and the next trunk
+segment both become eligible, so with 32 GPUs the branches wait for a free slot. That is expected; `afterok` keeps the
+order.
+
+*Wave 2: `signal-disagreement-lambda0` seed 44 alone.* Submit it once the GPUs it needs are free and no wave-1 segment
+is still waiting for a slot, so that it does not delay wave-1 branches.
+- **dp 8 (preferred).** The launcher supports it on one 8-GPU node. `deploy/slurm/kys_segment.sbatch` runs every
+  segment on one node (`--nnodes 1`) with as many processes as the config's `dp`, and the renderer derives
+  accum = 1024 / (32 × 8) = 4. Two 4-GPU nodes do **not** work: there is no multi-node launch. Add a cluster entry
+  `marc-cluster-8gpu` to `deploy/clusters.yaml`: a copy of `marc-cluster` with `gpus_per_node: 8`, `dp: 8`,
+  `slurm.gres` giving 8 GPUs and `cpus_per_task` scaled to match. Keep `micro_batch_size: 32`. Render into a
+  separate folder, so that seed 44's dp-4 configs in `filled/` stay as they are:
+  ```bash
+  python tools/kys_raw/fill_placeholders.py --cluster marc-cluster-8gpu --seed 44 \
+      --settings signal-disagreement-lambda0 --out-dir configs/1.5B-baseline-seed44/filled-dp8
+  python tools/kys_raw/plan_submit.py --cluster marc-cluster-8gpu --seed 44 --settings signal-disagreement-lambda0 \
+      --configs configs/1.5B-baseline-seed44/filled-dp8 --s-per-it <measured at dp 8> --submit
+  ```
+  Measure s/it at dp 8 with the §8 20-step smoke run on the `filled-dp8` trunk1 config first. dp 8 is not measured
+  on our side. Report the run as dp 8 / accum 4: the global batch and the mbs are unchanged, so this is not an
+  objective change (§13), but there is no bitwise claim across dp.
+- **dp 4 (otherwise).** Use the `marc-cluster` entry like wave 1:
+  ```bash
+  python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed 44 --settings signal-disagreement-lambda0
+  python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 44 --s-per-it <measured> \
+      --settings signal-disagreement-lambda0 --submit
+  ```
+  This rewrites `filled/submit_seed44.sh`, the script wave 1 already ran for seed 44; the configs from wave 1 are kept.
+
+**Budget** (22.8 s/it at dp 4, §12):
+- *Compute:* 9 chains × 99.7 = 897 node-hours on 4-GPU nodes (3,589 GPU-hours).
+- *Wall clock:* wave 1 holds all 32 GPUs for about 100 h (8 × 99.7 slot-hours over 8 slots). Wave 2's critical path
+  is 90.6 h at dp 4. At dp 8 it is about 45 h if the speed scales linearly, which is not measured. So the set takes
+  about 6 days with dp 8, or about 8 days with dp 4, plus queueing.
+- *Storage:* at most 9 × 303.9 GB = 2.7 TB active with nothing pruned. 27 finals uploaded = 0.65 TB.
+- *Evaluation:* 27 cells (§14).
 
 ---
 
@@ -378,7 +460,7 @@ python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed 42
 ```
 
 The script:
-- re-renders the **42** templates of `configs/1.5B-baseline-seed42/templates/` into
+- re-renders the **48** templates of `configs/1.5B-baseline-seed42/templates/` (or the `--settings` subset) into
   `configs/1.5B-baseline-seed42/filled/` (a `.yaml` and a `.env` each);
 - derives `accum = 1024 / (mbs × dp)` and refuses a non-integer result;
 - checks the memory fit against `hbm_gib`;
@@ -540,6 +622,8 @@ checkpoint's `config.yaml` in all 105 keys except run name, paths and (seed 42 o
   Excluding `optimizer/`, as the v2 comparator repo did, would cut the upload to 6.02 GB per final (0.43 TB total).
   Ask Huicong before changing this.
 
+The table is for the full grid; the rebuttal set's numbers are in §1b.
+
 **Runtime.** At 22.8 s/it measured on 4 × H100 (skipjack; your hardware will differ, so use your §8 number):
 
 | | steps | wall |
@@ -554,7 +638,7 @@ checkpoint's `config.yaml` in all 105 keys except run name, paths and (seed 42 o
 - With 8 nodes held (one per chain), a seed takes about 100 h and the three serial seeds about 12.5 days, plus
   queueing.
 - With enough nodes for the branches to overlap the trunks (up to 16), a seed takes about 91 h (11.3 days for three).
-- Evaluation: 72 checkpoints × about 9 min on one H100 (63 until kys-eval covers `signal-disagreement-lambda0`, §14).
+- Evaluation: 72 checkpoints × about 9 min on one H100 (the rebuttal set: 27, §1b).
 
 ---
 
@@ -600,9 +684,12 @@ run at once.
 It uses the exact v2 protocol (LightEval commit and patch, 0-shot `acc_norm`, dataset revisions, H100):
 - **Benchmarks:** Mean6 (ARC-Easy, HellaSwag, PIQA, SIQA, OpenBookQA, CommonsenseQA) and MMLU (57 subjects,
   macro-averaged, plus 4 categories).
-- **Grid:** 63 cells = 7 raw settings × 3 seeds × 3 epochs. **kys-eval `main` (50bb288) does not yet know
-  `signal-disagreement-lambda0`**: its 9 checkpoints are trained and uploaded like the others, and scoring them waits
-  for a kys-eval update (Huicong). Its comparison is against `disagreement_aware` (§2d).
+- **Grid:** 72 cells = 8 settings × 3 seeds × 3 epochs. kys-eval covers `signal-disagreement-lambda0` as of `main`
+  `c8aa8ff` (required: `c8aa8ff` or later). It pairs that setting with `disagreement_aware` (λ = 0.5, §2d), and
+  labels the pair "λ grid" in `raw_vs_rewritten.md`.
+- **Rebuttal set (§1b):** 27 of the 72 cells. Score them with
+  `--settings raw_diversity_oriented raw_disagreement_aware signal-disagreement-lambda0`; the reports then mark
+  the other five settings "—".
 - **Comparisons:** each strategy-linked setting against its rewritten counterpart (read `raw_rewire_inspired`'s
   as conditional, §2a); `rewire_inspired` against `raw_random` for REWIRE's pipeline effect; each global Top-10B
   setting against `quality_base`.
@@ -613,14 +700,17 @@ git clone https://github.com/imHuicongZhang/kys-eval.git && cd kys-eval
 python -m kys_eval.selftest && python -m kys_eval.prefetch
 # once per cluster, before scoring anything: must print PASS (exact match expected on H100)
 python -m kys_eval.reference_check --model hf://wytro/KYS-1.5B-Rewritten-v2/rewrite-1p5b/seed42/diversity_oriented/ep3/hf
-# score (skips finished cells); or the SLURM array 0-62 (one seed: 21 cells, --array=0-20 with KYS_GRID_ARGS="--seeds <S>")
-python -m kys_eval.run_grid --seeds 42 --delete-weights
-mkdir -p logs && sbatch --export=ALL,KYS_EVAL_ROOT=$PWD slurm/eval_grid_array.sbatch
+# rebuttal set: 27 cells (indices 0-26 of the filtered list; check with --list)
+R="--settings raw_diversity_oriented raw_disagreement_aware signal-disagreement-lambda0"
+python -m kys_eval.run_grid $R --list --check-hub
+python -m kys_eval.run_grid $R --delete-weights        # skips finished cells
+mkdir -p logs && sbatch --array=0-26 --export=ALL,KYS_EVAL_ROOT=$PWD,KYS_GRID_ARGS="$R" slurm/eval_grid_array.sbatch
+# full grid: the SLURM array 0-71 (one seed: 24 cells, --array=0-23 with KYS_GRID_ARGS="--seeds <S>")
 python -m kys_eval.run_grid --list --check-hub        # which checkpoints are uploaded / scored
 python -m kys_eval.aggregate                          # reports/raw_selected_report.md, raw_vs_rewritten.md, CSVs
 ```
 
-Upload `results/` and `reports/` to `rewrite-1p5b/seed<S>/eval/` after each seed.
+Upload `results/` and `reports/` to `rewrite-1p5b/seed<S>/eval/` after each seed (for the rebuttal set, once its 27 cells are scored).
 - If you have no H100, say so before scoring. `--allow-any-gpu` records and flags it; bf16 near-ties move Mean6 by
   about 7e-4 across architectures (measured, kys-eval `config.py`).
 - `eval_checkpoint` scores a single model into `--out-dir`, but only `run_grid` results are aggregated.
@@ -663,11 +753,13 @@ Anything that exits 0 but looks wrong: stop the chain and ask rather than resubm
 - mbs ≠ 32, or dp not a power of two;
 - proceeding past a failed hash, token total or invariant;
 - deleting anything under `<ckpt_root>` other than the eight prunable restart points;
-- starting seed 43 before seed 42 is uploaded.
+- queueing any chain outside the rebuttal set (§1b);
+- for the full grid only: starting seed 43 before seed 42 is uploaded (the rebuttal set runs its seeds concurrently).
 
 **Report without being asked:**
 - the §8 smoke numbers;
 - the seven tokenized totals and the `signal-disagreement-lambda0` check (`sha256sum -c`, then `assert_invariants.py`);
-- peak memory and s/it of the first `trunk1`;
+- peak memory and s/it of the first `trunk1`, and for `signal-disagreement-lambda0` seed 44 whether it ran at dp 8
+  (with its s/it) or dp 4;
 - each chain's three finals uploaded;
 - each seed's completion.
