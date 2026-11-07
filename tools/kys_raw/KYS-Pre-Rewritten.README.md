@@ -135,7 +135,7 @@ not run `tokenize_raw_text.sh` for it.
   `tools/fix_ds_metadata.py --output-folder <data_root>/signal-disagreement-lambda0/tokenized --tokenizer-dir <data_root>/tokenizer`.
 - **Provenance:** the anchor is identical to `raw_text/raw_disagreement_aware`'s 4,120,164 anchor documents, and the
   document order is the seed-42 `pp_io.bucketed_shuffle`. The checks are listed in `configs/1.5B-baseline/RUNBOOK.md`
-  (branch `kys-lambda0` of the code repository).
+  (branch `huicong-dev` of the code repository).
 
 ## Related
 
