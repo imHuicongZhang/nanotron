@@ -1,5 +1,5 @@
 # RENDERED by tools/render_config.py — do not edit.
-# template : /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/configs/1.5B-baseline-seed42/templates/signal-disagreement-lambda0_seed42_ep1.yaml
+# template : /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys/configs/1.5B-baseline-seed42/templates/signal-disagreement-lambda0_seed42_ep1.yaml
 # cluster  : {{CLUSTER}}  (dp=4 tp=1 pp=1 mbs=32 accum=8 recompute_layer={{RECOMPUTE_LAYER}}, 4 GPU/node)
 # seed     : 42  -> assigned cluster {{CLUSTER}}
 # global batch: 32 x 8 x 4 = 1024 seq = 2,097,152 tokens/step  [INVARIANT]
