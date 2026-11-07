@@ -120,6 +120,23 @@ setting.
     sample of texts was compared byte for byte with the raw pool (selection report §7b).
 - **Code:** `tools/kys_raw/` in the code repository. The exact commits are in `manifest.json`.
 
+## Additional tokenized corpus: `signal-disagreement-lambda0/tokenized/` (added 2026-11-06)
+
+This is not a raw baseline. It is the **λ = 0 arm of the Disagreement-Aware rewritten grid**: the same shared 5B
+anchor plus a 5B rewritten half whose sources are chosen by quality alone (`u = q + 0·√var3`). Its comparator is the
+published `disagreement_aware` arm (λ = 0.5). It ships **already tokenized**, in nanotron/datatrove format, so do
+not run `tokenize_raw_text.sh` for it.
+
+- **Files:** 26 × `000NN_unshuffled.ds` / `.ds.index` / `.ds.metadata`, plus `SHA256SUMS`.
+- **Total:** 10,000,002,556 tokens over 12,566,224 documents (text + one `</s>`, no `<s>`). The total is recorded
+  in `tools/kys_raw/registry.py`, not in `manifest.json`. Two empty-text rewrites in the assembled corpus produce no
+  document, which is why the total is 2 below the assembly budget of 10,000,002,558.
+- **Use:** run `sha256sum -c SHA256SUMS` in the folder, then
+  `tools/fix_ds_metadata.py --output-folder <data_root>/signal-disagreement-lambda0/tokenized --tokenizer-dir <data_root>/tokenizer`.
+- **Provenance:** the anchor is identical to `raw_text/raw_disagreement_aware`'s 4,120,164 anchor documents, and the
+  document order is the seed-42 `pp_io.bucketed_shuffle`. The checks are listed in `configs/1.5B-baseline/RUNBOOK.md`
+  (branch `kys-lambda0` of the code repository).
+
 ## Related
 
 - **Tokenizer:** [`tokenizer/`](tokenizer) in this repo, the exact llama-2 tokenizer directory the grid used.

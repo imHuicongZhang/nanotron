@@ -2,9 +2,9 @@
 
 **For:** Marc Marone's cluster, and the agent operating it.
 **Code:** `github.com/imHuicongZhang/nanotron`, branch `huicong-dev`, at or after `e5316a52` (training code and configs are unchanged since `0246ad59`).
-**Data:** `huggingface.co/datasets/blab-jhu/KYS-Pre-Rewritten`, revision `4ba8df66` or later (data files identical since `a5b3ab93`; later revisions changed descriptions only). It holds
+**Data:** `huggingface.co/datasets/blab-jhu/KYS-Pre-Rewritten`, revision `b264b0ce` or later (raw-text data files identical since `a5b3ab93`; `8a394d84` added `signal-disagreement-lambda0/tokenized/`, `b264b0ce` its README entry). It holds
 the raw text of the seven raw corpora, the tokenizer and, under `signal-disagreement-lambda0/tokenized/`, the
-already-tokenized eighth corpus (§2d; it needs the revision that added that folder, LAMBDA0_HF_REVISION or later).
+already-tokenized eighth corpus (§2d; added in revision `8a394d84`, so `4ba8df66` and earlier lack it).
 **Init:** `huggingface.co/wytro/Know-Your-Sources-init`, revision `87e13356`.
 **Outputs go to:** `huggingface.co/blab-jhu/KYS-1.5B-Raw-Selected-Baselines`.
 **Evaluation:** `github.com/imHuicongZhang/kys-eval`, branch `main`, at or after `50bb288`.
@@ -46,6 +46,7 @@ files are byte-unchanged.
 | export check (`verify_global_top10b.py`) | doc sets = selections, 0 duplicates, order = seed-42 shuffle, token totals exact, 3 × 32,000 sampled texts byte-identical to the raw pool |
 | consumer tokenization (`tokenize_raw_text.sh`, unchanged) of the three new settings | datatrove totals = `expected_total_tokens` exactly |
 | upload to `blab-jhu/KYS-Pre-Rewritten@a5b3ab93` | 54 new data files: Hub LFS sha256 and size = local; `manifest.json` round-trips; fresh download reads |
+| upload of `signal-disagreement-lambda0/tokenized/` to `blab-jhu/KYS-Pre-Rewritten@8a394d84` (2026-11-06) | 79 files: the 52 LFS files' Hub sha256 and size = local; the 26 `.ds.metadata` and `SHA256SUMS` downloaded back and byte-identical |
 | configs: `fill_placeholders.py` for seeds 42/43/44 (a dry-run cluster entry copying skipjack's H100 values) | 126 configs rendered; `assert_invariants.py` passes on all |
 | `compare_configs.py` A/B/C vs `wytro/KYS-1.5B-Rewritten-v2@b22c8733` | PASS (only run/path, recompute and seed-42 mbs fields differ; §13) |
 | `plan_submit.py` plan + `--test-only` for seeds 42/43/44 | 126/126 segments accepted by `sbatch --test-only`; nothing queued; unknown `--settings` and too-short `time` refused |
@@ -264,7 +265,7 @@ upstream nanotron will not work. H100/H200 (`sm_90`) are covered by the prebuilt
 ```python
 from huggingface_hub import snapshot_download
 data_root = snapshot_download("blab-jhu/KYS-Pre-Rewritten", repo_type="dataset",
-                              revision="4ba8df66b51c210bb2bc51d2f5f93c48e850171d", local_dir="/YOUR/PATH/kys_raw")
+                              revision="b264b0cef6dab29fceebb50cb1c7b3fe152ba5d9", local_dir="/YOUR/PATH/kys_raw")
 init_root = snapshot_download("wytro/Know-Your-Sources-init", revision="87e1335647a3105471928e0fd261d92846021d1a",
                               local_dir="/YOUR/PATH/kys_init")
 ```
