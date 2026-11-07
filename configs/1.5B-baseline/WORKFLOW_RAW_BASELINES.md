@@ -3,7 +3,8 @@
 **For:** Marc Marone's cluster, and the agent operating it.
 **Code:** `github.com/imHuicongZhang/nanotron`, branch `huicong-dev`, at or after `e5316a52` (training code and configs are unchanged since `0246ad59`).
 **Data:** `huggingface.co/datasets/blab-jhu/KYS-Pre-Rewritten`, revision `4ba8df66` or later (data files identical since `a5b3ab93`; later revisions changed descriptions only). It holds
-the raw text of all seven corpora and the tokenizer.
+the raw text of the seven raw corpora, the tokenizer and, under `signal-disagreement-lambda0/tokenized/`, the
+already-tokenized eighth corpus (§2d; it needs the revision that added that folder, LAMBDA0_HF_REVISION or later).
 **Init:** `huggingface.co/wytro/Know-Your-Sources-init`, revision `87e13356`.
 **Outputs go to:** `huggingface.co/blab-jhu/KYS-1.5B-Raw-Selected-Baselines`.
 **Evaluation:** `github.com/imHuicongZhang/kys-eval`, branch `main`, at or after `50bb288`.
@@ -50,12 +51,13 @@ files are byte-unchanged.
 | `plan_submit.py` plan + `--test-only` for seeds 42/43/44 | 126/126 segments accepted by `sbatch --test-only`; nothing queued; unknown `--settings` and too-short `time` refused |
 | strategy-linked audit: each raw strategy half rebuilt from `wytro/Know-Your-Sources@9e5ff241` alone; anchors vs the arms' anchors | all four equal the published corpora; anchors identical; no overlap or duplicates |
 | consumer tokenization of the four strategy-linked corpora (files checked against `manifest.json` sha256) | datatrove totals = `expected_total_tokens` exactly; every document is text + `</s>`, no `<s>` |
+| `signal-disagreement-lambda0` (2026-11-06; RUNBOOK "Additional setting"): anchor ids vs `raw_disagreement_aware`'s anchor; `pp_io.bucketed_shuffle(seed 42)` recomputed; 6,000 rows re-tokenized; 26 tokenized shards vs their parquet files; 18 configs rendered against the data | anchor identical (4,120,164); shuffle order reproduced exactly; `train_tokens` = text tokens in all rows; total 10,000,002,556; full `assert_invariants.py` passes on 18/18 |
 | kys-eval `selftest` (7 settings, 63 cells) | pass (run in the preparation Python env, not a fresh `./install.sh` venv) |
 
 **Still pending, and Marc's to run** (hardware- and site-dependent): the INSTALL.md environment and smoke checks
 §3.1–3.4 on his nodes; measured s/it and peak memory; `fill_placeholders.py` / `plan_submit.py --test-only` against
-his own `marc-cluster` entry and partition; tokenization of all seven settings on his side (the script checks every
-sha256 and total); the kys-eval install and reference check on his H100.
+his own `marc-cluster` entry and partition; tokenization of the seven raw settings on his side (the script checks every
+sha256 and total) and `fix_ds_metadata.py` on the downloaded `signal-disagreement-lambda0/tokenized/` (§5); the kys-eval install and reference check on his H100.
 
 ### Things Marc must supply (the complete list)
 
@@ -100,15 +102,15 @@ partition wall limit, and the smoke results of §8 (loss at steps 1/10/20, stead
 
 | unit | count | what it is |
 |---|---:|---|
-| settings | **7** | a training corpus (§2) |
+| settings | **8** | a training corpus (§2): 7 raw + `signal-disagreement-lambda0` |
 | seeds | 3 | 42, 43, 44 (init checkpoint and data seed) |
-| setting-seed **chains** | **21** | one WSD run: a trunk plus three annealing branches |
-| scheduled **segments** | **126** | 6 per chain (`trunk1 trunk2 trunk3 ep1 ep2 ep3`), one SLURM job each; these are **not** independent training runs |
-| **annealed final checkpoints** | **63** | 3 per chain: ep1 / ep2 / ep3 |
-| templates per seed | **42** | 7 settings × 6 segments, in `configs/1.5B-baseline-seed<S>/templates/` |
+| setting-seed **chains** | **24** | one WSD run: a trunk plus three annealing branches |
+| scheduled **segments** | **144** | 6 per chain (`trunk1 trunk2 trunk3 ep1 ep2 ep3`), one SLURM job each; these are **not** independent training runs |
+| **annealed final checkpoints** | **72** | 3 per chain: ep1 / ep2 / ep3 |
+| templates per seed | **48** | 8 settings × 6 segments, in `configs/1.5B-baseline-seed<S>/templates/` |
 
 The existing fastText **Quality-Base** (`quality_base` in `wytro/KYS-1.5B-Rewritten-v2`) is a **comparator**. It is
-not an eighth setting and is not retrained.
+not a setting and is not retrained.
 
 **Schedule** (authoritative: `tools/generate_configs.py` `TRAIN_STEPS / BRANCHES / TRUNK_SEGMENTS`; identical to the
 released v2 checkpoints' `config.yaml`):
@@ -139,14 +141,14 @@ from random initialization, and exits 0. Two guards prevent this:
 - `afterok` dependencies make it unschedulable;
 - `assert_invariants.py --check-resume`, run inside every job before `torchrun`, refuses to start.
 
-**Seeds run one after another.** Start seed 43 only after all 21 ep finals of seed 42 exist and are uploaded, and
-seed 44 likewise. Within a seed the seven chains are independent and should run in parallel.
+**Seeds run one after another.** Start seed 43 only after all 24 ep finals of seed 42 exist and are uploaded, and
+seed 44 likewise. Within a seed the eight chains are independent and should run in parallel.
 
 ---
 
-## 2. The seven settings
+## 2. The eight settings
 
-Two families answer different questions. The corpus directory, the setting name and the checkpoint path component
+Two raw families (§2a, §2b) and one rewritten arm (§2d) answer different questions. The corpus directory, the setting name and the checkpoint path component
 are the same string.
 
 ### 2a. Four strategy-linked raw controls (published earlier; audited, unchanged)
@@ -206,6 +208,23 @@ up to 3 tail documents. Selection report §2.
 
 These compare *selection scores on raw data*. They do not isolate a rewriting effect.
 
+### 2d. One rewritten λ-grid arm: `signal-disagreement-lambda0` (added 2026-11-06)
+
+Not a raw baseline. It is the λ = 0 arm of the Disagreement-Aware rewritten grid. It is built from the same shared
+5B anchor plus a 5B rewritten half whose source documents are chosen by `u = q + λ·√var3` with λ = 0, i.e. by
+quality alone (q = mean of the three `*-ranking-v2` percentiles). The published `disagreement_aware` arm is
+λ = 0.5. The pair `signal-disagreement-lambda0` vs `disagreement_aware` therefore isolates the disagreement term
+at equal tokens and an identical anchor.
+
+- **Composition:** 4,120,164 anchor docs (5,000,002,332 tokens) + 5,527,293 wikipedia-style rewrites +
+  2,918,769 distill rewrites; 12,566,226 rows, shuffled once with `pp_io.bucketed_shuffle` seed 42.
+- **Shipped tokenized** (26 shards), not as raw text, so it skips §5's tokenize script. Its expected total is
+  in `tools/kys_raw/registry.py` (`expected_corpus`), not in `manifest.json`.
+- **Total: 10,000,002,556 tokens.** The assembly budget was 10,000,002,558. Two rewrites have empty text, and
+  datatrove writes no document for them. That is a property of the corpus, not a download error.
+- Same schedule, batch, seeds and init checkpoints as every other setting. Provenance checks:
+  RUNBOOK.md, section "Additional setting: `signal-disagreement-lambda0`".
+
 ### 2c. Setting table
 
 | setting | family | dataset path | anchor | docs | TRAIN tokens (= `expected_total_tokens`) | comparator (v2) |
@@ -217,8 +236,10 @@ These compare *selection scores on raw data*. They do not isolate a rewriting ef
 | `raw_top10b_fineweb_edu` | global Top-10B | `raw_text/raw_top10b_fineweb_edu/` | **no** | 7,534,192 | 10,000,007,488 | `quality_base` |
 | `raw_top10b_modernbert` | global Top-10B | `raw_text/raw_top10b_modernbert/` | **no** | 5,918,416 | 10,000,000,657 | `quality_base` |
 | `raw_top10b_consensus` | global Top-10B | `raw_text/raw_top10b_consensus/` | **no** | 5,643,567 | 10,000,003,972 | `quality_base` |
+| `signal-disagreement-lambda0` | rewritten λ grid (§2d) | `signal-disagreement-lambda0/tokenized/` (tokenized) | yes, 5B | 12,566,224 | 10,000,002,556 (registry, not `manifest.json`) | `disagreement_aware` |
 
-- The anchor is 4,120,164 docs / 5,000,002,332 tokens, identical in the four strategy-linked corpora.
+- The anchor is 4,120,164 docs / 5,000,002,332 tokens, identical in the four strategy-linked corpora and in
+  `signal-disagreement-lambda0`.
 - The global Top-10B corpora contain anchor documents only where their own score ranked them in (8–20% of tokens).
 - `manifest.json` → `settings_overview` records the family, anchor presence and comparator of every setting.
 
@@ -254,12 +275,14 @@ init_root = snapshot_download("wytro/Know-Your-Sources-init", revision="87e13356
 |---|---:|
 | raw text, four strategy-linked settings | 66.7 GB (16.6–16.7 GB each) |
 | raw text, three global Top-10B settings | 50.1 GB (16.57 / 16.83 / 16.67 GB) |
+| `signal-disagreement-lambda0/tokenized/` (78 files + `SHA256SUMS`) | 19 GB |
 | `selection/`, `reports/`, `tokenizer/`, `manifest.json` | 0.31 GB |
 | init checkpoints, three seeds | 27.1 GB (9.03 GB each) |
 
 ```
 <data_root>/manifest.json                         counts, expected_total_tokens, sha256 of every file, tokenizer sha256, code commits
 <data_root>/raw_text/<setting>/part-000NN.parquet 16 files per setting, in training order
+<data_root>/signal-disagreement-lambda0/tokenized/  26 × 000NN_unshuffled.ds{,.index,.metadata} + SHA256SUMS (§2d)
 <data_root>/tokenizer/                            Llama-2 tokenizer (vocab 32000; <s> = 1, </s> = 2)
 <data_root>/selection/<new setting>/*.npy         selected doc ids of the three global Top-10B settings
 <data_root>/reports/                              provenance, selection and config reports
@@ -286,7 +309,7 @@ Do not download the rewritten corpora (`wytro/Know-Your-Sources*`); they are not
 
 ---
 
-## 5. Tokenize the seven corpora — CPU only, once
+## 5. Tokenize the seven raw corpora — CPU only, once
 
 Each parquet folder is **the final corpus in training order**: anchor merged where there is one, shuffled once with
 seed 42, rows in order. Tokenization must preserve that order.
@@ -330,6 +353,18 @@ other tokenizer file. Any of these changes the data order or the token stream.
 
 `000NN_unshuffled.ds` is datatrove's default filename; the shuffle happened upstream. Use the same `--tokenizer-dir`
 string for every setting, because nanotron asserts that all metadata files carry the identical tokenizer path.
+
+**`signal-disagreement-lambda0` is downloaded already tokenized. Do not tokenize it.** It was tokenized on the
+preparation cluster with the same script and tokenizer, using 26 tasks over its 26 files (shard i = file i). Its
+metadata still names the preparation cluster's tokenizer path, so check it and point it at yours:
+
+```bash
+cd <data_root>/signal-disagreement-lambda0/tokenized && sha256sum -c SHA256SUMS && cd -     # 78 files OK
+python tools/fix_ds_metadata.py --output-folder <data_root>/signal-disagreement-lambda0/tokenized \
+    --tokenizer-dir <data_root>/tokenizer
+```
+
+`assert_invariants.py` then requires 26 shards and exactly 10,000,002,556 tokens (§2d).
 
 ---
 
@@ -447,13 +482,14 @@ ep3 final   <ckpt_root>/seed<S>/X/ep3/X/seed<S>/14305/
 wandb run   X_seed<S>_<segment>     (group X_seed<S>)
 ```
 
-**Model:** identical for all seven and identical to the v2 grid. 1.5B Llama, 1,504,299,008 parameters:
+**Model:** identical for all eight and identical to the v2 grid. 1.5B Llama, 1,504,299,008 parameters:
 - 28 layers, hidden 2048, FFN 5632, 16 heads (no GQA), vocab 32000, tied embeddings, RoPE θ = 10000;
 - sequence length 2048, bf16;
 - AdamW β 0.9/0.95, ε 1e-8, peak LR 5e-4, weight decay 0.1, clip 1.0, fp32 gradient accumulation, `zero_stage 0`.
 
 `reports/CONFIG_COMPARISON.md` shows that each setting's configs equal `raw_random`'s after renaming, for all 126
-segments. It also shows that each branch config, parsed by nanotron, equals the released v2 Quality-Base
+raw segments. The 18 `signal-disagreement-lambda0` configs equal `raw_random`'s after renaming, apart from the
+comment line naming the template path (checked 2026-11-06; not yet in that report). It also shows that each branch config, parsed by nanotron, equals the released v2 Quality-Base
 checkpoint's `config.yaml` in all 105 keys except run name, paths and (seed 42 only) mbs/accum.
 
 ---
@@ -486,21 +522,21 @@ checkpoint's `config.yaml` in all 105 keys except run name, paths and (seed 42 o
 - a chain writes 14 full checkpoints: 11 on the trunk (1500, 3000, 4292, 4500, 6000, 7500, 8583, 9000, 10500, 12000,
   12875) and 3 finals.
 
-| storage | per chain | per seed (7 chains) | all 3 seeds |
+| storage | per chain | per seed (8 chains) | all 3 seeds |
 |---|---:|---:|---:|
-| **active**, nothing pruned (14 × 21.06 + 9.03) | 303.9 GB | 2.13 TB | — (seeds are serial) |
-| **retained locally** until uploads are confirmed (branch points 4292/8583/12875 + finals; 6 × 21.06) | 126.4 GB | 0.88 TB | 2.65 TB if never deleted after upload |
-| **uploaded** (3 × (21.06 + 3.01)) | 72.2 GB | 0.51 TB | 1.52 TB (21 chains) |
-| inputs: raw text + tokenized, seven settings | — | — | 117 GB raw + 140 GB tokenized = 257 GB, once (+ 27 GB init) |
+| **active**, nothing pruned (14 × 21.06 + 9.03) | 303.9 GB | 2.43 TB | — (seeds are serial) |
+| **retained locally** until uploads are confirmed (branch points 4292/8583/12875 + finals; 6 × 21.06) | 126.4 GB | 1.01 TB | 3.03 TB if never deleted after upload |
+| **uploaded** (3 × (21.06 + 3.01)) | 72.2 GB | 0.58 TB | 1.73 TB (24 chains) |
+| inputs: raw text + tokenized, eight settings | — | — | 117 GB raw + 159 GB tokenized = 276 GB, once (+ 27 GB init) |
 
 **How to plan for it:**
-- **Peak local need** with the serial-seed plan: one seed's active set (2.13 TB) plus the previous seed's retained
-  set until Huicong confirms its upload (0.88 TB), about **3.0 TB**, plus inputs.
+- **Peak local need** with the serial-seed plan: one seed's active set (2.43 TB) plus the previous seed's retained
+  set until Huicong confirms its upload (1.01 TB), about **3.4 TB**, plus inputs.
 - **Pruning.** The eight trunk restart checkpoints per chain (1500, 3000, 4500, 6000, 7500, 9000, 10500, 12000) may
   be deleted once the trunk segment after them has completed. **Never delete 4292 / 8583 / 12875 before their branch
   has finished**: a missing branch point makes that branch train from random init and exit 0.
 - **Optimizer state in uploads.** Uploading the step directory with optimizer state follows the original plan.
-  Excluding `optimizer/`, as the v2 comparator repo did, would cut the upload to 6.02 GB per final (0.38 TB total).
+  Excluding `optimizer/`, as the v2 comparator repo did, would cut the upload to 6.02 GB per final (0.43 TB total).
   Ask Huicong before changing this.
 
 **Runtime.** At 22.8 s/it measured on 4 × H100 (skipjack; your hardware will differ, so use your §8 number):
@@ -511,13 +547,13 @@ checkpoint's `config.yaml` in all 105 keys except run name, paths and (seed 42 o
 | ep1 / ep2 / ep3 | 476 / 954 / 1430 | 3.0 / 6.0 / 9.1 h |
 | one chain, all 6 segments | 15,735 | **99.7 node-hours** (399 GPU-hours) |
 | critical path of a chain (trunk1→2→3→ep3) | 14,305 | 90.6 h |
-| whole grid (21 chains) | — | **2,093 node-hours** (8,373 GPU-hours) |
+| whole grid (24 chains) | — | **2,392 node-hours** (9,569 GPU-hours) |
 
 **Wall-clock scenarios:**
-- With 7 nodes held (one per chain), a seed takes about 100 h and the three serial seeds about 12.5 days, plus
+- With 8 nodes held (one per chain), a seed takes about 100 h and the three serial seeds about 12.5 days, plus
   queueing.
-- With enough nodes for the branches to overlap the trunks (up to 14), a seed takes about 91 h (11.3 days for three).
-- Evaluation: 63 checkpoints × about 9 min on one H100.
+- With enough nodes for the branches to overlap the trunks (up to 16), a seed takes about 91 h (11.3 days for three).
+- Evaluation: 72 checkpoints × about 9 min on one H100 (63 until kys-eval covers `signal-disagreement-lambda0`, §14).
 
 ---
 
@@ -541,7 +577,8 @@ checkpoint's `config.yaml` in all 105 keys except run name, paths and (seed 42 o
 
 **Global batch:** 1024 × 2048 = 2,097,152 tokens per step. The renderer derives accum; never set it by hand.
 
-**Data:** no reshuffle, no re-sharding, no filtering, no other tokenizer, 16 tasks. The parquet order *is* the
+**Data:** no reshuffle, no re-sharding, no filtering, no other tokenizer, 16 tasks (`signal-disagreement-lambda0`:
+use the 26 shards as downloaded). The parquet order *is* the
 experiment.
 
 **Files you do not edit:** the templates, `tools/kys_raw/`, `tools/generate_configs.py`, `tools/render_config.py`,
@@ -562,7 +599,9 @@ run at once.
 It uses the exact v2 protocol (LightEval commit and patch, 0-shot `acc_norm`, dataset revisions, H100):
 - **Benchmarks:** Mean6 (ARC-Easy, HellaSwag, PIQA, SIQA, OpenBookQA, CommonsenseQA) and MMLU (57 subjects,
   macro-averaged, plus 4 categories).
-- **Grid:** 63 cells = 7 settings × 3 seeds × 3 epochs.
+- **Grid:** 63 cells = 7 raw settings × 3 seeds × 3 epochs. **kys-eval `main` (50bb288) does not yet know
+  `signal-disagreement-lambda0`**: its 9 checkpoints are trained and uploaded like the others, and scoring them waits
+  for a kys-eval update (Huicong). Its comparison is against `disagreement_aware` (§2d).
 - **Comparisons:** each strategy-linked setting against its rewritten counterpart (read `raw_rewire_inspired`'s
   as conditional, §2a); `rewire_inspired` against `raw_random` for REWIRE's pipeline effect; each global Top-10B
   setting against `quality_base`.
@@ -627,7 +666,7 @@ Anything that exits 0 but looks wrong: stop the chain and ask rather than resubm
 
 **Report without being asked:**
 - the §8 smoke numbers;
-- the seven tokenized totals;
+- the seven tokenized totals and the `signal-disagreement-lambda0` check (`sha256sum -c`, then `assert_invariants.py`);
 - peak memory and s/it of the first `trunk1`;
 - each chain's three finals uploaded;
 - each seed's completion.

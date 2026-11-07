@@ -3,7 +3,7 @@
 
     python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 [--s-per-it 16.5] [--submit]
 
-Reads the filled configs (7 settings x 6 segments = 42 per seed; tools/kys_raw/registry.py) in configs/1.5B-baseline-seed<S>/filled/ (tools/kys_raw/fill_placeholders.py)
+Reads the filled configs (8 settings x 6 segments = 48 per seed; tools/kys_raw/registry.py) in configs/1.5B-baseline-seed<S>/filled/ (tools/kys_raw/fill_placeholders.py)
 and the cluster entry in deploy/clusters.yaml, re-runs tools/assert_invariants.py on each (placeholders,
 batch, environment are checked; corpus and resume are checked by the launcher before every segment),
 and writes configs/1.5B-baseline-seed<S>/filled/submit_seed<S>.sh containing:

@@ -8,7 +8,7 @@ required field is still null, and re-renders configs/1.5B-baseline-seed<S>/templ
 tools/render_config.py with a profile built from that entry. Every renderer guard applies:
 accum = 1024 / (mbs * dp) must be an integer, the mbs must fit hbm_gib under the memory model,
 and the seed must be assigned to this cluster. Output: configs/1.5B-baseline-seed<S>/filled/
-(one config + .env per setting x segment: 7 x 6 = 42 per seed; registry.py), then tools/assert_invariants.py runs on each (placeholders, batch,
+(one config + .env per setting x segment: 8 x 6 = 48 per seed; registry.py), then tools/assert_invariants.py runs on each (placeholders, batch,
 environment; corpus and resume checks need the data and checkpoints on disk and are run by the
 launcher before every segment).
 """
@@ -71,7 +71,7 @@ def main():
 
     folder = REPO / 'configs' / f'1.5B-baseline-seed{args.seed}'
     want = template_names(args.seed, parse_settings(args.settings))
-    have = {p.name for p in (folder / 'templates').glob(f'raw_*_seed{args.seed}_*.yaml')}
+    have = {p.name for p in (folder / 'templates').glob(f'*_seed{args.seed}_*.yaml')}
     if set(template_names(args.seed)) != have:
         sys.exit(f'{folder}/templates does not hold exactly the {len(template_names(args.seed))} templates of '
                  f'tools/kys_raw/registry.py; missing {sorted(set(template_names(args.seed)) - have)}, '

@@ -43,7 +43,7 @@ EXPECTED_MBS = 32
 # needs full layer recomputation (probe job 424229, configs/1.5B-baseline/README.md). A cluster that
 # cannot fit mbs 32 passes --expected-mbs N and must report the deviation (RUNBOOK.md).
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'kys_raw'))
-from registry import SETTING_NAMES as _RAW_NAMES  # noqa: E402
+from registry import RAW_SETTINGS as _RAW_REG, SETTING_NAMES as _RAW_NAMES  # noqa: E402
 RAW_SETTINGS = set(_RAW_NAMES)
 EXPECTED_MBS_RAW = 32
 EXPECTED_TOK_PER_STEP = 2_097_152
@@ -96,8 +96,9 @@ EXPECTED_CORPUS = {
     'rewire_inspired':    (10_000_002_683, 16),
     'disagreement_aware': (10_000_002_333, 16),
     # Raw-selected baselines (tools/kys_raw/registry.py): None = read the expected total from the
-    # consumer's <data_root>/manifest.json (blab-jhu/KYS-Pre-Rewritten), below.
-    **{s: None for s in _RAW_NAMES},
+    # consumer's <data_root>/manifest.json (blab-jhu/KYS-Pre-Rewritten), below. Settings that ship
+    # tokenized (family lambda_grid) carry their own `expected_corpus` in the registry.
+    **{s: _RAW_REG[s].get('expected_corpus') for s in _RAW_NAMES},
 }
 
 # nanotron/trainer.py logs this banner once at startup:

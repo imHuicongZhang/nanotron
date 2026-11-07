@@ -100,6 +100,62 @@ All seven totals were confirmed this way on the preparation cluster (selection r
 Use `<data_root>` as `data_root` and `<data_root>/tokenizer` as `tokenizer_path`. `tools/assert_invariants.py` reads
 the expected totals from `<data_root>/manifest.json`.
 
+## Additional setting: `signal-disagreement-lambda0`
+
+An eighth setting in `tools/kys_raw/registry.py` (family `lambda_grid`). It is **not** a raw baseline. It is the
+λ = 0 arm of the Disagreement-Aware rewritten grid: the shared 5B anchor plus the 5B rewritten half chosen by
+`u = q + 0·√var3`, i.e. pure quality. The published `disagreement_aware` arm is λ = 0.5, and it is this setting's
+comparator. It runs on the identical schedule, batch (mbs 32 / accum 8 / dp 4), init checkpoints and seeds, so
+the rest of this runbook applies unchanged. It adds 3 chains (18 segments, 9 annealed finals).
+
+- **Configs:** `configs/1.5B-baseline-seed<S>/signal-disagreement-lambda0_seed<S>_<segment>.{yaml,env}` and
+  `templates/`, produced by `generate_configs.py` → `render_placeholders.py`. They are identical to
+  `raw_random`'s except for the setting name and the comment line naming the template path.
+- **The data ships tokenized, not as raw_text.** Do not run `tokenize_raw_text.sh` for it. Place the 26 shards at
+  `<data_root>/signal-disagreement-lambda0/tokenized/` (`00000_unshuffled.ds` … `00025_unshuffled.ds`, each with
+  `.ds.index` and `.ds.metadata`). Then run
+  `python tools/fix_ds_metadata.py --output-folder <data_root>/signal-disagreement-lambda0/tokenized --tokenizer-dir <data_root>/tokenizer`,
+  with the same `--tokenizer-dir` as the raw settings.
+- **Expected total: 10,000,002,556 tokens in 26 shards (12,566,224 documents).** `assert_invariants.py` reads
+  this from the registry's `expected_corpus`, not from `manifest.json`. The assembly manifests give a budget of
+  10,000,002,558 tokens over 12,566,226 rows. The 2-token difference is two wikipedia rewrites with empty text
+  (`doc_id` 79663246 in `shuffled/part_00020`, 84276725 in `part_00023`). The budget counts each of them as one
+  `</s>`, but datatrove writes no document for an empty text. Budget composition: the anchor has
+  4,120,164 docs / 5,000,002,332 tokens, the wikipedia rewrites 5,527,293 / 3,514,196,820, and the distill
+  rewrites 2,918,769 / 1,485,803,406. Each document is its text plus one `</s>`; no `<s>` is added.
+- **Source on the preparation cluster:** `/weka/scratch/jhu/bvandur1/zhuicon1/datasets/rewrite/signal-disagreement-lambda0/`.
+  It holds `shuffled/` (26 parquet × 500,000 rows, in training order), `tokenized/` (78 files, 19 GB),
+  `tokenized.SHA256SUMS`, `_assembly_manifest.json` and `_pretrain_manifest.json`.
+- **Tokenization (2026-11-06):** `tools/preprocess_data_parquet.py --eos-token "</s>" --n-tasks 26 --workers 4
+  parquet --dataset <…>/shuffled --column text --glob-pattern "part_*.parquet"`, with the KYS-Pre-Rewritten
+  `tokenizer/tokenizer.json` (sha256 `81bb383c…d8e5`), then `fix_ds_metadata.py`. With 26 files and 26 tasks,
+  shard i is file i and nothing is shuffled.
+
+**Provenance checks run on 2026-11-06:**
+1. *Anchor identity.* The `source_prompt == 'original'` rows are 4,120,164 unique `orig_doc_id`s. As a set they
+   are identical to the `source == 'anchor'` rows of KYS-Pre-Rewritten `raw_text/raw_disagreement_aware`, whose
+   16 files were verified against `manifest.json` sha256. The intersection is 4,120,164 documents, and the anchor
+   holds 5,000,002,332 tokens.
+2. *Shuffle.* Recomputing `pp_io.bucketed_shuffle(seed=42)` (B = 16 buckets, inputs `shared-top-5B/` +
+   `rewritten/`) reproduces the `shuffled/` row order exactly. The anchor share is 0.327–0.329 in every shard. So
+   this is the document-shuffled corpus, not the unshuffled layout behind the retired `10B-base` sawtooth.
+3. *Token convention.* 6,000 rows sampled from shards 0, 7, 13 and 25, covering all three sources, were
+   re-tokenized with that tokenizer. In every row the stored `train_tokens` equals
+   `len(tokens(text, add_special_tokens=False))`.
+4. *Tokenized output.* There are 26 shards, `0000i_unshuffled.ds` = `shuffled/part_0000i.parquet`. For each shard,
+   the `.ds.metadata` count equals `.ds` bytes / 2, which equals Σ(`train_tokens` + 1) of its parquet file. The
+   exceptions are shards 20 and 23, which are 1 token and 1 document short, from the empty rewrites above. In
+   every shard, the first document's token ids equal its parquet file's first text tokenized + `</s>`. The total
+   is 10,000,002,556. After `fix_ds_metadata.py`, line 1 of all 26 metadata files is byte-identical to the raw
+   baselines' line 1.
+5. *Configs.* The 18 configs were rendered against this cluster's data with the grid profile (dp 4 / mbs 32 /
+   accum 8). The full `assert_invariants.py` (corpus, tokenizer metadata, batch, environment, placeholders) passes
+   on all 18. After renaming, the shipped `.env` files are identical to `raw_random`'s. A `raw_random` config still
+   passes with its total read from `manifest.json`.
+
+This setting was trained once before, in July 2026 (seeds 42/43/44, from the earlier `examples/` configs). Its
+tokenized data and checkpoints from that run are deleted, so this entry re-creates it from the data above.
+
 ## Setup steps
 
 1. **Init.** Verify it (above). trunk1 loads the init as **weights only** (`load_optimizer: false`,

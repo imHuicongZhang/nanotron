@@ -203,7 +203,9 @@ clusters:
     # --- paths on that cluster ---
     data_root: null           # local_dir of snapshot_download("blab-jhu/KYS-Pre-Rewritten", repo_type="dataset");
                               #   after tools/kys_raw/tokenize_raw_text.sh it must contain <setting>/tokenized/ (16 x
-                              #   .ds/.ds.index/.ds.metadata) for all seven settings of tools/kys_raw/registry.py
+                              #   .ds/.ds.index/.ds.metadata) for all seven raw settings of tools/kys_raw/registry.py,
+                              #   plus signal-disagreement-lambda0/tokenized/ (26 shards, shipped tokenized; run
+                              #   tools/fix_ds_metadata.py on it, WORKFLOW_RAW_BASELINES.md §5)
     tokenizer_path: null      # the llama2 tokenizer DIRECTORY: <data_root>/tokenizer (shipped in blab-jhu/KYS-Pre-Rewritten);
                               #   run tools/fix_ds_metadata.py on every tokenized/ folder with this exact path
     ckpt_root: null           # checkpoint root; runs write <ckpt_root>/seed<S>/<setting>/<trunk|epN>/<setting>/seed<S>/<step>/
@@ -336,7 +338,7 @@ seed_assignment:
   43: kys_grid_1p5b
   44: kys_grid_1p5b
 
-# Raw-selected baselines (7 settings, tools/kys_raw/registry.py; configs/1.5B-baseline-seed{42,43,44}) only. They cannot share a cluster
+# Raw-selected baselines (8 settings: 7 raw + signal-disagreement-lambda0, tools/kys_raw/registry.py; configs/1.5B-baseline-seed{42,43,44}) only. They cannot share a cluster
 # with their rewritten counterparts, which ran on kys_grid_1p5b, so render_config.py assigns them
 # here instead and checks mbs uniformity among these clusters alone. Training runs on
 # marc-cluster (configs/1.5B-baseline/RUNBOOK.md); skipjack_h100 was used for the local probe,
