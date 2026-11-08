@@ -7,8 +7,9 @@ the raw text of the seven raw corpora, the tokenizer and, under `signal-disagree
 already-tokenized eighth corpus (§2d; added in revision `8a394d84`, so `4ba8df66` and earlier lack it).
 **Init:** `huggingface.co/wytro/Know-Your-Sources-init`, revision `87e13356`.
 **Outputs go to:** `huggingface.co/blab-jhu/KYS-1.5B-Raw-Selected-Baselines`.
-**Evaluation:** `github.com/imHuicongZhang/kys-eval`, branch `main`, at or after `c8aa8ff` (the first commit that
-covers `signal-disagreement-lambda0`; 72-cell grid).
+**Evaluation:** `github.com/imHuicongZhang/kys-eval`, branch `main`, at or after `216c1ba` (72-cell grid including
+`signal-disagreement-lambda0` since `c8aa8ff`; `216c1ba` adds the result-identity and SLURM-array guards of the
+2026-11-07 prelaunch audit, E-F1/E-F2/E-F12).
 **Comparators:** `huggingface.co/wytro/KYS-1.5B-Rewritten-v2`, revision `b22c8733`.
 
 **What to run now: the rebuttal set, §1b** (nine chains: `raw_diversity_oriented`, `raw_disagreement_aware` and
@@ -706,7 +707,8 @@ It uses the exact v2 protocol (LightEval commit and patch, 0-shot `acc_norm`, da
 - **Benchmarks:** Mean6 (ARC-Easy, HellaSwag, PIQA, SIQA, OpenBookQA, CommonsenseQA) and MMLU (57 subjects,
   macro-averaged, plus 4 categories).
 - **Grid:** 72 cells = 8 settings × 3 seeds × 3 epochs. kys-eval covers `signal-disagreement-lambda0` as of `main`
-  `c8aa8ff` (required: `c8aa8ff` or later). It pairs that setting with `disagreement_aware` (λ = 0.5, §2d), and
+  `c8aa8ff`; required: `216c1ba` or later, which reuses a finished cell only if its `results.json` belongs to that
+  cell's checkpoint and makes the SLURM array refuse to run without `KYS_GRID_ARGS`. It pairs that setting with `disagreement_aware` (λ = 0.5, §2d), and
   labels the pair "λ grid" in `raw_vs_rewritten.md`.
 - **Rebuttal set (§1b):** 27 of the 72 cells. Score them with
   `--settings raw_diversity_oriented raw_disagreement_aware signal-disagreement-lambda0`; the reports then mark
@@ -726,7 +728,8 @@ R="--settings raw_diversity_oriented raw_disagreement_aware signal-disagreement-
 python -m kys_eval.run_grid $R --list --check-hub
 python -m kys_eval.run_grid $R --delete-weights        # skips finished cells
 mkdir -p logs && sbatch --array=0-26 --export=ALL,KYS_EVAL_ROOT=$PWD,KYS_GRID_ARGS="$R" slurm/eval_grid_array.sbatch
-# full grid: the SLURM array 0-71 (one seed: 24 cells, --array=0-23 with KYS_GRID_ARGS="--seeds <S>")
+# full grid: --array=0-71 with KYS_GRID_ARGS=all (one seed: 24 cells, --array=0-23 with KYS_GRID_ARGS="--seeds <S>").
+# KYS_GRID_ARGS is required, and each task refuses an --array range that is not 0..N-1 for the selected N cells.
 python -m kys_eval.run_grid --list --check-hub        # which checkpoints are uploaded / scored
 python -m kys_eval.aggregate                          # reports/raw_selected_report.md, raw_vs_rewritten.md, CSVs
 ```

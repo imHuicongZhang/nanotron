@@ -37,8 +37,8 @@ the raw half holds a random ~half of those sources. Audit: [reports/strategy_lin
 
     configs/1.5B-baseline/README.md, RUNBOOK.md
     configs/1.5B-baseline-seed<S>/                  S = 42, 43, 44
-        templates/<setting>_seed<S>_<kind>.yaml       42 experiment templates (7 settings x 6; tools/generate_configs.py)
-        <setting>_seed<S>_<kind>.yaml                 42 rendered configs with {{PLACEHOLDERS}} (render_placeholders.py)
+        templates/<setting>_seed<S>_<kind>.yaml       48 experiment templates (8 settings x 6; tools/generate_configs.py)
+        <setting>_seed<S>_<kind>.yaml                 48 rendered configs with {{PLACEHOLDERS}} (render_placeholders.py)
     configs/1.5B-baseline/reports/                  selection report, scorer-training audit, config comparison
         filled/                                        produced on the training cluster (fill_placeholders.py)
 
@@ -50,8 +50,9 @@ clone — the `.env` files carry only wandb metadata and are rebuilt from your `
 `<kind>` is `trunk1`, `trunk2`, `trunk3` (stable phase, ending at steps 4292 / 8583 / 12875) and
 `ep1`, `ep2`, `ep3` (decay branches from those trunk steps, ending at 4768 / 9537 / 14305).
 
-**What differs between settings.** Across the seven settings the configs are identical after renaming (all 126;
-`reports/CONFIG_COMPARISON.md`). Against its rewritten counterpart, each rendered config differs
+**What differs between settings.** Across the eight settings the configs are identical after renaming (all 144:
+the seven raw settings' 126 in `reports/CONFIG_COMPARISON.md`; `signal-disagreement-lambda0`'s 18 against
+`raw_random`'s, same text comparison, 18/18, checked 2026-11-08). Against its rewritten counterpart, each rendered config differs
 in exactly four fields (the 24 original seed-42 configs rendered for skipjack and diffed): `general.run`, the
 dataset folder, the checkpoint paths (setting name only), and `parallelism.recompute_layer`. Model,
 LR schedule, steps, global batch, micro batch, seeds and data order are identical.
@@ -205,9 +206,9 @@ per-step overhead.
 
 **Wall time at 22.8 s/it**, per setting per seed: 27.2 h for each of the three trunk segments (the
 longest single job, comfortably inside a 3-day limit), 3.0 / 6.0 / 9.1 h for ep1 / ep2 / ep3 —
-15,735 steps, **99.7 h ~= 4.15 days** (one node). One seed of the seven-setting grid: 7 x 99.7 = **698 node-hours**;
-all 21 chains: **2,093 node-hours** on 4 x H100. (An earlier version of this page said ~2,392 node-hours for one
-seed of four settings; that was an arithmetic error — four chains are 399 node-hours.) Pass the measured value to the planner with
+15,735 steps, **99.7 h ~= 4.15 days** (one node). One seed of the eight-setting grid: 8 x 99.7 = **798 node-hours**;
+all 24 chains: **2,392 node-hours** on 4 x H100 (the rebuttal set's 9 chains: **897 node-hours**). (A much earlier version of this page also said ~2,392 node-hours, but for one seed of four settings; that was an
+arithmetic error — four chains are 399 node-hours. 2,392 is now the correct total for 24 chains.) Pass the measured value to the planner with
 `plan_submit.py --s-per-it 22.8` to get this table for your own cluster.
 
 ## Environment notes (skipjack; see INSTALL.md)

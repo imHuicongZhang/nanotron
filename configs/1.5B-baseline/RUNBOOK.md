@@ -256,8 +256,9 @@ Use your own wandb project, or `mode: offline` with `wandb.dir` on shared storag
 
 ## Evaluation
 
-Use `github.com/imHuicongZhang/kys-eval` at `main` `c8aa8ff` or later, which covers `signal-disagreement-lambda0`
-(paired with `disagreement_aware`). The full grid is 72 cells; the rebuttal set is 27, selected with
+Use `github.com/imHuicongZhang/kys-eval` at `main` `216c1ba` or later. It covers `signal-disagreement-lambda0`
+(paired with `disagreement_aware`), reuses a finished cell only if its results belong to that checkpoint, and its
+SLURM array refuses to run without `KYS_GRID_ARGS` or with an `--array` range that does not match it. The full grid is 72 cells; the rebuttal set is 27, selected with
 `--settings raw_diversity_oriented raw_disagreement_aware signal-disagreement-lambda0`. Run the reference check
 first, then `run_grid`, then `aggregate`. The commands
 are in WORKFLOW §14 and the kys-eval README. Upload `results/` and `reports/` to `rewrite-1p5b/seed<S>/eval/`.

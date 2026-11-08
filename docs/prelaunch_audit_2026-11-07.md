@@ -572,3 +572,24 @@ explicit value `all`, which the rebuttal set never uses. The WORKFLOW §6 and §
 missing flag (argparse, exit 2), an empty value and an unknown name; seed 42 with the three wave-1 settings renders
 and plans 18 segments (assert_invariants passes on each); `--settings all` renders and plans 48. Nothing was submitted.
 The F11 grep gate in Part F is no longer needed for T-F3, but stays harmless.
+
+### Addendum 3 (2026-11-08) — E-F1, E-F2, E-F12 fixed in kys-eval; D-F4 fixed
+
+- kys-eval `main` @ `216c1ba876b6702d7000a1395b31e7f76a87ded4` (required revision in WORKFLOW and RUNBOOK is now
+  `216c1ba` or later):
+  - E-F1: a cell is skipped only if its complete `results.json` has the same model path (HF repo + subfolder or
+    local dir), the pinned revision when one is given, and the same setting / seed / epoch / step / subfolder /
+    repo. Otherwise it is re-evaluated; `run_grid --list` marks it `stale`. A re-upload to the same path and
+    revision is still not detectable: keep `--force` for that case (F12).
+  - E-F2: `eval_grid_array.sbatch` exits 2 without `KYS_GRID_ARGS` (`all` = 72 cells), and each task exits 2
+    unless `--array` is exactly `0..N-1` for the N selected cells (`run_grid --expect-cells`);
+    `KYS_ARRAY_PARTIAL=1` allows re-running single indices. Default array `0-26%8`. The F12 commands still work
+    unchanged, since they already export `KYS_GRID_ARGS`.
+  - E-F12: `aggregate.py` now writes that the v2 checkpoints are the source of the paper's ICLR tables. The kys-eval
+    README's own stale v2 sentence (line 10, Part E list) was not changed.
+  - `python -m kys_eval.selftest` passes, with new identity and array-size cases; the sbatch guard was exercised with
+    stubbed `python` / `nvidia-smi` for: no args (refused), rebuttal 0-26 (runs, `--expect-cells 27`), `all` 0-71,
+    `--array=7-12` (refused; runs with `KYS_ARRAY_PARTIAL=1`), and full grid with a 27-task array (refused).
+- D-F4: `configs/1.5B-baseline/README.md` now says 48 templates / 48 rendered configs per seed, 144 identical after
+  renaming (the 18 λ0 configs checked against `raw_random`'s, 18/18), 8 × 99.7 = 798 node-hours per seed, 24 chains
+  = 2,392 node-hours, rebuttal set 897.
