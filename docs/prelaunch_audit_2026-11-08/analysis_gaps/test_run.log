@@ -1,0 +1,16 @@
+PASS 0 v2-only run
+PASS A1 rebuttal cell scores == comparator scores, bit for bit (27 x 12)  27 files, problems 0
+PASS A0 run with --kys-results (hf layout)  [kys] 27 rebuttal cells from /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/analysis_gaps/work/tree_hf; 6 added pairs: rawDO-DO, rawDO-QB, rawDA-DA, rawDA-QB, DA0-DA
+PASS A2 v2-pair rows, ranks and Step 1 unchanged; new per-checkpoint rows == comparator rows
+PASS A3 new − primary comparator: all 0.00, 0/3 seeds  222 rebuttal rows in the three CSVs
+PASS A4 new − quality_base rows == v2 comparator − quality_base rows
+PASS A5 tables.tex: 6 added pairs in each of the two pairwise tables  12 rows
+PASS B native kys-eval tree gives the same outputs
+PASS C refuses missing_cell  ('rewrite-1p5b/seed43/raw_disagreement_aware/ep2/hf', 'no valid results.json')
+PASS C refuses wrong_step  ('/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/analysis_gaps/work/neg_wrong_step/rewrite-1p5b/seed43/raw_disagreement_aware/ep2/hf/results.json', '
+PASS C refuses wrong_model_subfolder  ('/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/analysis_gaps/work/neg_wrong_model_subfolder/rewrite-1p5b/seed43/raw_disagreement_aware/ep2/hf/resul
+PASS C refuses incomplete  ('/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/analysis_gaps/work/neg_incomplete/rewrite-1p5b/seed43/raw_disagreement_aware/ep2/hf/results.json', '
+PASS C refuses misplaced_path  ('/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/analysis_gaps/work/neg_misplaced_path/rewrite-1p5b/seed44/raw_disagreement_aware/ep2/hf/extra/result
+PASS C refuses duplicate  ('/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/analysis_gaps/work/neg_duplicate/rewrite-1p5b/seed43/raw_disagreement_aware/ep2/hf/results.json', 'd
+PASS D kys-eval aggregate: primary Δ = 0; quality_base Δ = setting − QB = paired_analysis comparator − QB  216 rows (3 settings x 2 comparators x 3 epochs x 12 benchmarks); primary rows with a 'positive' seed from CSV rounding: 78 of 108
+PASS D2 report states the Appendix F orientation

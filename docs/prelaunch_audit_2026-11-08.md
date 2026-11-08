@@ -294,3 +294,40 @@ kys-eval `main` = `1c191acf` (unchanged); main clone `nanotron-kys` untouched.
   wording items G-D2…G-D8. Deviations needing a sentence: greedy decoding (5), plus λ0 seed 44 dp 8 and
   training-hardware difference for the rebuttal's own list.
 - **Handoff prompt for the final independent review:** `prelaunch_audit_2026-11-08/HANDOFF_GPT6.md`.
+
+## 11. Addendum (2026-11-08, later) — analysis gaps G-O1, G-O2, G-O3 closed
+
+| gap | change | commit |
+|---|---|---|
+| G-O1 (no Quality-Base pairs) | kys-eval `aggregate.py`: every setting whose primary comparator is not `quality_base` (the four strategy-linked controls and λ0) is also paired with `quality_base` (`config.APPENDIX_F_BASELINE`); `raw_vs_rewritten.csv` gains a `comparison` column (`primary` / `quality_base`) | kys-eval `main` **`668a9dd3e37caecc007a7a35629238ee4ccd5852`** (pushed) |
+| G-O2 (sign convention) | same commit: Δ = setting − comparator per seed; "Seeds Δ>0" = seeds in which the setting is higher (Appendix F). `rewritten_*` CSV columns renamed `comparator_*` so old consumers fail loudly instead of reading flipped signs. README and the report text updated; selftest updated (13 pairs × 3 × 12) and passing | same |
+| G-O3 (paired analysis cannot read kys-eval output) | `projects/rewrite/docs/rebuttal_q1_paired_analysis/paired_analysis.py --kys-results ROOT [--out-dir]`: loads kys-eval `results.json` files for the 27 rebuttal cells, each identified by `rewrite-1p5b/seed<S>/<setting>/ep<N>/hf` (stored cell, model spec/subfolder and file path must agree; complete, unique, all 27 required); scores computed with the v2 arithmetic; pairs each rebuttal setting − its comparator and − `quality_base` in the same CSV / LaTeX / LOTO / 2d outputs. Step 1 and ranks stay on the six v2 settings | `projects/rewrite` `master`: **`ecf7d74`** (the 2026-11-06 folder committed unchanged, so the change is a diff) and **`c639080`** (the loader). **Not pushed: the `projects/rewrite` repository has no git remote.** |
+
+kys-eval scoring (`eval_checkpoint`, `run_grid`, the protocol) is unchanged; the collaborator's requirement
+"kys-eval `216c1ba` or later" in WORKFLOW/RUNBOOK still holds and was not edited. No training-side file changed.
+
+**Identity test against the 54 v2 files** (`prelaunch_audit_2026-11-08/analysis_gaps/test_analysis_gaps.py`, log
+`test_run.log`, results `test_results.json`; work trees in `analysis_gaps/work/`, not committed). The 27 rebuttal
+cells were filled with their primary comparator's v2 LightEval results through kys-eval's `package_existing` →
+`build_results`, once in the `rewrite-1p5b/seed<S>/<setting>/ep<N>/hf/` layout and once in kys-eval's native
+`raw_selected/` tree with the full model provenance dict. 17/17 checks pass:
+- regression: `paired_analysis.py` without `--kys-results` writes all 13 outputs byte-identical to the committed
+  2026-11-06 files (`analysis_gaps/regression/`, local);
+- A1 every rebuttal cell's 12 scores equal the comparator's bit for bit; A2 the 15 v2 pairs' rows, the ranks and
+  Step 1 are unchanged; A3 setting − primary comparator is 0.00 / 0.00 / 0/3 in all 222 added CSV rows; A4 setting −
+  Quality Base equals the v2 row comparator − Quality Base field for field; A5 `tables.tex` has the 6 added pairs in a
+  third block of both pairwise tables; B the native tree gives identical outputs;
+- C the loader refuses (exit 1, with the reason) a missing cell, a wrong step, a wrong model subfolder, an incomplete
+  file, a file under another cell's path, and a duplicate;
+- D kys-eval `aggregate.py` on the same cells: primary Δ = 0 (|Δ| < 1e-9) with n = 3; Quality-Base Δ (setting − QB)
+  equals `paired_analysis`'s comparator − QB in mean, SD and positive-seed count for all 108 rows; the report states
+  the orientation.
+
+**New minor finding (G-O5, Note).** In the identity test, 78 of kys-eval's 108 primary rows count a "positive" seed
+although the true difference is 0: `aggregate.py` takes the comparator from `reference/rewritten_v2_54_per_task.csv`
+(10 decimals) but the new cell from full-precision JSON, so exact ties appear as ±1e-11. Irrelevant for real
+checkpoints (differences are ~1e-3), but it means kys-eval's seed counts are not trustworthy for ties at the 1e-10
+level; `paired_analysis.py` reads the raw JSON on both sides and has no such artefact. No change made.
+
+Revisions after this addendum: nanotron `huicong-dev` = the commit adding this addendum (docs only); kys-eval `main` =
+`668a9dd3`; `projects/rewrite` `master` = `c639080` (local only).
