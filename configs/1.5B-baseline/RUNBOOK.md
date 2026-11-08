@@ -226,8 +226,13 @@ tokenized data and checkpoints from that run are deleted, so this entry re-creat
    - `--settings a,b` restricts it to a subset.
    - `--submit` runs the script.
    - Run it from the clone set as `repo_dir`.
-7. **Requeue.** A trunk resumes via `latest.txt`, losing at most 1500 steps; a branch reruns from its branch point; a
-   segment whose final checkpoint exists exits 0. Do **not** resubmit while jobs of the seed are still queued or
+7. **Requeue.** A trunk resumes via `latest.txt` with its full state (weights, AdamW, LR schedule, step and
+   consumed-sample counters), losing at most 1500 steps. trunk1 is rendered weights-only because step 0 is the init.
+   When its `latest.txt` is past 0, `kys_segment.sbatch` therefore runs a copy written by
+   `tools/kys_raw/trunk_restart_config.py` that loads that state. `assert_invariants.py --check-resume` refuses a
+   weights-only trunk config past step 0 (prelaunch audit 2026-11-07, B1: before this fix such a restart silently
+   began again from step 0 on trained weights). A branch reruns from its branch point; a segment whose final
+   checkpoint exists exits 0. Do **not** resubmit while jobs of the seed are still queued or
    running: the final-checkpoint skip does not protect an unfinished segment.
 
 ## Logging

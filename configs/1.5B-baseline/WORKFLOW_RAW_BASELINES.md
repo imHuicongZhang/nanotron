@@ -482,6 +482,13 @@ A job with a shorter limit requeues forever at the same step. So `slurm.time` mu
 speed. A full trunk segment is 27.2 h, so a limit of ≥ 28 h avoids trunk requeues entirely.
 `plan_submit.py --s-per-it <measured>` refuses a `time` that is too short for your measured speed.
 
+A limit between 12 h and 28 h is safe for trunk1 too, but only with the launcher at or after the B1 fix
+(prelaunch audit 2026-11-07). trunk1 is rendered weights-only, because its step 0 is the init, which has no
+optimizer state. Before that fix, a trunk1 restarted from its step-1500 or 3000 save reloaded the weights but
+restarted the LR schedule, AdamW state and data stream from step 0, and still exited 0. Now `kys_segment.sbatch`
+runs a state-loading copy of the config whenever `latest.txt` > 0 (§9), and `assert_invariants.py --check-resume`
+refuses a weights-only trunk config whose `latest.txt` is not 0.
+
 ---
 
 ## 8. Smoke checks — before any full submission
@@ -535,12 +542,20 @@ In `--test-only` mode dependencies are omitted, because the upstream ids do not 
 
 **Inside each job** (`deploy/slurm/kys_segment.sbatch`):
 - if `<ckpt>/<final step>/model_config.json` already exists, the job exits 0;
-- otherwise it sources the `.env`, runs `assert_invariants.py --config <cfg> --check-resume`, then `torchrun`;
+- otherwise it sources the `.env` and picks the config to run with `tools/kys_raw/trunk_restart_config.py`. That
+  is the rendered config itself, except for a trunk whose config is weights-only (trunk1) while `latest.txt` > 0.
+  Then the job writes `<trunk dir>.restart/<run>_from<step>.yaml`, a copy that differs only in
+  `load_optimizer: true` and `load_lr_scheduler: true`, and logs `[restart-config] … running …`;
+- it runs `assert_invariants.py --config <that config> --check-resume`, then `torchrun`;
 - it fails if the final checkpoint was not written, so dependents do not start.
 
 **What is and is not safe:**
 - *Requeue after preemption or node failure* is handled.
-  - A trunk resumes from its newest checkpoint via `latest.txt`, losing at most 1500 steps.
+  - A trunk resumes from its newest checkpoint via `latest.txt`, losing at most 1500 steps. It restores the weights,
+    AdamW state, LR schedule and step/consumed-sample counters, so the data stream continues where it stopped. For
+    trunk1 this holds only because of the restart copy above. `--check-resume` refuses to start a weights-only
+    trunk1 whose `latest.txt` is past 0, so a manual launch cannot silently restart it from step 0 either. A
+    restarted trunk1's first logged iteration is therefore the saved step + 1 (1501 or 3001), not 1.
   - A branch reruns from its branch point.
   - The dependency chain holds because SLURM keeps the job id across a requeue. This is SLURM semantics and was not
     exercised in this preparation.

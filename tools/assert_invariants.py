@@ -389,6 +389,18 @@ def check_resume(cfg_path: Path):
             if not (tgt / "model_config.json").is_file():
                 errs.append(f"latest.txt points at step {step} but {tgt}/model_config.json "
                             f"is missing")
+            # Audit 2026-11-07, B1: with either flag false, nanotron loads the weights at
+            # latest.txt but rebuilds metadata at step 0 (trainer.py "Define iteration start
+            # state"), restarting warmup, AdamW and the data stream on trained weights while
+            # still exiting 0. Only the init (step 0) may be loaded weights-only.
+            no_state = [f for f in ("load_optimizer", "load_lr_scheduler") if not ck.get(f)]
+            if step != "0" and no_state:
+                errs.append(f"latest.txt points at step {step} > 0 but {' and '.join(no_state)} "
+                            f"{'is' if len(no_state) == 1 else 'are'} false: nanotron would load the "
+                            f"step-{step} weights and restart the LR schedule, optimizer state and "
+                            f"data stream from step 0. Run the config printed by "
+                            f"`tools/kys_raw/trunk_restart_config.py {cfg_path}` instead "
+                            f"(deploy/slurm/kys_segment.sbatch does this automatically).")
     else:
         # direct step-dir form: must BE a checkpoint, and must be the right step
         want = str(cfg["optimizer"]["learning_rate_scheduler"]["lr_decay_starting_step"])
