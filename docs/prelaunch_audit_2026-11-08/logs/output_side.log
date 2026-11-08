@@ -1,0 +1,8 @@
+PASS 1 MMLU category map identical  57 subjects; categories ['Humanities', 'Other', 'STEM', 'Social Sciences']
+PASS 1b category keys  {'mmlu_stem': 'mmlu_stem', 'mmlu_humanities': 'mmlu_humanities', 'mmlu_social_sciences': 'mmlu_social_sciences', 'mmlu_other': 'mmlu_other'}
+PASS 2 kys-eval scores == paired_analysis per_checkpoint_scores (54 x 12)  54 checkpoints, max |diff| 4.99e-05 points (CSV has 4 decimals)
+PASS 3 reference CSV == v2 JSONs (acc, acc_norm)  3402 task cells, max |diff| 5.0e-11, steps match True
+PASS 4 identity: Δ = 0, n_paired = 3 for the rebuttal pairs  108 rows, 0 bad
+PASS 4b non-rebuttal settings have no pairs  0 rows with data
+PASS 5 aggregate Δ(DA − λ0:=QB) == paired_analysis DA − QB (Mean6, MMLU, 3 epochs)  max |diff| 0.0032 points (reference has 2 decimals), seed counts True
+PASS 5b per-task epoch 3 Δ == paired_analysis per-task DA − QB  10 rows, max |diff| 0.0047

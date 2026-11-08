@@ -1,0 +1,10 @@
+hub revision afd1f177aa08f5bab9f5695048cc7b1be428d6fa files 213
+A manifest identical: True
+B raw_diversity_oriented True 16 7138615
+B raw_disagreement_aware True 16 7018928
+C raw_diversity_oriented {'shards': 16, 'bytes_div2': 10000002885, 'metadata_sum': 10000002885, 'folder': '/home/jhu/zhuicon1/projects_bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/raw_diversity_oriented/tokenized', 'ok': True}
+C raw_disagreement_aware {'shards': 16, 'bytes_div2': 10000005069, 'metadata_sum': 10000005069, 'folder': '/home/jhu/zhuicon1/projects_bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/raw_disagreement_aware/tokenized', 'ok': True}
+D {'local_sums_entries': 78, 'local_files_match_local_sums': True, 'local_sums_eq_hub_sums': True, 'hub_tokenized_files': 79, 'hub_lfs_sha_eq_hub_sums': True, 'hub_lfs_checked': 52, 'shards': 26, 'bytes_div2': 10000002556, 'metadata_sum': 10000002556, 'ok_total': True}
+E {'tokenizer.json': True, 'tokenizer_config.json': True, 'tokenizer_report.json': True} {'tokenizer.json': False, 'tokenizer_config.json': False, 'tokenizer_report.json': False}
+F {'raw_text/raw_diversity_oriented/': 16, 'raw_text/raw_disagreement_aware/': 16, 'signal-disagreement-lambda0/tokenized/': 79, 'tokenizer/': 3}
+wrote /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/evidence/verify_data.json

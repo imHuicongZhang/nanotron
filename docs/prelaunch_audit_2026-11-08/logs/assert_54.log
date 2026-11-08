@@ -1,0 +1,4 @@
+full assert_invariants: pass=54 fail=0 (expected 54/0)
+      3           16 shards, 10,000,002,885 tokens (expected 10,000,002,885)
+      3           16 shards, 10,000,005,069 tokens (expected 10,000,005,069)
+      3           26 shards, 10,000,002,556 tokens (expected 10,000,002,556)

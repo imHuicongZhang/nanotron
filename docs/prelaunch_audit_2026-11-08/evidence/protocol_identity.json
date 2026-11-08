@@ -1,0 +1,5271 @@
+{
+ "rows": {
+  "42/ep1/raw_diversity_oriented/vs/diversity_oriented": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/trunk/raw_diversity_oriented/seed42/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed42_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/ep1/raw_diversity_oriented/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed42_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed42_ep1",
+     "diversity_oriented_seed42_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep1/raw_diversity_oriented/vs/quality_base": {
+   "diff": {
+    "tokens.micro_batch_size": [
+     32,
+     16
+    ],
+    "tokens.batch_accumulation_per_replica": [
+     8,
+     16
+    ],
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 63,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/trunk/raw_diversity_oriented/seed42/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/ep1/raw_diversity_oriented/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed42_ep1",
+     "quality_base_seed42_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep1/raw_disagreement_aware/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/trunk/raw_disagreement_aware/seed42/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/ep1/raw_disagreement_aware/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed42_ep1",
+     "disagreement_aware_seed42_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep1/raw_disagreement_aware/vs/quality_base": {
+   "diff": {
+    "tokens.micro_batch_size": [
+     32,
+     16
+    ],
+    "tokens.batch_accumulation_per_replica": [
+     8,
+     16
+    ],
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 63,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/trunk/raw_disagreement_aware/seed42/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/ep1/raw_disagreement_aware/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed42_ep1",
+     "quality_base_seed42_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep1/signal-disagreement-lambda0/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed42/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/ep1/signal-disagreement-lambda0/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed42_ep1",
+     "disagreement_aware_seed42_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep1/signal-disagreement-lambda0/vs/quality_base": {
+   "diff": {
+    "tokens.micro_batch_size": [
+     32,
+     16
+    ],
+    "tokens.batch_accumulation_per_replica": [
+     8,
+     16
+    ],
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 63,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed42/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/ep1/signal-disagreement-lambda0/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed42_ep1",
+     "quality_base_seed42_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep2/raw_diversity_oriented/vs/diversity_oriented": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/trunk/raw_diversity_oriented/seed42/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed42_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/ep2/raw_diversity_oriented/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed42_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed42_ep2",
+     "diversity_oriented_seed42_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep2/raw_diversity_oriented/vs/quality_base": {
+   "diff": {
+    "tokens.micro_batch_size": [
+     32,
+     16
+    ],
+    "tokens.batch_accumulation_per_replica": [
+     8,
+     16
+    ],
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 63,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/trunk/raw_diversity_oriented/seed42/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/ep2/raw_diversity_oriented/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed42_ep2",
+     "quality_base_seed42_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep2/raw_disagreement_aware/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/trunk/raw_disagreement_aware/seed42/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/ep2/raw_disagreement_aware/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed42_ep2",
+     "disagreement_aware_seed42_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep2/raw_disagreement_aware/vs/quality_base": {
+   "diff": {
+    "tokens.micro_batch_size": [
+     32,
+     16
+    ],
+    "tokens.batch_accumulation_per_replica": [
+     8,
+     16
+    ],
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 63,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/trunk/raw_disagreement_aware/seed42/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/ep2/raw_disagreement_aware/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed42_ep2",
+     "quality_base_seed42_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep2/signal-disagreement-lambda0/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed42/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/ep2/signal-disagreement-lambda0/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed42_ep2",
+     "disagreement_aware_seed42_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep2/signal-disagreement-lambda0/vs/quality_base": {
+   "diff": {
+    "tokens.micro_batch_size": [
+     32,
+     16
+    ],
+    "tokens.batch_accumulation_per_replica": [
+     8,
+     16
+    ],
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 63,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed42/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/ep2/signal-disagreement-lambda0/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed42_ep2",
+     "quality_base_seed42_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep3/raw_diversity_oriented/vs/diversity_oriented": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/trunk/raw_diversity_oriented/seed42/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed42_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/ep3/raw_diversity_oriented/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed42_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed42_ep3",
+     "diversity_oriented_seed42_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep3/raw_diversity_oriented/vs/quality_base": {
+   "diff": {
+    "tokens.micro_batch_size": [
+     32,
+     16
+    ],
+    "tokens.batch_accumulation_per_replica": [
+     8,
+     16
+    ],
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 63,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/trunk/raw_diversity_oriented/seed42/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_diversity_oriented/ep3/raw_diversity_oriented/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed42_ep3",
+     "quality_base_seed42_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep3/raw_disagreement_aware/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/trunk/raw_disagreement_aware/seed42/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/ep3/raw_disagreement_aware/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed42_ep3",
+     "disagreement_aware_seed42_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep3/raw_disagreement_aware/vs/quality_base": {
+   "diff": {
+    "tokens.micro_batch_size": [
+     32,
+     16
+    ],
+    "tokens.batch_accumulation_per_replica": [
+     8,
+     16
+    ],
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 63,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/trunk/raw_disagreement_aware/seed42/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/raw_disagreement_aware/ep3/raw_disagreement_aware/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed42_ep3",
+     "quality_base_seed42_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep3/signal-disagreement-lambda0/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed42/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/ep3/signal-disagreement-lambda0/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed42_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed42_ep3",
+     "disagreement_aware_seed42_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "42/ep3/signal-disagreement-lambda0/vs/quality_base": {
+   "diff": {
+    "tokens.micro_batch_size": [
+     32,
+     16
+    ],
+    "tokens.batch_accumulation_per_replica": [
+     8,
+     16
+    ],
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 63,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed42/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed42/signal-disagreement-lambda0/ep3/signal-disagreement-lambda0/seed42",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed42_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed42_ep3",
+     "quality_base_seed42_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep1/raw_diversity_oriented/vs/diversity_oriented": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/trunk/raw_diversity_oriented/seed43/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed43_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/ep1/raw_diversity_oriented/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed43_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed43_ep1",
+     "diversity_oriented_seed43_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep1/raw_diversity_oriented/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/trunk/raw_diversity_oriented/seed43/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/ep1/raw_diversity_oriented/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed43_ep1",
+     "quality_base_seed43_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep1/raw_disagreement_aware/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/trunk/raw_disagreement_aware/seed43/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/ep1/raw_disagreement_aware/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed43_ep1",
+     "disagreement_aware_seed43_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep1/raw_disagreement_aware/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/trunk/raw_disagreement_aware/seed43/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/ep1/raw_disagreement_aware/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed43_ep1",
+     "quality_base_seed43_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep1/signal-disagreement-lambda0/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed43/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/ep1/signal-disagreement-lambda0/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed43_ep1",
+     "disagreement_aware_seed43_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep1/signal-disagreement-lambda0/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed43/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/ep1/signal-disagreement-lambda0/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed43_ep1",
+     "quality_base_seed43_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep2/raw_diversity_oriented/vs/diversity_oriented": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/trunk/raw_diversity_oriented/seed43/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed43_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/ep2/raw_diversity_oriented/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed43_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed43_ep2",
+     "diversity_oriented_seed43_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep2/raw_diversity_oriented/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/trunk/raw_diversity_oriented/seed43/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/ep2/raw_diversity_oriented/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed43_ep2",
+     "quality_base_seed43_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep2/raw_disagreement_aware/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/trunk/raw_disagreement_aware/seed43/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/ep2/raw_disagreement_aware/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed43_ep2",
+     "disagreement_aware_seed43_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep2/raw_disagreement_aware/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/trunk/raw_disagreement_aware/seed43/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/ep2/raw_disagreement_aware/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed43_ep2",
+     "quality_base_seed43_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep2/signal-disagreement-lambda0/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed43/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/ep2/signal-disagreement-lambda0/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed43_ep2",
+     "disagreement_aware_seed43_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep2/signal-disagreement-lambda0/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed43/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/ep2/signal-disagreement-lambda0/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed43_ep2",
+     "quality_base_seed43_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep3/raw_diversity_oriented/vs/diversity_oriented": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/trunk/raw_diversity_oriented/seed43/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed43_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/ep3/raw_diversity_oriented/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed43_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed43_ep3",
+     "diversity_oriented_seed43_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep3/raw_diversity_oriented/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/trunk/raw_diversity_oriented/seed43/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_diversity_oriented/ep3/raw_diversity_oriented/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed43_ep3",
+     "quality_base_seed43_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep3/raw_disagreement_aware/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/trunk/raw_disagreement_aware/seed43/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/ep3/raw_disagreement_aware/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed43_ep3",
+     "disagreement_aware_seed43_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep3/raw_disagreement_aware/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/trunk/raw_disagreement_aware/seed43/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/raw_disagreement_aware/ep3/raw_disagreement_aware/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed43_ep3",
+     "quality_base_seed43_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep3/signal-disagreement-lambda0/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed43/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/ep3/signal-disagreement-lambda0/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed43_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed43_ep3",
+     "disagreement_aware_seed43_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "43/ep3/signal-disagreement-lambda0/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed43/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed43/signal-disagreement-lambda0/ep3/signal-disagreement-lambda0/seed43",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed43_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed43_ep3",
+     "quality_base_seed43_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep1/raw_diversity_oriented/vs/diversity_oriented": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/trunk/raw_diversity_oriented/seed44/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed44_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/ep1/raw_diversity_oriented/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed44_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed44_ep1",
+     "diversity_oriented_seed44_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep1/raw_diversity_oriented/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/trunk/raw_diversity_oriented/seed44/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/ep1/raw_diversity_oriented/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed44_ep1",
+     "quality_base_seed44_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep1/raw_disagreement_aware/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/trunk/raw_disagreement_aware/seed44/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/ep1/raw_disagreement_aware/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed44_ep1",
+     "disagreement_aware_seed44_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep1/raw_disagreement_aware/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/trunk/raw_disagreement_aware/seed44/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/ep1/raw_disagreement_aware/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed44_ep1",
+     "quality_base_seed44_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep1/signal-disagreement-lambda0/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed44/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/ep1/signal-disagreement-lambda0/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed44_ep1",
+     "disagreement_aware_seed44_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep1/signal-disagreement-lambda0/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed44/4292",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_trunk/4292"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/ep1/signal-disagreement-lambda0/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_ep1"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed44_ep1",
+     "quality_base_seed44_ep1"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 9999220736,
+     "consumed_train_samples": 4882432,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 9999220736
+       },
+       "consumed_train_samples": 4882432,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 4768
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep2/raw_diversity_oriented/vs/diversity_oriented": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/trunk/raw_diversity_oriented/seed44/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed44_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/ep2/raw_diversity_oriented/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed44_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed44_ep2",
+     "diversity_oriented_seed44_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep2/raw_diversity_oriented/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/trunk/raw_diversity_oriented/seed44/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/ep2/raw_diversity_oriented/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed44_ep2",
+     "quality_base_seed44_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep2/raw_disagreement_aware/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/trunk/raw_disagreement_aware/seed44/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/ep2/raw_disagreement_aware/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed44_ep2",
+     "disagreement_aware_seed44_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep2/raw_disagreement_aware/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/trunk/raw_disagreement_aware/seed44/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/ep2/raw_disagreement_aware/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed44_ep2",
+     "quality_base_seed44_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep2/signal-disagreement-lambda0/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed44/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/ep2/signal-disagreement-lambda0/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed44_ep2",
+     "disagreement_aware_seed44_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep2/signal-disagreement-lambda0/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed44/8583",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_trunk/8583"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/ep2/signal-disagreement-lambda0/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_ep2"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed44_ep2",
+     "quality_base_seed44_ep2"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 20000538624,
+     "consumed_train_samples": 9765888,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 20000538624
+       },
+       "consumed_train_samples": 9765888,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 9537
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep3/raw_diversity_oriented/vs/diversity_oriented": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/trunk/raw_diversity_oriented/seed44/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed44_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/ep3/raw_diversity_oriented/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/diversity_oriented_seed44_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed44_ep3",
+     "diversity_oriented_seed44_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/diversity_oriented/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep3/raw_diversity_oriented/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/trunk/raw_diversity_oriented/seed44/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_diversity_oriented/ep3/raw_diversity_oriented/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_diversity_oriented/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_diversity_oriented_seed44_ep3",
+     "quality_base_seed44_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep3/raw_disagreement_aware/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/trunk/raw_disagreement_aware/seed44/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/ep3/raw_disagreement_aware/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed44_ep3",
+     "disagreement_aware_seed44_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep3/raw_disagreement_aware/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/trunk/raw_disagreement_aware/seed44/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/raw_disagreement_aware/ep3/raw_disagreement_aware/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/raw_disagreement_aware/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "raw_disagreement_aware_seed44_ep3",
+     "quality_base_seed44_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep3/signal-disagreement-lambda0/vs/disagreement_aware": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed44/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/ep3/signal-disagreement-lambda0/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/disagreement_aware_seed44_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed44_ep3",
+     "disagreement_aware_seed44_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/disagreement_aware/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  },
+  "44/ep3/signal-disagreement-lambda0/vs/quality_base": {
+   "diff": {
+    "parallelism.recompute_layer": [
+     "{{RECOMPUTE_LAYER}}",
+     false
+    ]
+   },
+   "only_in_v2": [
+    "checkpoints.checkpoints_path_is_shared_file_system",
+    "data_stages.0.data.dataset.dataset_max_tokens",
+    "data_stages.0.data.dataset.dataset_read_path",
+    "data_stages.0.data.dataset.dataset_weights",
+    "data_stages.0.data.dataset.pad_samples_to_global_batch_size",
+    "data_stages.0.data.dataset.return_positions",
+    "data_stages.0.data.dataset.shuffle_files",
+    "data_stages.0.data.dataset.skip_in_stream",
+    "data_stages.0.data.dataset.token_size_in_bytes",
+    "data_stages.0.data.dataset.tokenizer_name",
+    "data_stages.0.data.dataset.use_old_brrr_dataloader",
+    "data_stages.0.data.dataset.vocab_size",
+    "data_stages.0.sequence_length",
+    "general.benchmark_csv_path",
+    "general.consumed_train_samples",
+    "general.ignore_sanity_checks",
+    "general.step",
+    "lighteval",
+    "logging.log_level",
+    "logging.log_level_replica",
+    "metrics_logging",
+    "model.init_method.scaling_method",
+    "model.model_config._attn_implementation",
+    "model.model_config.initializer_range",
+    "model.model_config.rope_scaling",
+    "model.model_config.z_loss_coefficient",
+    "model.model_config.z_loss_enabled",
+    "optimizer.weight_decay_exclude_named_params",
+    "parallelism.context_parallel_size",
+    "parallelism.tp_recompute_allgather",
+    "profiler",
+    "s3_upload",
+    "tokenizer.tokenizer_max_length",
+    "tokenizer.tokenizer_revision"
+   ],
+   "equal": 65,
+   "n_new": 71,
+   "run_fields": {
+    "checkpoints.resume_checkpoint_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/trunk/signal-disagreement-lambda0/seed44/12875",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_trunk/12875"
+    ],
+    "checkpoints.checkpoints_path": [
+     "{{CKPT_ROOT}}/seed44/signal-disagreement-lambda0/ep3/signal-disagreement-lambda0/seed44",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/checkpoints/quality_base_seed44_ep3"
+    ],
+    "data_stages.0.data.dataset.dataset_folder": [
+     [
+      "{{DATA_ROOT}}/signal-disagreement-lambda0/tokenized"
+     ],
+     [
+      "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized"
+     ]
+    ],
+    "general.run": [
+     "signal-disagreement-lambda0_seed44_ep3",
+     "quality_base_seed44_ep3"
+    ],
+    "tokenizer.tokenizer_name_or_path": [
+     "{{TOKENIZER_PATH}}",
+     "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/tokenizer"
+    ]
+   },
+   "v2_checkpoint_metadata": {
+    "cp": 1,
+    "custom_metas": null,
+    "dp": 4,
+    "metas": {
+     "consumed_tokens_total": 29999759360,
+     "consumed_train_samples": 14648320,
+     "data_stages": [
+      {
+       "consumed_tokens_per_dataset_folder": {
+        "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 29999759360
+       },
+       "consumed_train_samples": 14648320,
+       "name": "S0_top10B",
+       "sequence_length": 2048,
+       "start_training_step": 1
+      }
+     ],
+     "last_stage_idx": 0,
+     "last_train_step": 14305
+    },
+    "tp": 1,
+    "version": "1.5"
+   }
+  }
+ },
+ "differing_keys": {
+  "parallelism.recompute_layer": [
+   "[\"{{RECOMPUTE_LAYER}}\", false]"
+  ],
+  "tokens.micro_batch_size": [
+   "[32, 16]"
+  ],
+  "tokens.batch_accumulation_per_replica": [
+   "[8, 16]"
+  ]
+ }
+}

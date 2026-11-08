@@ -1,0 +1,173 @@
+{
+ "revision": "afd1f177aa08f5bab9f5695048cc7b1be428d6fa",
+ "commits": [
+  [
+   "afd1f177",
+   "2026-11-07T03:02:45+00:00",
+   "README: the signal-disagreement-lambda0 section points at code branch huicong-dev (documentation only)"
+  ],
+  [
+   "b264b0ce",
+   "2026-11-07T02:48:17+00:00",
+   "README: add the signal-disagreement-lambda0/tokenized section (documentation only; no data change)"
+  ],
+  [
+   "8a394d84",
+   "2026-11-07T02:47:45+00:00",
+   "Add signal-disagreement-lambda0/tokenized: \u03bb=0 Disagreement-Aware arm, 26 datatrove shards, 10,000,002,556 tokens, SHA256SUMS"
+  ],
+  [
+   "4ba8df66",
+   "2026-09-28T22:53:26+00:00",
+   "reports/RAW_SELECTED_BASELINES_PROVENANCE.md: note that the temporary audit workspace was deleted and where its records are (documentation only)"
+  ],
+  [
+   "9c641e5e",
+   "2026-09-28T22:49:31+00:00",
+   "Documentation only: strategy-linked audit report; README and manifest role descriptions (no data change)"
+  ],
+  [
+   "ed09db2a",
+   "2026-09-28T20:15:52+00:00",
+   "reports/GLOBAL_TOP10B_SELECTION_REPORT.md: add \u00a79 publication record (revision a5b3ab93)"
+  ],
+  [
+   "a5b3ab93",
+   "2026-09-28T20:15:04+00:00",
+   "manifest.json: add raw_top10b_fineweb_edu, raw_top10b_modernbert, raw_top10b_consensus (additive)"
+  ],
+  [
+   "726631cd",
+   "2026-09-28T20:15:04+00:00",
+   "README.md: seven settings"
+  ],
+  [
+   "c99116be",
+   "2026-09-28T20:15:03+00:00",
+   "reports: provenance and selection reports"
+  ],
+  [
+   "40485d32",
+   "2026-09-28T20:15:02+00:00",
+   "selection/selection_manifest.json"
+  ],
+  [
+   "74994e21",
+   "2026-09-28T20:15:02+00:00",
+   "selection/raw_top10b_consensus: selected doc ids"
+  ],
+  [
+   "4710f706",
+   "2026-09-28T20:14:59+00:00",
+   "raw_text/raw_top10b_consensus: 16 parquet files (global Top-10B, no anchor)"
+  ],
+  [
+   "c87c50b3",
+   "2026-09-28T20:14:36+00:00",
+   "selection/raw_top10b_modernbert: selected doc ids"
+  ],
+  [
+   "1daab09b",
+   "2026-09-28T20:14:33+00:00",
+   "raw_text/raw_top10b_modernbert: 16 parquet files (global Top-10B, no anchor)"
+  ],
+  [
+   "b28fbf7f",
+   "2026-09-28T20:14:09+00:00",
+   "selection/raw_top10b_fineweb_edu: selected doc ids"
+  ],
+  [
+   "2ca5cc6e",
+   "2026-09-28T20:14:06+00:00",
+   "raw_text/raw_top10b_fineweb_edu: 16 parquet files (global Top-10B, no anchor)"
+  ],
+  [
+   "ce241737",
+   "2026-09-16T05:12:54+00:00",
+   "manifest.json: add raw_rewire_inspired"
+  ],
+  [
+   "929a5e9f",
+   "2026-09-16T05:12:53+00:00",
+   "raw_text/raw_rewire_inspired: 16 parquet files"
+  ],
+  [
+   "1952d607",
+   "2026-09-16T03:37:22+00:00",
+   "manifest.json: add raw_random"
+  ],
+  [
+   "1be8f990",
+   "2026-09-16T03:37:21+00:00",
+   "raw_text/raw_random: 16 parquet files"
+  ],
+  [
+   "df49f1d0",
+   "2026-09-16T02:04:14+00:00",
+   "manifest.json: add raw_disagreement_aware"
+  ],
+  [
+   "dd04f68e",
+   "2026-09-16T02:04:13+00:00",
+   "raw_text/raw_disagreement_aware: 16 parquet files"
+  ],
+  [
+   "394368f2",
+   "2026-09-16T00:03:32+00:00",
+   "README.md"
+  ],
+  [
+   "619dedbc",
+   "2026-09-16T00:03:32+00:00",
+   "manifest.json: add raw_diversity_oriented"
+  ],
+  [
+   "a484cc76",
+   "2026-09-16T00:03:31+00:00",
+   "raw_text/raw_diversity_oriented: 16 parquet files"
+  ],
+  [
+   "56d44cf3",
+   "2026-09-15T21:33:12+00:00",
+   "tokenizer/: llama-2 tokenizer directory used by the KYS 1.5B grid (copied unchanged)"
+  ],
+  [
+   "45ceeb4d",
+   "2026-09-15T19:22:33+00:00",
+   "initial commit"
+  ]
+ ],
+ "tokenizer": {
+  "tokenizer.json": true,
+  "tokenizer_config.json": true,
+  "tokenizer_report.json": true
+ },
+ "metadata": {
+  "00000_unshuffled.ds.metadata": true,
+  "00001_unshuffled.ds.metadata": true,
+  "00002_unshuffled.ds.metadata": true,
+  "00003_unshuffled.ds.metadata": true,
+  "00004_unshuffled.ds.metadata": true,
+  "00005_unshuffled.ds.metadata": true,
+  "00006_unshuffled.ds.metadata": true,
+  "00007_unshuffled.ds.metadata": true,
+  "00008_unshuffled.ds.metadata": true,
+  "00009_unshuffled.ds.metadata": true,
+  "00010_unshuffled.ds.metadata": true,
+  "00011_unshuffled.ds.metadata": true,
+  "00012_unshuffled.ds.metadata": true,
+  "00013_unshuffled.ds.metadata": true,
+  "00014_unshuffled.ds.metadata": true,
+  "00015_unshuffled.ds.metadata": true,
+  "00016_unshuffled.ds.metadata": true,
+  "00017_unshuffled.ds.metadata": true,
+  "00018_unshuffled.ds.metadata": true,
+  "00019_unshuffled.ds.metadata": true,
+  "00020_unshuffled.ds.metadata": true,
+  "00021_unshuffled.ds.metadata": true,
+  "00022_unshuffled.ds.metadata": true,
+  "00023_unshuffled.ds.metadata": true,
+  "00024_unshuffled.ds.metadata": true,
+  "00025_unshuffled.ds.metadata": true
+ }
+}

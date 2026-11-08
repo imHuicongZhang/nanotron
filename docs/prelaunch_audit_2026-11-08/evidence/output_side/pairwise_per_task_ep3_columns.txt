@@ -1,0 +1,13 @@
+diff_seed42
+diff_seed43
+diff_seed44
+epoch
+label_a
+label_b
+mean_diff_a_minus_b
+metric
+requested_pair
+sd_diff
+seeds_a_gt_b
+setting_a
+setting_b

@@ -1,0 +1,37 @@
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+render_config: mbs=32 -> ~49.6 GiB peak of 74.5 GiB (67%) on marc-cluster
+OK   raw_disagreement_aware_seed43_ep1.yaml
+OK   raw_disagreement_aware_seed43_ep2.yaml
+OK   raw_disagreement_aware_seed43_ep3.yaml
+OK   raw_disagreement_aware_seed43_trunk1.yaml
+OK   raw_disagreement_aware_seed43_trunk2.yaml
+OK   raw_disagreement_aware_seed43_trunk3.yaml
+OK   raw_diversity_oriented_seed43_ep1.yaml
+OK   raw_diversity_oriented_seed43_ep2.yaml
+OK   raw_diversity_oriented_seed43_ep3.yaml
+OK   raw_diversity_oriented_seed43_trunk1.yaml
+OK   raw_diversity_oriented_seed43_trunk2.yaml
+OK   raw_diversity_oriented_seed43_trunk3.yaml
+OK   signal-disagreement-lambda0_seed43_ep1.yaml
+OK   signal-disagreement-lambda0_seed43_ep2.yaml
+OK   signal-disagreement-lambda0_seed43_ep3.yaml
+OK   signal-disagreement-lambda0_seed43_trunk1.yaml
+OK   signal-disagreement-lambda0_seed43_trunk2.yaml
+OK   signal-disagreement-lambda0_seed43_trunk3.yaml
+wrote 18 filled configs to /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/work/assert54/filled/seed43. Next: run tools/assert_invariants.py --check-resume per segment (the launcher does), and tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 43 --settings raw_diversity_oriented,raw_disagreement_aware,signal-disagreement-lambda0.

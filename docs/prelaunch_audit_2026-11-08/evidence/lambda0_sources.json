@@ -1,0 +1,45 @@
+{
+ "lambdas": [
+  0.0,
+  0.25,
+  0.5,
+  0.75,
+  1.0
+ ],
+ "cutoffs": [
+  5542661,
+  5558958,
+  5602475,
+  5702555,
+  5876482
+ ],
+ "tau_q": 0.6956847310066223,
+ "tau_v": 0.10364920496940616,
+ "U_tau_docs": 10435667,
+ "sel0_docs_lt": 5542661,
+ "sel0_docs_le": 5542662,
+ "sel05_docs": 5602475,
+ "rewritten_rows": 8446062,
+ "rows_by_file_kind": {
+  "distill": 2918769,
+  "wiki": 5527293
+ },
+ "rewritten_unique_sources": 5532945,
+ "sources_in_U_tau": 5532945,
+ "sources_in_sel0_lt": 5532944,
+ "sources_in_sel0_le": 5532945,
+ "sel0_lt_covered": 0.9982468709524179,
+ "sources_in_sel05": 4955869,
+ "max_abs_u_score_minus_q_sample": 0.0,
+ "min_q_sources": 0.8145659565925598,
+ "max_v_sources": 0.0658576563000679,
+ "floor_cap_hold": true,
+ "shuffled_anchor_rows": 4120164,
+ "shuffled_rewritten_rows": 8446062,
+ "shuffled_source_prompts": {
+  "distill": 2918769,
+  "wikipedia": 5527293,
+  "original": 4120164
+ },
+ "shuffled_rewritten_sources_eq_rewritten_dir": true
+}

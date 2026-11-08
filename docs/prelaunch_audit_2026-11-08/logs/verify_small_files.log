@@ -1,0 +1,15 @@
+revision afd1f177aa08f5bab9f5695048cc7b1be428d6fa
+  afd1f177 2026-11-07T03:02:45+00:00 README: the signal-disagreement-lambda0 section points at code branch huicong-dev (documentation only)
+  b264b0ce 2026-11-07T02:48:17+00:00 README: add the signal-disagreement-lambda0/tokenized section (documentation only; no data change)
+  8a394d84 2026-11-07T02:47:45+00:00 Add signal-disagreement-lambda0/tokenized: λ=0 Disagreement-Aware arm, 26 datatrove shards, 10,000,002,556 tokens, SHA256SUMS
+  4ba8df66 2026-09-28T22:53:26+00:00 reports/RAW_SELECTED_BASELINES_PROVENANCE.md: note that the temporary audit workspace was deleted and where its records are (documentation only)
+  9c641e5e 2026-09-28T22:49:31+00:00 Documentation only: strategy-linked audit report; README and manifest role descriptions (no data change)
+  ed09db2a 2026-09-28T20:15:52+00:00 reports/GLOBAL_TOP10B_SELECTION_REPORT.md: add §9 publication record (revision a5b3ab93)
+  a5b3ab93 2026-09-28T20:15:04+00:00 manifest.json: add raw_top10b_fineweb_edu, raw_top10b_modernbert, raw_top10b_consensus (additive)
+  726631cd 2026-09-28T20:15:04+00:00 README.md: seven settings
+  c99116be 2026-09-28T20:15:03+00:00 reports: provenance and selection reports
+  40485d32 2026-09-28T20:15:02+00:00 selection/selection_manifest.json
+  74994e21 2026-09-28T20:15:02+00:00 selection/raw_top10b_consensus: selected doc ids
+  4710f706 2026-09-28T20:14:59+00:00 raw_text/raw_top10b_consensus: 16 parquet files (global Top-10B, no anchor)
+tokenizer {'tokenizer.json': True, 'tokenizer_config.json': True, 'tokenizer_report.json': True}
+metadata 26 all match: True

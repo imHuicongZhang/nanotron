@@ -1,0 +1,29 @@
+{
+ "scoring_transformers": "5.6.2",
+ "file_sha_equal": {
+  "config.json": false,
+  "generation_config.json": false,
+  "model.safetensors": true,
+  "tokenizer.json": true,
+  "tokenizer_config.json": false
+ },
+ "files_converted": [
+  "config.json",
+  "generation_config.json",
+  "model.safetensors",
+  "special_tokens_map.json",
+  "tokenizer.json",
+  "tokenizer_config.json"
+ ],
+ "tensor_names_equal": true,
+ "tensor_value_diffs": [],
+ "loaded_config_diff": {},
+ "tokenizer_attr_diff": {},
+ "tokenizer_class": [
+  "LlamaTokenizer",
+  "LlamaTokenizer"
+ ],
+ "encoding_diffs": [],
+ "batch_padding_equal": true,
+ "n_strings": 22
+}

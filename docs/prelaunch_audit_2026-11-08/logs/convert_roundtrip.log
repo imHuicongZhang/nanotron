@@ -1,0 +1,41 @@
+Fetching ... files: 0it [00:00, ?it/s]Fetching ... files: 3it [01:13, 24.43s/it]Fetching ... files: 137it [01:13,  2.65it/s]Fetching ... files: 177it [01:26,  2.04it/s]
+{
+ "convert_rc": 0,
+ "convert_tail": "[convert_to_hf] saved 28-layer model (1.504B params) -> /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/work/converted_hf\n\nWriting model shards:   0%|          | 0/1 [00:00<?, ?it/s]\nWriting model shards: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 1/1 [00:02<00:00,  2.72s/it]\nWriting model shards: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 1/1 [00:02<00:00,  2.72s/it]\n",
+ "tensors": {
+  "converted": 254,
+  "released": 254,
+  "only_converted": [],
+  "only_released": [],
+  "value_or_shape_diffs": []
+ },
+ "config_json_diff": {},
+ "files": {
+  "converted": [
+   "config.json",
+   "generation_config.json",
+   "model.safetensors",
+   "tokenizer.json",
+   "tokenizer_config.json"
+  ],
+  "released": [
+   "config.json",
+   "generation_config.json",
+   "model.safetensors",
+   "tokenizer.json",
+   "tokenizer_config.json"
+  ]
+ },
+ "tokenizer_sha_equal": {
+  "tokenizer.json": true,
+  "tokenizer_config.json": false
+ },
+ "model_safetensors_sha256": {
+  "converted": "733262aec4ca52fe94b69df0acf7ef1faa7cd0fc1f42ee79b91004a022db3f45",
+  "released": "733262aec4ca52fe94b69df0acf7ef1faa7cd0fc1f42ee79b91004a022db3f45"
+ },
+ "kys_validate_model_dir": {
+  "problems": [],
+  "warnings": []
+ }
+}

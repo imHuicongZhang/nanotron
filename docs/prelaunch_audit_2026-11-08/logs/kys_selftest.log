@@ -1,0 +1,34 @@
+ok  model specs and grid
+idx  status    hub      cell
+  0  pending   -        raw_diversity_oriented seed42 ep1 (step 4768) rewrite-1p5b/seed42/raw_diversity_oriented/ep1/hf
+  1  pending   -        raw_diversity_oriented seed42 ep2 (step 9537) rewrite-1p5b/seed42/raw_diversity_oriented/ep2/hf
+  2  pending   -        raw_diversity_oriented seed42 ep3 (step 14305) rewrite-1p5b/seed42/raw_diversity_oriented/ep3/hf
+  3  pending   -        raw_disagreement_aware seed42 ep1 (step 4768) rewrite-1p5b/seed42/raw_disagreement_aware/ep1/hf
+  4  pending   -        raw_disagreement_aware seed42 ep2 (step 9537) rewrite-1p5b/seed42/raw_disagreement_aware/ep2/hf
+  5  pending   -        raw_disagreement_aware seed42 ep3 (step 14305) rewrite-1p5b/seed42/raw_disagreement_aware/ep3/hf
+  6  pending   -        signal-disagreement-lambda0 seed42 ep1 (step 4768) rewrite-1p5b/seed42/signal-disagreement-lambda0/ep1/hf
+  7  pending   -        signal-disagreement-lambda0 seed42 ep2 (step 9537) rewrite-1p5b/seed42/signal-disagreement-lambda0/ep2/hf
+  8  pending   -        signal-disagreement-lambda0 seed42 ep3 (step 14305) rewrite-1p5b/seed42/signal-disagreement-lambda0/ep3/hf
+  9  pending   -        raw_diversity_oriented seed43 ep1 (step 4768) rewrite-1p5b/seed43/raw_diversity_oriented/ep1/hf
+ 10  pending   -        raw_diversity_oriented seed43 ep2 (step 9537) rewrite-1p5b/seed43/raw_diversity_oriented/ep2/hf
+ 11  pending   -        raw_diversity_oriented seed43 ep3 (step 14305) rewrite-1p5b/seed43/raw_diversity_oriented/ep3/hf
+ 12  pending   -        raw_disagreement_aware seed43 ep1 (step 4768) rewrite-1p5b/seed43/raw_disagreement_aware/ep1/hf
+ 13  pending   -        raw_disagreement_aware seed43 ep2 (step 9537) rewrite-1p5b/seed43/raw_disagreement_aware/ep2/hf
+ 14  pending   -        raw_disagreement_aware seed43 ep3 (step 14305) rewrite-1p5b/seed43/raw_disagreement_aware/ep3/hf
+ 15  pending   -        signal-disagreement-lambda0 seed43 ep1 (step 4768) rewrite-1p5b/seed43/signal-disagreement-lambda0/ep1/hf
+ 16  pending   -        signal-disagreement-lambda0 seed43 ep2 (step 9537) rewrite-1p5b/seed43/signal-disagreement-lambda0/ep2/hf
+ 17  pending   -        signal-disagreement-lambda0 seed43 ep3 (step 14305) rewrite-1p5b/seed43/signal-disagreement-lambda0/ep3/hf
+ 18  pending   -        raw_diversity_oriented seed44 ep1 (step 4768) rewrite-1p5b/seed44/raw_diversity_oriented/ep1/hf
+ 19  pending   -        raw_diversity_oriented seed44 ep2 (step 9537) rewrite-1p5b/seed44/raw_diversity_oriented/ep2/hf
+ 20  pending   -        raw_diversity_oriented seed44 ep3 (step 14305) rewrite-1p5b/seed44/raw_diversity_oriented/ep3/hf
+ 21  pending   -        raw_disagreement_aware seed44 ep1 (step 4768) rewrite-1p5b/seed44/raw_disagreement_aware/ep1/hf
+ 22  pending   -        raw_disagreement_aware seed44 ep2 (step 9537) rewrite-1p5b/seed44/raw_disagreement_aware/ep2/hf
+ 23  pending   -        raw_disagreement_aware seed44 ep3 (step 14305) rewrite-1p5b/seed44/raw_disagreement_aware/ep3/hf
+ 24  pending   -        signal-disagreement-lambda0 seed44 ep1 (step 4768) rewrite-1p5b/seed44/signal-disagreement-lambda0/ep1/hf
+ 25  pending   -        signal-disagreement-lambda0 seed44 ep2 (step 9537) rewrite-1p5b/seed44/signal-disagreement-lambda0/ep2/hf
+ 26  pending   -        signal-disagreement-lambda0 seed44 ep3 (step 14305) rewrite-1p5b/seed44/signal-disagreement-lambda0/ep3/hf
+27 cells; SLURM: --array=0-26
+ok  result identity check (E-F1) and array size check (E-F2)
+ok  aggregation reproduces the v2 Mean6/MMLU tables; all 8x3x12 deltas are 0
+ok  reference comparison (exact pass, hash/score/missing-task failures, tolerance pass)
+selftest passed

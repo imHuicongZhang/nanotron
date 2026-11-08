@@ -1,0 +1,24 @@
+{
+  "cp": 1,
+  "custom_metas": null,
+  "dp": 4,
+  "metas": {
+    "consumed_tokens_total": 29999759360,
+    "consumed_train_samples": 14648320,
+    "data_stages": [
+      {
+        "consumed_tokens_per_dataset_folder": {
+          "/checkpoint/ram/tianjian/pretrain_data_selection/nanotron_tokenized/quality_base/tokenized": 29999759360
+        },
+        "consumed_train_samples": 14648320,
+        "name": "S0_top10B",
+        "sequence_length": 2048,
+        "start_training_step": 1
+      }
+    ],
+    "last_stage_idx": 0,
+    "last_train_step": 14305
+  },
+  "tp": 1,
+  "version": "1.5"
+}

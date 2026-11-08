@@ -1,0 +1,10 @@
+placeholders: none
+config  : /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/work/assert54/filled/seed42/raw_disagreement_aware_seed42_ep1.yaml
+          mbs=32 accum=8 dp=4 seq=2048 -> 2,097,152 tokens/step
+wandb   : 0.30.0
+          WANDB_MODE=offline WANDB_PROJECT=zhc-1p5b-10b-wsd WANDB_DIR=/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/work/assert54/wandb
+corpus  : raw_disagreement_aware  (/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/work/assert54/data_root/raw_disagreement_aware/tokenized)
+          expected token total from /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/work/assert54/data_root/manifest.json
+          16 shards, 10,000,005,069 tokens (expected 10,000,005,069)
+tokenizer: /weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/tokenizer  (from .ds.metadata line 1)
+OK: micro_batch_size=32, 2,097,152 tokens/step, corpus verified by token count, tokenizer path matches metadata
