@@ -1,0 +1,1 @@
+{"type": "OptimizerFromGradientAccumulator", "parallelism": {"tp_size": "1", "dp_size": "4", "pp_size": "1", "expert_parallel_size": "1"}, "configs": {}}

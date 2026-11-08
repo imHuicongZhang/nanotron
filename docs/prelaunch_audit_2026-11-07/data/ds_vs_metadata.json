@@ -1,0 +1,50 @@
+{
+ "raw_diversity_oriented": {
+  "shards": 16,
+  "tokens_bytes/2": 10000002885,
+  "tokens_metadata": 10000002885,
+  "shard_mismatches": [],
+  "docs_from_index": 7138615,
+  "index_last_offset_equals_bytes": true,
+  "docs_ending_in_eos_id2": 7138615,
+  "docs_starting_with_bos_id1": 0,
+  "metadata_line1_values": [
+   "/weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/tokenizer|2"
+  ],
+  "manifest_expected": 10000002885,
+  "manifest_shards": 16,
+  "manifest_docs": null
+ },
+ "raw_disagreement_aware": {
+  "shards": 16,
+  "tokens_bytes/2": 10000005069,
+  "tokens_metadata": 10000005069,
+  "shard_mismatches": [],
+  "docs_from_index": 7018928,
+  "index_last_offset_equals_bytes": true,
+  "docs_ending_in_eos_id2": 7018928,
+  "docs_starting_with_bos_id1": 0,
+  "metadata_line1_values": [
+   "/weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/tokenizer|2"
+  ],
+  "manifest_expected": 10000005069,
+  "manifest_shards": 16,
+  "manifest_docs": null
+ },
+ "signal-disagreement-lambda0": {
+  "shards": 26,
+  "tokens_bytes/2": 10000002556,
+  "tokens_metadata": 10000002556,
+  "shard_mismatches": [],
+  "docs_from_index": 12566224,
+  "index_last_offset_equals_bytes": true,
+  "docs_ending_in_eos_id2": 12566224,
+  "docs_starting_with_bos_id1": 0,
+  "metadata_line1_values": [
+   "/weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/tokenizer|2"
+  ],
+  "manifest_expected": null,
+  "manifest_shards": null,
+  "manifest_docs": null
+ }
+}

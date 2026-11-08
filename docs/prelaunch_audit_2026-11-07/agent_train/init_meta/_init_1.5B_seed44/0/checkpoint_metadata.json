@@ -1,0 +1,22 @@
+{
+  "cp": 1,
+  "custom_metas": null,
+  "dp": 4,
+  "metas": {
+    "consumed_tokens_total": 0,
+    "consumed_train_samples": 0,
+    "data_stages": [
+      {
+        "consumed_tokens_per_dataset_folder": {},
+        "consumed_train_samples": 0,
+        "name": "S0_init",
+        "sequence_length": 2048,
+        "start_training_step": 1
+      }
+    ],
+    "last_stage_idx": 0,
+    "last_train_step": 0
+  },
+  "tp": 1,
+  "version": "1.5"
+}

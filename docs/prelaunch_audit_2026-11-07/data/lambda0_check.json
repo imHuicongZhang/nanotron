@@ -1,0 +1,57 @@
+{
+ "survivors": 10435667,
+ "lambdas": [
+  0.0,
+  0.25,
+  0.5,
+  0.75,
+  1.0
+ ],
+ "cutoffs": [
+  5542661,
+  5558958,
+  5602475,
+  5702555,
+  5876482
+ ],
+ "q_recomputed_equal": true,
+ "v_recomputed_max_abs_diff": 0.0,
+ "tau_q_Q30_U": 0.6956847310066223,
+ "tau_v_Q90_U": 0.1036492049694062,
+ "all_survivors_q_ge_tau_q": true,
+ "all_survivors_v_le_tau_v": true,
+ "lambda0.0_selected_docs": 5542661,
+ "lambda0.25_selected_docs": 5558958,
+ "lambda0.5_selected_docs": 5602475,
+ "lambda0.75_selected_docs": 5702555,
+ "lambda1.0_selected_docs": 5876482,
+ "lambda0_selected_min_q": 0.8145659565925598,
+ "lambda0_unselected_max_q": 0.8145659565925598,
+ "lambda0_corpus_rewrite_sources": 5532945,
+ "lambda0_sources_subset_of_lambda0_selection": false,
+ "lambda0_sources_in_lambda05_selection": 4955869,
+ "train_tokens_zero_rows": [
+  {
+   "file": "part_00020.parquet",
+   "row": 173739,
+   "doc_id": 79663246,
+   "source_prompt": "wikipedia",
+   "text_len": 0
+  },
+  {
+   "file": "part_00023.parquet",
+   "row": 336529,
+   "doc_id": 84276725,
+   "source_prompt": "wikipedia",
+   "text_len": 0
+  }
+ ],
+ "lambda05_published_sources": 5592424,
+ "lambda05_published_source_prompt_counts": {
+  "distill": 2855159,
+  "original": 4120164,
+  "wikipedia": 5587114
+ },
+ "lambda05_sources_subset_of_lambda05_selection": false,
+ "lambda0_vs_lambda05_selection_overlap": 4964267
+}

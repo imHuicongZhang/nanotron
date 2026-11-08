@@ -1,0 +1,19 @@
+n v2 54
+54 ('rev', 'Rowan/hellaswag', None, ('validation',))
+54 ('rev', 'allenai/ai2_arc', None, ('test',))
+54 ('rev', 'allenai/openbookqa', None, ('validation',))
+3078 ('rev', 'lighteval/mmlu', None, ('test',))
+54 ('rev', 'lighteval/piqa', None, ('validation',))
+54 ('rev', 'lighteval/siqa', None, ('validation',))
+54 ('rev', 'tau/commonsense_qa', None, ('validation',))
+3402 ('shots', 0)
+54 (None, '0228edcd06f0f3bcf88baf5948e7746577b2af71', '{"dtype": "bfloat16", "batch_size": null}')
+hash_full_prompts distinct: [('ef46db3751d8e999', 3402)]
+csv rows 3456
+csv keys 54 cells checked 6912 bad 0 maxdiff 4.994338276276267e-11
+tasks per ckpt {64}
+v2 file results_2026-09-07T13-29-10.353632.json expected file results_2026-09-07T13-29-10.353632.json
+expected json ntasks 64 fields 508 bad 0
+expected gpu {'gpu': 'NVIDIA H100 80GB HBM3', 'lighteval_sha': '0228edcd06f0f3bcf88baf5948e7746577b2af71', 'results_file': 'results_2026-09-07T13-29-10.353632.json', 'eval_seconds': 548.4, 'model_config': {'dtype': 'bfloat16', 'batch_size': None, 'revision': 'main', 'add_special_tokens': True, 'max_length': None}} 0228edcd06f0f3bcf88baf5948e7746577b2af71 /weka/projects/bvandur1/zhuicon1/checkpoints/rewrite-1p5b-hf/diversity-first-10B-1.5B-seed42/14305
+mean6 0.4651993996347736 0.4651993996347736
+mmlu 57 0.30965558911353275 0.30965558911353275

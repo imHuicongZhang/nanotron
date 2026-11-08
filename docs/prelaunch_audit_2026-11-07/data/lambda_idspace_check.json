@@ -1,0 +1,28 @@
+{
+ "lambda0 original: orig_doc_id == pool orig_doc_id[doc_id]": "4120164 / 4120164",
+ "lambda0 rewritten: orig_doc_id == pool orig_doc_id[doc_id]": "8446062 / 8446062",
+ "lambda0 rewritten sources not in lambda0 selection (doc_id)": [
+  78585542
+ ],
+ "stray 78585542": {
+  "in_survivors": true,
+  "q": 0.8145659565925598,
+  "v": 0.011782210320234299,
+  "rank0": 5542661,
+  "cutoff0": 5542661,
+  "selected_under_lambda": [
+   false,
+   false,
+   false,
+   false,
+   false
+  ],
+  "rows_in_corpus": [
+   "wikipedia"
+  ]
+ },
+ "lambda0 selected docs with no row in corpus": 9717,
+ "published disagreement_aware rewritten: orig_doc_id == pool orig[doc_id]": "8442273 / 8442273",
+ "published disagreement_aware sources in lambda0.5 selection (doc_id)": "5592423 / 5592424",
+ "lambda0.5 selected docs with no row in published arm": 10052
+}

@@ -1,0 +1,14 @@
+{
+ "raw_diversity_oriented": {
+  "rows_checked": 3000,
+  "identical": 3000,
+  "first_mismatch": null,
+  "docs_per_shard_equal_parquet_rows": true
+ },
+ "raw_disagreement_aware": {
+  "rows_checked": 3000,
+  "identical": 3000,
+  "first_mismatch": null,
+  "docs_per_shard_equal_parquet_rows": true
+ }
+}

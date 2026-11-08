@@ -1,0 +1,28 @@
+{
+ "raw_diversity_oriented": {
+  "published_rows": 7138615,
+  "pool_shard_inputs": 200,
+  "B_found": 16,
+  "full_order_identical": true,
+  "is_sorted_published": false
+ },
+ "raw_disagreement_aware": {
+  "published_rows": 7018928,
+  "pool_shard_inputs": 200,
+  "B_found": 16,
+  "full_order_identical": true,
+  "is_sorted_published": false
+ },
+ "lambda0:shared_then_rewritten": {
+  "published_rows": 12566226,
+  "inputs": 600,
+  "B_found": null,
+  "full_order_identical": false
+ },
+ "lambda0:rewritten_then_shared": {
+  "published_rows": 12566226,
+  "inputs": 600,
+  "B_found": 16,
+  "full_order_identical": true
+ }
+}

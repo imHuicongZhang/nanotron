@@ -1,0 +1,12 @@
+placeholders: none
+config  : /tmp/claude-10283/-weka-scratch-jhu-bvandur1-zhuicon1-projects-rewrite/90b98b2f-38fb-4df1-aa45-fd334cb2d16d/scratchpad/b1verify/filled/seed44/raw_diversity_oriented_seed44_trunk3.yaml
+          mbs=32 accum=8 dp=4 seq=2048 -> 2,097,152 tokens/step
+wandb   : 0.30.0
+          WANDB_MODE=offline WANDB_PROJECT=zhc-1p5b-10b-wsd WANDB_DIR=/weka/scratch/jhu/bvandur1/zhuicon1/projects/rewrite/00_TMP/b1verify_wandb
+corpus  : raw_diversity_oriented  (/tmp/claude-10283/-weka-scratch-jhu-bvandur1-zhuicon1-projects-rewrite/90b98b2f-38fb-4df1-aa45-fd334cb2d16d/scratchpad/b1verify/data_root/raw_diversity_oriented/tokenized)
+          expected token total from /tmp/claude-10283/-weka-scratch-jhu-bvandur1-zhuicon1-projects-rewrite/90b98b2f-38fb-4df1-aa45-fd334cb2d16d/scratchpad/b1verify/data_root/manifest.json
+          16 shards, 10,000,002,885 tokens (expected 10,000,002,885)
+tokenizer: /weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/tokenizer  (from .ds.metadata line 1)
+resume  : /tmp/claude-10283/-weka-scratch-jhu-bvandur1-zhuicon1-projects-rewrite/90b98b2f-38fb-4df1-aa45-fd334cb2d16d/scratchpad/b1verify/ckpt/seed44/raw_diversity_oriented/trunk/raw_diversity_oriented/seed44
+          latest.txt -> step 8583
+OK: micro_batch_size=32, 2,097,152 tokens/step, corpus verified by token count, tokenizer path matches metadata, resume path verified

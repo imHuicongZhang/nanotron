@@ -1,0 +1,164 @@
+global_batch_seq: 1024
+sequence_length: 2048
+data_root: /projects/bvandur1/zhuicon1/kys/nanotron_tokenized
+tokenizer_path: /projects/bvandur1/zhuicon1/kys/nanotron_tokenized/tokenizer
+ckpt_root: /projects/bvandur1/zhuicon1/checkpoints/rewrite-1p5b
+wandb:
+  project: zhc-1p5b-10b-wsd
+  mode: offline
+  entity: null
+  dir: /projects/bvandur1/zhuicon1/kys/wandb
+memory_model:
+  static_gib: 28.1
+  per_micro_batch_seq_gib: 5.1
+  reserve_frac: 0.9
+memory_model_recompute:
+  static_gib: 25.8
+  per_micro_batch_seq_gib: 0.744
+  reserve_frac: 0.9
+clusters:
+  kys_grid_1p5b:
+    arch: null
+    hbm_gib: null
+    gpus_per_node: 4
+    dp: 4
+    tp: 1
+    pp: 1
+    micro_batch_size: 32
+    zero_stage: 0
+    slurm:
+      partition: null
+      nodes: 1
+      gres: null
+      time: null
+  skipjack_h100:
+    arch: sm_90
+    hbm_gib: 74.5
+    gpus_per_node: 4
+    dp: 4
+    tp: 1
+    pp: 1
+    micro_batch_size: 32
+    recompute_layer: true
+    zero_stage: 0
+    slurm:
+      partition: h100
+      account: bvandur1_blabscify
+      qos: jhu2
+      nodes: 1
+      gres: gpu:h100:4
+      cpus_per_task: 32
+      time: 3-00:00:00
+    wandb:
+      mode: online
+      entity: imwytro-johns-hopkins-university
+  marc-cluster:
+    data_root: /tmp/claude-10283/-weka-scratch-jhu-bvandur1-zhuicon1-projects-rewrite/90b98b2f-38fb-4df1-aa45-fd334cb2d16d/scratchpad/b1verify/data_root
+    tokenizer_path: /weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/tokenizer
+    ckpt_root: /tmp/claude-10283/-weka-scratch-jhu-bvandur1-zhuicon1-projects-rewrite/90b98b2f-38fb-4df1-aa45-fd334cb2d16d/scratchpad/b1verify/ckpt
+    init_root: /nonexistent/verify_init
+    repo_dir: /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0
+    env_activate: /dev/null
+    python_include: null
+    arch: sm_90
+    hbm_gib: 74.5
+    gpus_per_node: 4
+    dp: 4
+    tp: 1
+    pp: 1
+    micro_batch_size: 32
+    recompute_layer: true
+    zero_stage: 0
+    wandb:
+      mode: offline
+      project: zhc-1p5b-10b-wsd
+      entity: null
+      dir: /weka/scratch/jhu/bvandur1/zhuicon1/projects/rewrite/00_TMP/b1verify_wandb
+    slurm:
+      partition: dryrun
+      account: null
+      qos: null
+      nodes: 1
+      gres: gpu:4
+      cpus_per_task: 16
+      time: 1-06:00:00
+  h200:
+    arch: sm_90
+    hbm_gib: 131.3
+    gpus_per_node: 8
+    dp: 8
+    tp: 1
+    pp: 1
+    micro_batch_size: 16
+    zero_stage: 0
+    slurm:
+      partition: null
+      nodes: 1
+      gres: gpu:h200:8
+      time: null
+  h100:
+    arch: sm_90
+    hbm_gib: 74.5
+    gpus_per_node: 4
+    dp: 4
+    tp: 1
+    pp: 1
+    micro_batch_size: 16
+    zero_stage: 0
+    slurm:
+      partition: h100,nvl
+      nodes: 1
+      gres: gpu:h100:4
+      time: '24:00:00'
+  b300:
+    arch: null
+    hbm_gib: 268.0
+    gpus_per_node: null
+    dp: null
+    tp: 1
+    pp: 1
+    micro_batch_size: null
+    zero_stage: 0
+    slurm:
+      partition: null
+      nodes: null
+      gres: null
+      time: null
+  marc-cluster-8gpu:
+    data_root: /tmp/claude-10283/-weka-scratch-jhu-bvandur1-zhuicon1-projects-rewrite/90b98b2f-38fb-4df1-aa45-fd334cb2d16d/scratchpad/b1verify/data_root
+    tokenizer_path: /weka/projects/bvandur1/zhuicon1/data/1p5_baseline/pretraining/raw/tokenizer
+    ckpt_root: /tmp/claude-10283/-weka-scratch-jhu-bvandur1-zhuicon1-projects-rewrite/90b98b2f-38fb-4df1-aa45-fd334cb2d16d/scratchpad/b1verify/ckpt
+    init_root: /nonexistent/verify_init
+    repo_dir: /weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0
+    env_activate: /dev/null
+    python_include: null
+    arch: sm_90
+    hbm_gib: 74.5
+    gpus_per_node: 8
+    dp: 8
+    tp: 1
+    pp: 1
+    micro_batch_size: 32
+    recompute_layer: true
+    zero_stage: 0
+    wandb:
+      mode: offline
+      project: zhc-1p5b-10b-wsd
+      entity: null
+      dir: /weka/scratch/jhu/bvandur1/zhuicon1/projects/rewrite/00_TMP/b1verify_wandb
+    slurm:
+      partition: dryrun
+      account: null
+      qos: null
+      nodes: 1
+      gres: gpu:8
+      cpus_per_task: 32
+      time: 1-06:00:00
+seed_assignment:
+  42: kys_grid_1p5b
+  43: kys_grid_1p5b
+  44: kys_grid_1p5b
+baseline_seed_assignment:
+  42: marc-cluster
+  43: marc-cluster
+  44: marc-cluster

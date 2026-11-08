@@ -1,0 +1,32 @@
+{
+ "raw_diversity_oriented": {
+  "R_unique_sources": 5867876,
+  "R_tokens": 9728111104,
+  "R_share_kept": 0.5144,
+  "replayed_S_docs": 3018451,
+  "replayed_S_tokens": 5000000553,
+  "published_strategy_docs": 3018451,
+  "published_strategy_equals_replay": true,
+  "published_strategy_subset_of_R": true,
+  "published_anchor_equals_shared_anchor": true,
+  "anchor_tokens_pool_plus1": 5000002332,
+  "strategy_tokens_pool_plus1": 5000000553,
+  "total_tokens_pool_plus1": 10000002885,
+  "R_intersect_anchor": 0
+ },
+ "raw_disagreement_aware": {
+  "R_unique_sources": 5592424,
+  "R_tokens": 9647286028,
+  "R_share_kept": 0.5183,
+  "replayed_S_docs": 2898764,
+  "replayed_S_tokens": 5000002737,
+  "published_strategy_docs": 2898764,
+  "published_strategy_equals_replay": true,
+  "published_strategy_subset_of_R": true,
+  "published_anchor_equals_shared_anchor": true,
+  "anchor_tokens_pool_plus1": 5000002332,
+  "strategy_tokens_pool_plus1": 5000002737,
+  "total_tokens_pool_plus1": 10000005069,
+  "R_intersect_anchor": 0
+ }
+}
