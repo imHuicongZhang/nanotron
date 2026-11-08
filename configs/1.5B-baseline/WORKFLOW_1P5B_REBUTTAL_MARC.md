@@ -240,13 +240,15 @@ Upload to `blab-jhu/KYS-1.5B-Raw-Selected-Baselines` with the authorized token, 
 
 ```
 rewrite-1p5b/seed<S>/<setting>/ep<N>/hf/
-rewrite-1p5b/seed<S>/<setting>/ep<N>/nanotron/      (native final, optional but preferred)
+rewrite-1p5b/seed<S>/<setting>/ep<N>/nanotron/      (native final step directory as written, ~21 GB incl. optimizer state; required)
 rewrite-1p5b/seed<S>/<setting>/logs/<setting>_seed<S>_<segment>.csv    (step, lm_loss, lr, tokens/s)
 ```
 
 ```bash
 huggingface-cli upload blab-jhu/KYS-1.5B-Raw-Selected-Baselines \
     <<EXPORT_ROOT>>/rewrite-1p5b/seed<<S>>/<<setting>>/ep<<N>>/hf rewrite-1p5b/seed<<S>>/<<setting>>/ep<<N>>/hf
+huggingface-cli upload blab-jhu/KYS-1.5B-Raw-Selected-Baselines \
+    <<ckpt_root>>/seed<<S>>/<<setting>>/ep<<N>>/<<setting>>/seed<<S>>/<<step>> rewrite-1p5b/seed<<S>>/<<setting>>/ep<<N>>/nanotron
 ```
 
 Record the Hub revision after each upload. **Never re-upload a checkpoint to the same path without telling Huicong**: the evaluation cache cannot detect a same-path re-upload and must then be run with `--force`. Pin the final revision in the report.
@@ -272,7 +274,18 @@ python -m kys_eval.aggregate                           # reports/raw_selected_re
 
 Indices 0–8 are seed 42, 9–17 seed 43, 18–26 seed 44. To re-run single indices, also export `KYS_ARRAY_PARTIAL=1`. Protocol, fixed by the harness: six commonsense tasks (ARC-Easy, HellaSwag, PIQA, SIQA, OpenBookQA, CommonsenseQA), MMLU over 57 subjects, zero-shot, full splits, `acc_norm`.
 
-Run `aggregate.py` for a first look, but the deliverable is the **27 per-checkpoint `results.json` files**, unmodified, plus the reference-check output. Upload them to the model repository under one folder, `rewrite-1p5b/eval_results/rebuttal_27/`, keeping kys-eval's own directory structure inside it, and also send them to Huicong directly. Huicong pairs them within seed against the v2 results with the repository's paired-analysis script. Do not average across seeds or tasks before sending.
+Run `aggregate.py` for a first look, but the deliverable is the **27 per-checkpoint `results.json` files**, unmodified, plus the reference-check output. Once all 27 cells are scored, upload kys-eval's `results/` and `reports/` per seed to `rewrite-1p5b/seed<S>/eval/` (WORKFLOW §14), keeping kys-eval's own directory structure, and also send them to Huicong directly:
+
+```bash
+cd <<EVAL_ROOT>>
+for S in 42 43 44; do
+  huggingface-cli upload blab-jhu/KYS-1.5B-Raw-Selected-Baselines results/raw_selected/seed$S \
+      rewrite-1p5b/seed$S/eval/results/raw_selected/seed$S
+  huggingface-cli upload blab-jhu/KYS-1.5B-Raw-Selected-Baselines reports rewrite-1p5b/seed$S/eval/reports
+done
+```
+
+The reference-check output goes with the results to Huicong. Huicong pairs them within seed against the v2 results with the repository's paired-analysis script. Do not average across seeds or tasks before sending.
 
 ## 11. Final report to Huicong
 
