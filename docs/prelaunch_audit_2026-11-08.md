@@ -512,3 +512,13 @@ gated=False, anonymous download OK; `blab-jhu/KYS-1.5B-Raw-Selected-Baselines` g
 exactly: the init repo is public with gating disabled and needs no token; the raw-selected repo is gated and the
 collaborator needs a Hugging Face token with write access to `blab-jhu`, kept in the environment, never in a file.
 kys-eval `main` = `00bbca3483b35e932e20f75e6a49c18a57a225e4` (README only). No token appears in any file.
+
+### Note (2026-11-08, round 4) — `configs/1.5B-baseline/WORKFLOW_1P5B_REBUTTAL_MARC.md` checked against the code
+
+The user's collaborator-facing workflow was verified command by command against this checkout and kys-eval `00bbca34`
+and corrected in place (structure, scientific contract and the two-wave plan unchanged). As received:
+`evidence/WORKFLOW_1P5B_REBUTTAL_MARC.as_received.md`. The download `allow_patterns` were checked against the Hub listing
+at `afd1f177` with huggingface_hub's own filter: 115 files (manifest, 3 tokenizer, 2 × 16 parquet, 79 λ0 files).
+Two points were left as written and reported to the user: §9 calls the `nanotron/` upload optional (RUNBOOK lists it
+as a deliverable), and §10 names one eval-results folder `rewrite-1p5b/eval_results/rebuttal_27/` (WORKFLOW §14 says
+`rewrite-1p5b/seed<S>/eval/`); the document's own rule says RUNBOOK/WORKFLOW win where they disagree.
