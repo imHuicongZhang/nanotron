@@ -126,7 +126,10 @@ An eighth setting in `tools/kys_raw/registry.py` (family `lambda_grid`). It is *
 `u = q + 0·√var3`, i.e. pure quality. The published `disagreement_aware` arm is λ = 0.5, and it is this setting's
 comparator. It runs on the identical schedule, batch (mbs 32 / accum 8 / dp 4), init checkpoints and seeds, so
 the rest of this runbook applies unchanged. (Exception in the rebuttal set: seed 44 may run at dp 8 / accum 4 on one
-8-GPU node; see Order of work.) It adds 3 chains (18 segments, 9 annealed finals).
+8-GPU node; see Order of work.) It adds 3 chains (18 segments, 9 annealed finals). Its rewrites were generated once,
+in July 2026, with the same rewriter as the λ = 0.5 arm (Qwen2.5-7B-Instruct, vLLM 0.22.0) using greedy decoding
+(`temperature=0`, no sampling seed); they ship as data and are not regenerated, and greedy decoding under batched
+inference is not guaranteed to be bitwise reproducible.
 
 - **Configs:** `configs/1.5B-baseline-seed<S>/signal-disagreement-lambda0_seed<S>_<segment>.{yaml,env}` and
   `templates/`, produced by `generate_configs.py` → `render_placeholders.py`. They are identical to

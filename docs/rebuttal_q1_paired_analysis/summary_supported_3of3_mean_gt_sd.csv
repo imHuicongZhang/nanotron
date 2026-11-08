@@ -1,0 +1,104 @@
+family,epoch,benchmark,winner,loser,winner_label,loser_label,mean_diff,sd_diff,diff_seed42,diff_seed43,diff_seed44,smallest_seed_margin_4dp
+Commonsense Mean6,1,Mean6,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,0.53,0.45,1.06,0.30,0.25,0.2492
+Commonsense Mean6,1,Mean6,diversity_oriented,disagreement_aware,Diversity Oriented,Disagreement Aware,0.40,0.35,0.80,0.15,0.24,0.1546
+Commonsense Mean6,1,Mean6,disagreement_aware,wrap_inspired,Disagreement Aware,WRAP Inspired,0.14,0.12,0.26,0.14,0.01,0.0099
+Commonsense Mean6,2,Mean6,quality_first,disagreement_aware,Quality First,Disagreement Aware,0.14,0.12,0.21,0.00,0.19,0.0034
+Commonsense Mean6,2,Mean6,diversity_oriented,quality_base,Diversity Oriented,Quality Base,0.60,0.31,0.85,0.69,0.25,0.2494
+Commonsense Mean6,2,Mean6,diversity_oriented,quality_first,Diversity Oriented,Quality First,0.44,0.40,0.16,0.90,0.27,0.1587
+Commonsense Mean6,2,Mean6,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,0.78,0.40,1.21,0.42,0.70,0.4210
+Commonsense Mean6,2,Mean6,diversity_oriented,rewire_inspired,Diversity Oriented,REWIRE Inspired,0.46,0.31,0.81,0.25,0.32,0.2484
+Commonsense Mean6,2,Mean6,diversity_oriented,disagreement_aware,Diversity Oriented,Disagreement Aware,0.58,0.28,0.37,0.90,0.46,0.3710
+Commonsense Mean6,2,Mean6,rewire_inspired,wrap_inspired,REWIRE Inspired,WRAP Inspired,0.32,0.13,0.40,0.17,0.39,0.1726
+Commonsense Mean6,3,Mean6,quality_first,wrap_inspired,Quality First,WRAP Inspired,0.25,0.13,0.30,0.10,0.34,0.0977
+Commonsense Mean6,3,Mean6,diversity_oriented,quality_first,Diversity Oriented,Quality First,0.35,0.26,0.15,0.64,0.26,0.1542
+Commonsense Mean6,3,Mean6,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,0.60,0.14,0.46,0.74,0.60,0.4592
+Commonsense Mean6,3,Mean6,diversity_oriented,rewire_inspired,Diversity Oriented,REWIRE Inspired,0.53,0.23,0.79,0.40,0.39,0.3912
+Commonsense Mean6,3,Mean6,diversity_oriented,disagreement_aware,Diversity Oriented,Disagreement Aware,0.48,0.10,0.53,0.55,0.37,0.3721
+MMLU macro,1,MMLU macro,quality_first,diversity_oriented,Quality First,Diversity Oriented,0.33,0.30,0.09,0.23,0.66,0.0856
+MMLU macro,1,MMLU macro,quality_first,wrap_inspired,Quality First,WRAP Inspired,0.82,0.32,1.18,0.56,0.71,0.5607
+MMLU macro,1,MMLU macro,disagreement_aware,wrap_inspired,Disagreement Aware,WRAP Inspired,0.62,0.26,0.87,0.65,0.35,0.3510
+MMLU macro,2,MMLU macro,quality_base,wrap_inspired,Quality Base,WRAP Inspired,0.59,0.25,0.31,0.65,0.80,0.3053
+MMLU macro,2,MMLU macro,quality_first,quality_base,Quality First,Quality Base,0.48,0.38,0.49,0.09,0.84,0.0938
+MMLU macro,2,MMLU macro,quality_first,wrap_inspired,Quality First,WRAP Inspired,1.06,0.50,0.80,0.75,1.65,0.7477
+MMLU macro,2,MMLU macro,diversity_oriented,quality_base,Diversity Oriented,Quality Base,0.40,0.16,0.46,0.21,0.52,0.2146
+MMLU macro,2,MMLU macro,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,0.98,0.30,0.76,0.87,1.32,0.7623
+MMLU macro,2,MMLU macro,rewire_inspired,wrap_inspired,REWIRE Inspired,WRAP Inspired,0.60,0.48,0.06,0.99,0.76,0.0610
+MMLU macro,2,MMLU macro,disagreement_aware,quality_base,Disagreement Aware,Quality Base,0.60,0.28,0.92,0.40,0.47,0.4040
+MMLU macro,2,MMLU macro,disagreement_aware,wrap_inspired,Disagreement Aware,WRAP Inspired,1.18,0.11,1.23,1.06,1.27,1.0579
+MMLU macro,2,MMLU macro,disagreement_aware,rewire_inspired,Disagreement Aware,REWIRE Inspired,0.58,0.55,1.17,0.06,0.51,0.0635
+MMLU macro,3,MMLU macro,quality_base,wrap_inspired,Quality Base,WRAP Inspired,0.87,0.42,0.42,1.23,0.97,0.4165
+MMLU macro,3,MMLU macro,quality_first,wrap_inspired,Quality First,WRAP Inspired,0.92,0.21,0.74,0.86,1.16,0.7438
+MMLU macro,3,MMLU macro,diversity_oriented,quality_base,Diversity Oriented,Quality Base,0.23,0.15,0.40,0.14,0.15,0.1354
+MMLU macro,3,MMLU macro,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,1.10,0.28,0.82,1.37,1.12,0.8180
+MMLU macro,3,MMLU macro,rewire_inspired,wrap_inspired,REWIRE Inspired,WRAP Inspired,0.87,0.81,0.20,1.77,0.63,0.2001
+MMLU macro,3,MMLU macro,disagreement_aware,quality_base,Disagreement Aware,Quality Base,0.49,0.42,0.97,0.19,0.31,0.1869
+MMLU macro,3,MMLU macro,disagreement_aware,quality_first,Disagreement Aware,Quality First,0.44,0.28,0.64,0.56,0.12,0.1208
+MMLU macro,3,MMLU macro,disagreement_aware,wrap_inspired,Disagreement Aware,WRAP Inspired,1.36,0.07,1.39,1.42,1.28,1.2786
+Commonsense task (ep3),3,ARC-e,quality_first,wrap_inspired,Quality First,WRAP Inspired,0.34,0.33,0.17,0.72,0.13,0.1263
+Commonsense task (ep3),3,ARC-e,diversity_oriented,rewire_inspired,Diversity Oriented,REWIRE Inspired,1.04,0.80,0.13,1.60,1.39,0.1263
+Commonsense task (ep3),3,CSQA,quality_first,diversity_oriented,Quality First,Diversity Oriented,1.12,0.72,1.31,1.72,0.33,0.3276
+Commonsense task (ep3),3,CSQA,rewire_inspired,diversity_oriented,REWIRE Inspired,Diversity Oriented,1.47,1.11,0.41,2.62,1.39,0.4095
+Commonsense task (ep3),3,CSQA,rewire_inspired,disagreement_aware,REWIRE Inspired,Disagreement Aware,0.76,0.53,0.16,0.98,1.15,0.1638
+Commonsense task (ep3),3,HellaSwag,quality_base,wrap_inspired,Quality Base,WRAP Inspired,0.35,0.21,0.12,0.51,0.43,0.1195
+Commonsense task (ep3),3,HellaSwag,quality_base,disagreement_aware,Quality Base,Disagreement Aware,0.88,0.42,0.51,1.33,0.80,0.5079
+Commonsense task (ep3),3,HellaSwag,quality_first,wrap_inspired,Quality First,WRAP Inspired,0.53,0.35,0.64,0.14,0.83,0.1394
+Commonsense task (ep3),3,HellaSwag,quality_first,disagreement_aware,Quality First,Disagreement Aware,1.06,0.12,1.03,0.97,1.19,0.9659
+Commonsense task (ep3),3,HellaSwag,diversity_oriented,quality_base,Diversity Oriented,Quality Base,1.34,0.56,1.62,0.70,1.71,0.6971
+Commonsense task (ep3),3,HellaSwag,diversity_oriented,quality_first,Diversity Oriented,Quality First,1.16,0.13,1.11,1.07,1.31,1.0655
+Commonsense task (ep3),3,HellaSwag,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,1.70,0.47,1.74,1.20,2.14,1.2049
+Commonsense task (ep3),3,HellaSwag,diversity_oriented,rewire_inspired,Diversity Oriented,REWIRE Inspired,0.86,0.40,1.21,0.43,0.93,0.4282
+Commonsense task (ep3),3,HellaSwag,diversity_oriented,disagreement_aware,Diversity Oriented,Disagreement Aware,2.22,0.25,2.13,2.03,2.51,2.0315
+Commonsense task (ep3),3,HellaSwag,wrap_inspired,disagreement_aware,WRAP Inspired,Disagreement Aware,0.53,0.26,0.39,0.83,0.37,0.3685
+Commonsense task (ep3),3,HellaSwag,rewire_inspired,quality_base,REWIRE Inspired,Quality Base,0.49,0.27,0.41,0.27,0.79,0.2689
+Commonsense task (ep3),3,HellaSwag,rewire_inspired,wrap_inspired,REWIRE Inspired,WRAP Inspired,0.84,0.35,0.53,0.78,1.21,0.5278
+Commonsense task (ep3),3,HellaSwag,rewire_inspired,disagreement_aware,REWIRE Inspired,Disagreement Aware,1.37,0.39,0.92,1.60,1.58,0.9162
+Commonsense task (ep3),3,OBQA,quality_base,rewire_inspired,Quality Base,REWIRE Inspired,2.13,1.14,1.20,1.80,3.40,1.2000
+Commonsense task (ep3),3,OBQA,quality_first,rewire_inspired,Quality First,REWIRE Inspired,1.33,0.42,1.80,1.20,1.00,1.0000
+Commonsense task (ep3),3,OBQA,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,1.67,0.70,2.40,1.00,1.60,1.0000
+Commonsense task (ep3),3,OBQA,diversity_oriented,rewire_inspired,Diversity Oriented,REWIRE Inspired,2.20,1.40,3.60,2.20,0.80,0.8000
+Commonsense task (ep3),3,OBQA,diversity_oriented,disagreement_aware,Diversity Oriented,Disagreement Aware,0.60,0.35,0.80,0.80,0.20,0.2000
+Commonsense task (ep3),3,OBQA,disagreement_aware,wrap_inspired,Disagreement Aware,WRAP Inspired,1.07,0.76,1.60,0.20,1.40,0.2000
+Commonsense task (ep3),3,OBQA,disagreement_aware,rewire_inspired,Disagreement Aware,REWIRE Inspired,1.60,1.11,2.80,1.40,0.60,0.6000
+Commonsense task (ep3),3,PIQA,quality_first,quality_base,Quality First,Quality Base,0.98,0.39,1.31,0.54,1.09,0.5441
+Commonsense task (ep3),3,PIQA,diversity_oriented,quality_base,Diversity Oriented,Quality Base,1.54,0.55,2.18,1.20,1.25,1.1970
+Commonsense task (ep3),3,PIQA,diversity_oriented,quality_first,Diversity Oriented,Quality First,0.56,0.36,0.87,0.65,0.16,0.1632
+Commonsense task (ep3),3,PIQA,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,0.45,0.14,0.60,0.44,0.33,0.3264
+Commonsense task (ep3),3,PIQA,diversity_oriented,rewire_inspired,Diversity Oriented,REWIRE Inspired,0.74,0.41,0.92,0.27,1.03,0.2720
+Commonsense task (ep3),3,PIQA,diversity_oriented,disagreement_aware,Diversity Oriented,Disagreement Aware,0.85,0.40,1.31,0.54,0.71,0.5441
+Commonsense task (ep3),3,PIQA,wrap_inspired,quality_base,WRAP Inspired,Quality Base,1.09,0.43,1.58,0.76,0.92,0.7617
+Commonsense task (ep3),3,PIQA,wrap_inspired,disagreement_aware,WRAP Inspired,Disagreement Aware,0.40,0.30,0.71,0.11,0.38,0.1088
+Commonsense task (ep3),3,PIQA,rewire_inspired,quality_base,REWIRE Inspired,Quality Base,0.80,0.53,1.25,0.92,0.22,0.2176
+Commonsense task (ep3),3,PIQA,disagreement_aware,quality_base,Disagreement Aware,Quality Base,0.69,0.17,0.87,0.65,0.54,0.5441
+Commonsense task (ep3),3,SIQA,quality_base,wrap_inspired,Quality Base,WRAP Inspired,0.65,0.39,0.56,0.31,1.07,0.3071
+Commonsense task (ep3),3,SIQA,quality_base,disagreement_aware,Quality Base,Disagreement Aware,0.51,0.18,0.46,0.36,0.72,0.3582
+Commonsense task (ep3),3,SIQA,rewire_inspired,quality_first,REWIRE Inspired,Quality First,0.15,0.05,0.10,0.15,0.20,0.1024
+MMLU category (ep3),3,Humanities,quality_base,wrap_inspired,Quality Base,WRAP Inspired,0.97,0.11,0.97,1.08,0.87,0.8664
+MMLU category (ep3),3,Humanities,quality_first,wrap_inspired,Quality First,WRAP Inspired,0.92,0.83,1.85,0.67,0.25,0.2490
+MMLU category (ep3),3,Humanities,diversity_oriented,quality_base,Diversity Oriented,Quality Base,0.57,0.23,0.76,0.62,0.32,0.3175
+MMLU category (ep3),3,Humanities,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,1.54,0.31,1.74,1.71,1.18,1.1838
+MMLU category (ep3),3,Humanities,diversity_oriented,rewire_inspired,Diversity Oriented,REWIRE Inspired,0.89,0.37,1.30,0.59,0.77,0.5936
+MMLU category (ep3),3,Humanities,rewire_inspired,wrap_inspired,REWIRE Inspired,WRAP Inspired,0.65,0.40,0.43,1.11,0.41,0.4092
+MMLU category (ep3),3,Humanities,disagreement_aware,quality_base,Disagreement Aware,Quality Base,0.99,0.59,1.37,0.31,1.31,0.3097
+MMLU category (ep3),3,Humanities,disagreement_aware,quality_first,Disagreement Aware,Quality First,1.05,0.77,0.49,0.72,1.92,0.4888
+MMLU category (ep3),3,Humanities,disagreement_aware,wrap_inspired,Disagreement Aware,WRAP Inspired,1.97,0.50,2.34,1.39,2.17,1.3947
+MMLU category (ep3),3,Humanities,disagreement_aware,rewire_inspired,Disagreement Aware,REWIRE Inspired,1.32,0.90,1.91,0.28,1.76,0.2818
+MMLU category (ep3),3,Other,quality_base,wrap_inspired,Quality Base,WRAP Inspired,0.94,0.59,0.27,1.19,1.36,0.2704
+MMLU category (ep3),3,Other,quality_first,quality_base,Quality First,Quality Base,1.19,0.52,1.22,0.66,1.69,0.6623
+MMLU category (ep3),3,Other,quality_first,diversity_oriented,Quality First,Diversity Oriented,0.92,0.76,0.31,0.67,1.76,0.3130
+MMLU category (ep3),3,Other,quality_first,wrap_inspired,Quality First,WRAP Inspired,2.13,0.82,1.49,1.85,3.06,1.4863
+MMLU category (ep3),3,Other,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,1.21,0.07,1.17,1.18,1.29,1.1733
+MMLU category (ep3),3,Other,rewire_inspired,wrap_inspired,REWIRE Inspired,WRAP Inspired,1.45,1.24,0.03,2.22,2.11,0.0255
+MMLU category (ep3),3,Other,disagreement_aware,quality_base,Disagreement Aware,Quality Base,0.87,0.45,1.35,0.82,0.45,0.4506
+MMLU category (ep3),3,Other,disagreement_aware,diversity_oriented,Disagreement Aware,Diversity Oriented,0.60,0.21,0.44,0.83,0.52,0.4431
+MMLU category (ep3),3,Other,disagreement_aware,wrap_inspired,Disagreement Aware,WRAP Inspired,1.81,0.20,1.62,2.01,1.81,1.6164
+MMLU category (ep3),3,STEM,quality_base,quality_first,Quality Base,Quality First,0.96,0.32,1.33,0.83,0.72,0.7189
+MMLU category (ep3),3,STEM,quality_base,diversity_oriented,Quality Base,Diversity Oriented,0.65,0.24,0.39,0.84,0.73,0.3859
+MMLU category (ep3),3,STEM,quality_base,wrap_inspired,Quality Base,WRAP Inspired,1.45,0.29,1.13,1.53,1.69,1.1261
+MMLU category (ep3),3,STEM,diversity_oriented,wrap_inspired,Diversity Oriented,WRAP Inspired,0.80,0.14,0.74,0.69,0.96,0.6875
+MMLU category (ep3),3,STEM,rewire_inspired,wrap_inspired,REWIRE Inspired,WRAP Inspired,1.05,1.02,0.92,2.13,0.11,0.1059
+MMLU category (ep3),3,STEM,disagreement_aware,wrap_inspired,Disagreement Aware,WRAP Inspired,1.24,0.31,1.34,1.48,0.88,0.8848
+MMLU category (ep3),3,Social Sci.,quality_first,wrap_inspired,Quality First,WRAP Inspired,0.15,0.05,0.10,0.16,0.20,0.0952
+MMLU category (ep3),3,Social Sci.,diversity_oriented,quality_base,Diversity Oriented,Quality Base,1.13,0.48,0.60,1.24,1.53,0.6050
+MMLU category (ep3),3,Social Sci.,diversity_oriented,rewire_inspired,Diversity Oriented,REWIRE Inspired,0.82,0.35,0.46,0.84,1.15,0.4605
+MMLU category (ep3),3,Social Sci.,rewire_inspired,quality_base,REWIRE Inspired,Quality Base,0.31,0.14,0.14,0.40,0.38,0.1445
+MMLU category (ep3),3,Social Sci.,disagreement_aware,wrap_inspired,Disagreement Aware,WRAP Inspired,0.36,0.26,0.16,0.66,0.28,0.1608

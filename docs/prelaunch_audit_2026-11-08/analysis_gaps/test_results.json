@@ -57,7 +57,7 @@
  },
  "D kys-eval aggregate: primary \u0394 = 0; quality_base \u0394 = setting \u2212 QB = paired_analysis comparator \u2212 QB": {
   "ok": true,
-  "detail": "216 rows (3 settings x 2 comparators x 3 epochs x 12 benchmarks); primary rows with a 'positive' seed from CSV rounding: 78 of 108"
+  "detail": "216 rows (3 settings x 2 comparators x 3 epochs x 12 benchmarks); primary rows with a positive seed: 0 of 108"
  },
  "D2 report states the Appendix F orientation": {
   "ok": true,

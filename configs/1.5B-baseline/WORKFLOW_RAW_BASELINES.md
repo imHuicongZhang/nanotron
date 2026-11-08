@@ -94,8 +94,10 @@ sha256 and total) and `fix_ds_metadata.py` on the downloaded `signal-disagreemen
 `<ACCOUNT>`, `<GPU_TYPE>`, `<TIME>` (`01:00:00` per checkpoint).
 
 **C. Access.**
-- An HF token with write access to `blab-jhu/KYS-1.5B-Raw-Selected-Baselines`. Reading needs none: all inputs are
-  public.
+- An HF token with write access to `blab-jhu` (for uploads to `blab-jhu/KYS-1.5B-Raw-Selected-Baselines`).
+  The inputs (`blab-jhu/KYS-Pre-Rewritten`, `wytro/Know-Your-Sources-init`, `wytro/KYS-1.5B-Rewritten-v2`) are public
+  and need no token. `blab-jhu/KYS-1.5B-Raw-Selected-Baselines` is **gated**: scoring downloads its checkpoints, so
+  every evaluation node also needs that login (an account that has accepted its access conditions).
 - GitHub push to a branch `marc-runs` of `imHuicongZhang/nanotron`, or send a patch.
 - Tell Huicong which usernames to grant.
 - Keep tokens in the environment (`HF_TOKEN`, `huggingface-cli login`). **Never put a token in a config, a
@@ -170,7 +172,7 @@ mbs are exactly those of §1.
 **Not part of the rebuttal set, and must not be queued:** `raw_random`, `raw_rewire_inspired`,
 `raw_top10b_fineweb_edu`, `raw_top10b_modernbert`, `raw_top10b_consensus`. Their templates and configs stay in the
 repo; the full grid (§1) is unchanged. So:
-- always pass `--settings` to `plan_submit.py`. Without it, the script plans all eight settings of the seed;
+- always pass `--settings` to `fill_placeholders.py` and `plan_submit.py`. Both refuse to run without it;
 - tokenize only `raw_diversity_oriented` and `raw_disagreement_aware` (§5), and run the `signal-disagreement-lambda0`
   check and `fix_ds_metadata.py` (§5). The other five raw corpora are not needed.
 
@@ -681,6 +683,13 @@ The table is for the full grid; the rebuttal set's numbers are in §1b.
   (Quality-Base ep3 Mean6 by seed: 0.4566 / 0.4617 / 0.4698).
 - If you truly cannot fit mbs 32, pass `--expected-mbs N` to `fill_placeholders.py` and `plan_submit.py`, and report
   it.
+- **Known deviations of the rebuttal set** (report them with the results):
+  - `signal-disagreement-lambda0` seed 44, if run at dp 8 / accum 4 (§1b wave 2): same global batch and mbs, so no
+    objective change, but a different gradient-reduction order than the dp-4 v2 runs; it enters one of the three
+    paired differences against `disagreement_aware`.
+  - Training hardware: the 27 new checkpoints are trained on this cluster, the 54 v2 comparators on the authors'
+    cluster (dp 4 per their checkpoint metadata). No bitwise reproducibility holds across GPU models or drivers (below), so every paired
+    difference also contains this hardware change.
 
 **Global batch:** 1024 × 2048 = 2,097,152 tokens per step. The renderer derives accum; never set it by hand.
 

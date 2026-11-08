@@ -1,0 +1,6 @@
+ok  model specs and grid
+ok  result identity check (E-F1) and array size check (E-F2)
+ok  aggregation reproduces the v2 Mean6/MMLU tables; primary-pair deltas are 0 and quality_base-pair deltas equal comparator − quality_base (13 pairs x 3 x 12)
+ok  pairing: full-precision reference round-trips; CSV refused; mixed-sign, tied and partly tied differences give the right mean, ddof-1 SD and positive-seed counts
+ok  reference comparison (exact pass, hash/score/missing-task failures, tolerance pass)
+selftest passed

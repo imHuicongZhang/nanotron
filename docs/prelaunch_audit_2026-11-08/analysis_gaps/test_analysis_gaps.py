@@ -212,18 +212,17 @@ def main():
         b = r["benchmark"]
         comp = r["comparator_setting"]
         if r["comparison"] == "primary":
-            # aggregate.py reads the comparator from reference/rewritten_v2_54_per_task.csv (10 decimals) and the new
-            # cell from the full-precision JSON, so an exact tie shows as |Δ| ~ 1e-11; n_delta_positive is then noise
-            d_ok &= comp == NEW[r["raw_setting"]] and abs(float(r["delta_mean"])) < 1e-9 and abs(float(r["delta_std"])) < 1e-9 \
-                and r["n_paired"] == "3"
+            # since kys-eval's full-precision reference (Issue B): identical doubles, so exactly 0 and 0/3, no tolerance
+            d_ok &= comp == NEW[r["raw_setting"]] and float(r["delta_mean"]) == 0.0 and float(r["delta_std"]) == 0.0 \
+                and r["n_paired"] == "3" and r["n_delta_positive"] == "0"
             tie_noise.append(int(r["n_delta_positive"]))
         else:
             d = [v2data[(NEW[r["raw_setting"]], s, ep)][b] - v2data[("quality_base", s, ep)][b] for s in C.SEEDS]
             d_ok &= comp == "quality_base" and abs(float(r["delta_mean"]) * 100 - statistics.fmean(d)) < 1e-4 \
                 and abs(float(r["delta_std"]) * 100 - statistics.stdev(d)) < 1e-4 and int(r["n_delta_positive"]) == sum(x > 0 for x in d)
     check("D kys-eval aggregate: primary Δ = 0; quality_base Δ = setting − QB = paired_analysis comparator − QB", d_ok and n_d == 3 * 2 * 3 * 12,
-          f"{n_d} rows (3 settings x 2 comparators x 3 epochs x 12 benchmarks); primary rows with a 'positive' seed from "
-          f"CSV rounding: {sum(1 for x in tie_noise if x)} of {len(tie_noise)}")
+          f"{n_d} rows (3 settings x 2 comparators x 3 epochs x 12 benchmarks); primary rows with a positive seed: "
+          f"{sum(1 for x in tie_noise if x)} of {len(tie_noise)}")
     md = (rep / "raw_vs_rewritten.md").read_text()
     check("D2 report states the Appendix F orientation", "Δ = setting − comparator" in md and "Also paired with" in md)
     (HERE / "test_results.json").write_text(json.dumps(results, indent=1))
