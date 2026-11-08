@@ -562,3 +562,13 @@ raw-baseline jobs submit their own copy of `kys_segment.sbatch`. It still has th
   and the folder contents are unchanged.
 - The rendered configs in `data/rendered_configs/` still name the audit-time `/tmp` checkpoint and data paths.
   They are a record of that render, not inputs.
+
+### Addendum 2 (2026-11-08) — T-F3 fixed
+
+`--settings` is now required by `tools/kys_raw/fill_placeholders.py` and `tools/kys_raw/plan_submit.py`, and
+`registry.parse_settings` no longer maps an empty value to every setting. All eight settings are planned only for the
+explicit value `all`, which the rebuttal set never uses. The WORKFLOW §6 and §9, RUNBOOK steps 2 and 6, README and
+`deploy/clusters.yaml` examples now pass `--settings`. Checked locally with `b1_fix/profile.yaml`: both tools refuse a
+missing flag (argparse, exit 2), an empty value and an unknown name; seed 42 with the three wave-1 settings renders
+and plans 18 segments (assert_invariants passes on each); `--settings all` renders and plans 48. Nothing was submitted.
+The F11 grep gate in Part F is no longer needed for T-F3, but stays harmless.

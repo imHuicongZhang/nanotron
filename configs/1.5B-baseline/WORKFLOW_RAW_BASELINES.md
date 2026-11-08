@@ -456,11 +456,12 @@ python tools/fix_ds_metadata.py --output-folder <data_root>/signal-disagreement-
 Fill every field listed in §0A. Then:
 
 ```bash
-python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed 42
+python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed 42 --settings <the seed's settings from §1b>
 ```
 
-The script:
-- re-renders the **48** templates of `configs/1.5B-baseline-seed42/templates/` (or the `--settings` subset) into
+`--settings` is required (no default): name the seed's settings from §1b, or pass `all` only if you really mean
+all eight. The script:
+- re-renders the 6 templates per named setting of `configs/1.5B-baseline-seed42/templates/` (48 for `all`) into
   `configs/1.5B-baseline-seed42/filled/` (a `.yaml` and a `.env` each);
 - derives `accum = 1024 / (mbs × dp)` and refuses a non-integer result;
 - checks the memory fit against `hbm_gib`;
@@ -522,14 +523,19 @@ shape. **The measured s/it is the basis for every wall-time number: pass it to `
 ## 9. Plan, dry-run, submit — per seed
 
 ```bash
+# --settings is required (no default): the seed's settings from §1b, e.g. for seed 42
+W1=raw_diversity_oriented,raw_disagreement_aware,signal-disagreement-lambda0
 # 1) plan (dry run): writes configs/1.5B-baseline-seed42/filled/submit_seed42.sh, prints the job table, submits nothing
-python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 --s-per-it <measured>
+python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 --s-per-it <measured> --settings $W1
 # 2) let SLURM validate every segment's partition/account/qos/gres/time without queueing anything
-python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 --s-per-it <measured> --test-only
-# 3) validate one chain end to end first (optional), then the whole seed
-python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 --s-per-it <measured> --settings raw_random --submit
-python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 --s-per-it <measured> --submit
+python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 --s-per-it <measured> --settings $W1 --test-only
+# 3) validate one chain end to end first (optional), then the seed's other chains
+python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 --s-per-it <measured> --settings raw_diversity_oriented --submit
+python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 --s-per-it <measured> --settings $W1 --submit
 ```
+
+Both tools refuse to run without `--settings`, so a forgotten flag cannot plan the five settings §1b excludes.
+`--settings all` plans all eight and is never part of the rebuttal set.
 
 The generated `submit_seed<S>.sh`:
 1. **Refuses to submit anything** if a job named `kys_<setting>_seed<S>_<segment>` for any of its segments is

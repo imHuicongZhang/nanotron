@@ -53,10 +53,17 @@ def template_names(seed: int, settings=None) -> list[str]:
 
 
 def parse_settings(arg: str | None) -> list[str]:
-    """Validate a comma-separated --settings value (None -> all settings, registry order)."""
-    if not arg:
+    """Validate a comma-separated --settings value. There is no default: an empty value is refused, and every
+    setting is planned only for the explicit value 'all' (prelaunch audit T-F3: an omitted --settings used to
+    plan all eight settings, while only the rebuttal set's chains may be queued)."""
+    if arg is None or not arg.strip():
+        raise SystemExit('--settings is required: a comma-separated subset of tools/kys_raw/registry.py, or "all" '
+                         f'for every setting; known: {",".join(SETTING_NAMES)}')
+    if arg.strip() == 'all':
         return list(SETTING_NAMES)
-    out = [s for s in arg.split(',') if s]
+    out = [s.strip() for s in arg.split(',') if s.strip()]
+    if not out:
+        raise SystemExit(f'--settings {arg!r} names no setting')
     bad = sorted(set(out) - set(SETTING_NAMES))
     if bad:
         raise SystemExit(f'unknown settings {bad}; known: {",".join(SETTING_NAMES)}')

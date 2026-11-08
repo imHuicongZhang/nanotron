@@ -67,7 +67,7 @@ reorders files when `shuffle_files` is true, which it never is here (verified in
 `{{TOKENIZER_PATH}}`, `{{CKPT_ROOT}}`, `{{WANDB_ENTITY}}`, `{{WANDB_DIR}}`, `{{CLUSTER}}`,
 `{{RECOMPUTE_LAYER}}`. `tools/assert_invariants.py` refuses any config or `.env` that still contains
 one. Fill the `marc-cluster` entry in `deploy/clusters.yaml`, then
-`tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed <S>` re-renders the templates with
+`tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed <S> --settings <list>` (required; `all` for every setting) re-renders the templates with
 those values (renderer guards included) and `tools/kys_raw/plan_submit.py` writes the SLURM chain.
 
 ## Data: blab-jhu/KYS-Pre-Rewritten (raw text)

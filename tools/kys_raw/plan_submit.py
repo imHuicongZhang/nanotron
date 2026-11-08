@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """Write (and optionally run) the SLURM submission script for one seed of the raw baselines.
 
-    python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 [--s-per-it 16.5] [--submit]
+    python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed 42 --settings <comma list | all> [--s-per-it 16.5] [--submit]
 
-Reads the filled configs (8 settings x 6 segments = 48 per seed; tools/kys_raw/registry.py) in configs/1.5B-baseline-seed<S>/filled/ (tools/kys_raw/fill_placeholders.py)
+Reads the filled configs of the --settings given (required, no default: 6 segments per setting; tools/kys_raw/registry.py) in configs/1.5B-baseline-seed<S>/filled/ (tools/kys_raw/fill_placeholders.py)
 and the cluster entry in deploy/clusters.yaml, re-runs tools/assert_invariants.py on each (placeholders,
 batch, environment are checked; corpus and resume are checked by the launcher before every segment),
 and writes configs/1.5B-baseline-seed<S>/filled/submit_seed<S>.sh containing:
@@ -39,7 +39,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from registry import DEPENDS, FIRST_STEP, KINDS, SETTING_NAMES, parse_settings  # noqa: E402
+from registry import DEPENDS, FIRST_STEP, KINDS, parse_settings  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 SBATCH = REPO / 'deploy' / 'slurm' / 'kys_segment.sbatch'
@@ -61,7 +61,8 @@ def main():
     ap.add_argument('--cluster', default='marc-cluster')
     ap.add_argument('--seed', type=int, required=True)
     ap.add_argument('--configs', type=Path, help='default: configs/1.5B-baseline-seed<S>/filled')
-    ap.add_argument('--settings', default=','.join(SETTING_NAMES), help='comma-separated subset of registry.py')
+    ap.add_argument('--settings', required=True,
+                    help='required: comma-separated subset of tools/kys_raw/registry.py, or "all" (no default; audit T-F3)')
     ap.add_argument('--s-per-it', type=float, help='measured seconds per optimizer step, for the wall-time table')
     ap.add_argument('--expected-mbs', type=int, help='forwarded to assert_invariants.py if mbs != 32')
     ap.add_argument('--submit', action='store_true')

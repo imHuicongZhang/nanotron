@@ -183,9 +183,10 @@ tokenized data and checkpoints from that run are deleted, so this entry re-creat
    one. Later segments load full state from the trunk.
 2. **Cluster entry.** Fill every field of `marc-cluster` in `deploy/clusters.yaml`, then run:
    ```bash
-   python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed <S>
+   python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed <S> --settings <that seed's settings>
    ```
-   This re-renders the 48 templates of that seed (or the `--settings` subset) into `configs/1.5B-baseline-seed<S>/filled/`, derives accum and
+   `--settings` is required (no default; `all` = all eight, which the rebuttal set never uses). This re-renders
+   the 6 templates per named setting of that seed into `configs/1.5B-baseline-seed<S>/filled/`, derives accum and
    checks the memory fit. Never edit rendered configs by hand. Placeholders in the shipped configs:
    `{{DATA_ROOT}} {{TOKENIZER_PATH}} {{CKPT_ROOT}} {{WANDB_ENTITY}} {{WANDB_DIR}} {{CLUSTER}} {{RECOMPUTE_LAYER}}`.
 3. **Parallelism.** Global batch 1024 × 2048; dp = GPUs per node; **mbs 32** with `recompute_layer: true` on 80 GB
@@ -217,7 +218,7 @@ tokenized data and checkpoints from that run are deleted, so this entry re-creat
    sourcing the `.env`). The launcher repeats it with `--check-resume` before every segment.
 6. **Submission.**
    ```bash
-   python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed <S> --s-per-it <measured>
+   python tools/kys_raw/plan_submit.py --cluster marc-cluster --seed <S> --s-per-it <measured> --settings <that seed's settings>
    ```
    This writes `submit_seed<S>.sh` and prints the plan. The script refuses to submit anything if one of its job
    names is already queued for `$USER`, seeds each trunk with the init (step 0 + `latest.txt`), and submits

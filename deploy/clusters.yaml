@@ -195,7 +195,7 @@ clusters:
   marc-cluster:
     # TEMPLATE for the external cluster that trains the raw-selected baselines. Every field is
     # null on purpose: the operator there fills them, then runs
-    #     python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed <S>
+    #     python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed <S> --settings <list>   # required; "all" = every setting
     # which re-renders configs/1.5B-baseline-seed<S>/templates/ with these values (all renderer
     # guards apply: global batch, memory fit, seed assignment) into configs/1.5B-baseline-seed<S>/filled/.
     # See configs/1.5B-baseline/RUNBOOK.md. Nothing here may be left null except where marked optional.

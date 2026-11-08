@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 """Produce runnable raw-baseline configs for an external cluster from its deploy/clusters.yaml entry.
 
-    python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed 42
+    python tools/kys_raw/fill_placeholders.py --cluster marc-cluster --seed 42 --settings <comma list | all>
 
 Reads the cluster entry (see the marc-cluster template in deploy/clusters.yaml), refuses if any
 required field is still null, and re-renders configs/1.5B-baseline-seed<S>/templates/ through
 tools/render_config.py with a profile built from that entry. Every renderer guard applies:
 accum = 1024 / (mbs * dp) must be an integer, the mbs must fit hbm_gib under the memory model,
 and the seed must be assigned to this cluster. Output: configs/1.5B-baseline-seed<S>/filled/
-(one config + .env per setting x segment: 8 x 6 = 48 per seed; registry.py), then tools/assert_invariants.py runs on each (placeholders, batch,
+(one config + .env per selected setting x segment: 6 per setting, 48 per seed for --settings all; registry.py), then tools/assert_invariants.py runs on each (placeholders, batch,
 environment; corpus and resume checks need the data and checkpoints on disk and are run by the
 launcher before every segment).
 """
@@ -41,7 +41,8 @@ def main():
                     help='pass the mbs you set if it is not 32 (recorded as a deviation by assert_invariants.py)')
     ap.add_argument('--profile', type=Path, default=REPO / 'deploy' / 'clusters.yaml')
     ap.add_argument('--out-dir', type=Path, help='default: configs/1.5B-baseline-seed<S>/filled')
-    ap.add_argument('--settings', help='comma-separated subset of tools/kys_raw/registry.py (default: all)')
+    ap.add_argument('--settings', required=True,
+                    help='required: comma-separated subset of tools/kys_raw/registry.py, or "all" (no default; audit T-F3)')
     args = ap.parse_args()
 
     prof = yaml.safe_load(args.profile.read_text())
@@ -97,7 +98,8 @@ def main():
     if failures:
         sys.exit(f'{failures} filled config(s) failed assert_invariants.py')
     print(f'wrote {len(templates)} filled configs to {out_dir}. Next: run tools/assert_invariants.py --check-resume per segment '
-          f'(the launcher does), and tools/kys_raw/plan_submit.py --cluster {args.cluster} --seed {args.seed}.')
+          f'(the launcher does), and tools/kys_raw/plan_submit.py --cluster {args.cluster} --seed {args.seed} '
+          f'--settings {args.settings}.')
 
 
 if __name__ == '__main__':
