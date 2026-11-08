@@ -13,7 +13,7 @@ Huicong has published the validated inputs, training code and evaluation code. M
 | Artifact | Exact source |
 |---|---|
 | Training code | https://github.com/imHuicongZhang/nanotron, branch `huicong-dev` |
-| **Training commit** | **`PIN_SET_IN_NEXT_COMMIT`** (checked out explicitly in §4). Training code (everything outside `docs/` and the `configs/1.5B-baseline/*.md` documents) is identical since `6fe10b9b130a22338bfc1c2d199761131b711a88`; every later commit changes documentation and audit records only, confirmed by audit. Record the SHA used. |
+| **Training commit** | **`b94f9d49aa552fafd64ffafb0753bfef979d684f`** (checked out explicitly in §4); the commit after it on `huicong-dev` changes only this pin in this document. Training code (everything outside `docs/` and the `configs/1.5B-baseline/*.md` documents) is identical since `6fe10b9b130a22338bfc1c2d199761131b711a88`; every later commit changes documentation and audit records only, confirmed by audit. Record the SHA used. |
 | Evaluation code | https://github.com/imHuicongZhang/kys-eval, branch `main` |
 | **Evaluation commit** | **`00bbca3483b35e932e20f75e6a49c18a57a225e4`** (checked out explicitly in §4). Scoring code is unchanged since `216c1ba`; `6da264bf` added the full-precision v2 reference, the `quality_base` pairing and the Appendix F sign convention, all of which the rebuttal needs; `00bbca34` changes only the README. |
 | Data repository | https://huggingface.co/datasets/blab-jhu/KYS-Pre-Rewritten, public |
@@ -85,7 +85,7 @@ Two environments are needed: the nanotron training environment (`INSTALL.md` §2
 
 ```bash
 source "$HOME/kys_rebuttal_env.sh"
-NANOTRON_SHA="PIN_SET_IN_NEXT_COMMIT"
+NANOTRON_SHA="b94f9d49aa552fafd64ffafb0753bfef979d684f"
 KYS_EVAL_SHA="00bbca3483b35e932e20f75e6a49c18a57a225e4"
 git clone --branch huicong-dev https://github.com/imHuicongZhang/nanotron.git "$CODE_ROOT"
 git -C "$CODE_ROOT" checkout "$NANOTRON_SHA"
