@@ -290,55 +290,9 @@ six-task mean. The CSVs carry a `smallest_seed_margin_4dp` column for this check
 | CSQA | 3 | DA > DO | +0.71 ± 0.80 [0.25, 1.64, 0.25] |
 | MMLU Social Sci. | 3 | DA > QF | +0.21 ± 0.25 [0.07, 0.50, 0.07] |
 
-## 5. Plain-language summary (draft rebuttal text)
+## 5. (omitted from this public copy)
 
-> We extended the paired analysis of Appendix F from strategy-vs-Quality-Base to all 15 pairs of
-> settings, using the same 54 checkpoints and LightEval outputs. Because the six settings at a
-> given seed share initialization, every comparison is a within-seed paired difference; we report
-> the mean and standard deviation of the three per-seed differences and the number of seeds in
-> which the difference is positive, and we call a comparison supported only when it is positive in
-> all three seeds *and* its mean exceeds its standard deviation. We do not report p-values: with
-> three seeds they would overstate what the design supports.
->
-> **Commonsense (six-task mean).** The comparison that survives is Diversity-Oriented against the
-> other rewriting strategies, not against Quality-Base. At epochs 2 and 3, Diversity-Oriented
-> exceeds Quality-First (+0.44 ± 0.40, +0.35 ± 0.26), WRAP-Inspired (+0.78 ± 0.40, +0.60 ± 0.14),
-> REWIRE-Inspired (+0.46 ± 0.31, +0.53 ± 0.23) and Disagreement-Aware (+0.58 ± 0.28,
-> +0.48 ± 0.10) in every seed. It ranks first in all three seeds at epoch 2 and in two of three
-> at epoch 3. Its margin over Quality-Base is supported at epoch 2 (+0.60 ± 0.31, 3/3), but at
-> epoch 3 it is +0.14 ± 0.86 (2/3) and turns negative when HellaSwag or PIQA is removed. We
-> therefore do not claim a final-epoch commonsense gain over Quality-Base. Diversity-Oriented's
-> lead over Disagreement-Aware stays positive in all 18 leave-one-task-out variants (+0.14 to
-> +0.77) but loses seed-unanimity when HellaSwag is removed. No other strategy's commonsense
-> difference from Quality-Base is supported at epoch 2 or 3.
->
-> **MMLU.** Disagreement-Aware exceeds Quality-Base in every seed at epochs 2 and 3 (+0.60 ± 0.28,
-> +0.49 ± 0.42), exceeds Quality-First at epoch 3 (+0.44 ± 0.28), and ranks first in two of three
-> seeds at both epochs. Diversity-Oriented also exceeds Quality-Base in every seed at epochs 2 and
-> 3 (+0.40 ± 0.16, +0.23 ± 0.15). Disagreement-Aware's epoch-3 lead over Diversity-Oriented is
-> consistent in sign but smaller than its spread (+0.26 ± 0.27). WRAP-Inspired is last on MMLU in
-> every seed at epochs 2 and 3, and every other setting, including Quality-Base, exceeds it at
-> epoch 3 with mean larger than SD.
->
-> **What is not supported.** Quality-First vs REWIRE-Inspired is unresolved on both benchmark
-> families at every epoch. All five strategies' epoch-3 commonsense differences from Quality-Base
-> are unsupported (at most 2/3 seeds). Per-seed rankings are otherwise unstable: only five
-> (setting, epoch, benchmark) cells hold the same rank in all three seeds, and Quality-Base itself
-> ranks 6th, 2nd and 1st on the six-task mean at epoch 3 across seeds.
->
-> The resulting picture is a trade-off rather than a single winner. Diversity-Oriented is the
-> strongest selection on commonsense relative to the other strategies, and Disagreement-Aware and
-> Diversity-Oriented are the two that improve MMLU over Quality-Base, with Disagreement-Aware
-> ahead.
-
-**Caveats to keep in mind (not for the rebuttal text as written):**
-
-- Even when nothing differs, a three-seed comparison is sign-consistent one time in four. With
-  240 comparisons, 111 of which are 3/3, some per-task and per-category entries in Table 1 are
-  expected by chance. The Mean6 and MMLU-macro families (90 comparisons, 35 supported) are the
-  ones to cite. The per-task and per-category lists should be read as descriptive.
-- Single-task differences at epoch 3 are often a handful of examples. One OpenBookQA example is
-  0.2 points, and one example in the six-task mean is at most about 0.03 points.
+The draft rebuttal text and its caveats are kept only in the canonical copy in `projects/rewrite`.
 
 ## 6. Adding the three rebuttal settings (kys-eval results)
 
