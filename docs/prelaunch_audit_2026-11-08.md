@@ -522,3 +522,45 @@ at `afd1f177` with huggingface_hub's own filter: 115 files (manifest, 3 tokenize
 Two points were left as written and reported to the user: §9 calls the `nanotron/` upload optional (RUNBOOK lists it
 as a deliverable), and §10 names one eval-results folder `rewrite-1p5b/eval_results/rebuttal_27/` (WORKFLOW §14 says
 `rewrite-1p5b/seed<S>/eval/`); the document's own rule says RUNBOOK/WORKFLOW win where they disagree.
+
+## 13. Addendum (2026-11-08, round 5) — final repair of `WORKFLOW_1P5B_REBUTTAL_MARC.md` after GPT-6's review
+
+Documentation only; no training-side file, no launch. Starting HEADs: nanotron `huicong-dev`
+`e180e797ecac1f6bd39bdac26a43890904ac14cb`, kys-eval `main` `00bbca3483b35e932e20f75e6a49c18a57a225e4` (both = origin).
+Evidence in `prelaunch_audit_2026-11-08/round5/`.
+
+- **Pinning.** A document cannot contain the SHA of the commit that adds it. The content is therefore committed first
+  with the placeholder `PIN_SET_IN_NEXT_COMMIT`; a second commit replaces only that placeholder with the first commit's
+  SHA. Training code is identical in both and since `6fe10b9b`. kys-eval is pinned to `00bbca34` (full SHA) with an
+  explicit `git checkout`.
+- **Placeholders.** The 3B workflow named as the model for this convention was not found on this filesystem. The
+  convention was applied as specified: one definitions block in §3 (`VAR="<<description>>"`, sourced from
+  `$HOME/kys_rebuttal_env.sh`) and `"$VAR"` everywhere after.
+  - Scan: 0 `<<…>>` on any executable line outside that block (heredoc markers `<<'PY'` excluded).
+  - `bash -n`: 16/16 bash blocks OK (`round5/bash_n.log`, blocks in `round5/blocks/`); the embedded Python download
+    script compiles.
+- **Invariant loop.** The block is a subshell that exits 1 on any failure or on a count other than 54.
+  - Test (`round5/invariant_exit_test.log`) on a copy of the 54 configs rendered against the local data (§6):
+    - clean: `54 OK, 0 FAIL`, exit 0;
+    - one config broken (`raw_disagreement_aware_seed43_ep2`, mbs 32 → 16): `FAIL …`, `INVARIANT CHECK FAILED: launch
+      is blocked`, exit 1, with the log reading "micro_batch_size is 16, expected 32";
+    - one config missing: `53 OK, 0 FAIL`, exit 1.
+  - A first draft ended in `|| echo …`, which would have returned 0. It was caught and fixed before the test.
+- **Hugging Face CLI.**
+  - Training env: `huggingface_hub` 0.36.2, which has `hf` and `huggingface-cli`.
+  - kys-eval venv: 1.12.0, where `huggingface-cli` prints "deprecated and no longer works. Use `hf` instead", so the
+    previous §10 result-upload command would have failed.
+  - Both environments use `hf upload REPO LOCAL PATH_IN_REPO` (same positional syntax, checked with `--help` in both)
+    and `hf auth login`.
+- **wandb.** INSTALL.md §2 does not install it (no mention, and none in `pyproject.toml`). The working training env
+  has 0.30.0, which `assert_invariants.py` reports. The workflow now pins `pip install "wandb==0.30.0"` plus an import
+  check.
+- **Init access.** Anonymous download again (`round5/init_anonymous_download.log`, 2026-11-08T21:05:23Z):
+  - setup: `HF_TOKEN` unset, empty `HF_HOME`, `token=False`;
+  - result: `init_1.5B_seed42.hash.json` at `87e1335…` downloaded, 23,039 bytes, sha256 `feeeaeb4…931a`, exit 0.
+- **Requeue rule and smoke criteria** were rewritten from `kys_segment.sbatch`, `trunk_restart_config.py`,
+  `assert_invariants.check_resume` and `smoke_20steps.py`; that last one "writes no checkpoints"
+  (`checkpoint_interval=100000, save_final_state=False`).
+  - Iteration log format is `iteration: N / <train_steps>` (`src/nanotron/logging/base.py:314`).
+- **Storage** is from WORKFLOW §1b and §12: peak local ≤ 2.7 TB (9 × 303.9 GB) vs 0.65 TB uploaded.
+- The SHAs of both commits are given in the change log to the user.

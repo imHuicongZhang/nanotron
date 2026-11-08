@@ -1,0 +1,6 @@
+$ date -u: 2026-11-08T21:05:23Z
+$ env -u HF_TOKEN HF_HOME=<scratch>/hf_home HF_HUB_DISABLE_IMPLICIT_TOKEN=1 /weka/scratch/jhu/bvandur1/zhuicon1/projects/kys-eval/.venv/bin/python -c "from huggingface_hub import hf_hub_download; import hashlib; p=hf_hub_download(\"wytro/Know-Your-Sources-init\", \"init_1.5B_seed42.hash.json\", revision=\"87e1335647a3105471928e0fd261d92846021d1a\", token=False, cache_dir=\"<scratch>/cache\"); print(\"downloaded\", p.split(\"/snapshots/\")[1]); print(\"bytes\", len(open(p,\"rb\").read())); print(\"sha256\", hashlib.sha256(open(p,\"rb\").read()).hexdigest())"
+downloaded 87e1335647a3105471928e0fd261d92846021d1a/init_1.5B_seed42.hash.json
+bytes 23039
+sha256 feeeaeb4fc093096831d48f9676fd0973af3f4b43dd8ef73c1ba88dc1356931a
+exit=0

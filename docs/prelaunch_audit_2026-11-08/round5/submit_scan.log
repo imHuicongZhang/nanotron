@@ -1,0 +1,2 @@
+block10.sh: 3 --submit lines; header: # step 3, wave 1: only after steps 1 and 2 succeeded for all three lines
+block12.sh: 1 --submit lines; header: # step 3, wave 2: only after steps 1 and 2 succeeded

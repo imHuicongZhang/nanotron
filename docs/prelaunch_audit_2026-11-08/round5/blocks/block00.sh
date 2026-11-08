@@ -1,0 +1,10 @@
+CODE_ROOT="<<absolute path for the nanotron checkout; also repo_dir in deploy/clusters.yaml>>"
+EVAL_ROOT="<<absolute path for the kys-eval checkout>>"
+DATA_ROOT="<<absolute path for the KYS-Pre-Rewritten download; also data_root>>"
+INIT_ROOT="<<absolute path for the Know-Your-Sources-init download; also init_root>>"
+CKPT_ROOT="<<absolute checkpoint root; also ckpt_root>>"
+EXPORT_ROOT="<<absolute path for the HF exports of the 27 finals>>"
+SMOKE_DIR="<<absolute scratch directory on shared storage for the 20-step smoke run>>"
+S_PER_IT="<<seconds per step measured by the dp-4 smoke run, e.g. 22.8>>"
+S_PER_IT_DP8="<<seconds per step measured by the dp-8 smoke run; only if wave 2 runs at dp 8>>"
+export CODE_ROOT EVAL_ROOT DATA_ROOT INIT_ROOT CKPT_ROOT EXPORT_ROOT SMOKE_DIR S_PER_IT S_PER_IT_DP8

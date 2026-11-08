@@ -1,0 +1,17 @@
+### A: clean copy of the 54 rendered configs
+invariants: 54 OK, 0 FAIL (expected 54 OK, 0 FAIL)
+invariant check passed
+block exit status: 0
+1
+### B: one config broken (raw_disagreement_aware_seed43_ep2: micro_batch_size 32 -> 16)
+FAIL configs/1.5B-baseline-seed43/filled/raw_disagreement_aware_seed43_ep2.yaml  (see configs/1.5B-baseline-seed43/filled/raw_disagreement_aware_seed43_ep2.invariants.log)
+invariants: 53 OK, 1 FAIL (expected 54 OK, 0 FAIL)
+INVARIANT CHECK FAILED: launch is blocked
+block exit status: 1
+INVARIANT VIOLATION
+  - micro_batch_size is 16, expected 32
+  mbs is pinned for numerical comparability across the 72 runs, not for speed.
+### C: one config missing (53 present)
+invariants: 53 OK, 0 FAIL (expected 54 OK, 0 FAIL)
+INVARIANT CHECK FAILED: launch is blocked
+block exit status: 1
