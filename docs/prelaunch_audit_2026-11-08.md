@@ -503,3 +503,12 @@ any re-run."* Recommended to add it there; it is not a defect.
 README §5 (draft rebuttal text and caveats) was removed from the public copy `docs/rebuttal_q1_paired_analysis/` in
 `ac3dfa2c`. The text remains readable in this public repository's history (commit `91ae7f16`). By the user's
 decision the history is left as is: no rewrite, no force-push. The canonical copy in `projects/rewrite` is unchanged.
+
+### Note (2026-11-08, round 3) — access wording made exact
+
+Re-verified anonymously (`logs/access_check_round3.log`): `wytro/Know-Your-Sources-init` private=False,
+gated=False, anonymous download OK; `blab-jhu/KYS-1.5B-Raw-Selected-Baselines` gated=auto, anonymous download fails
+(`GatedRepoError`). WORKFLOW §0C, the RUNBOOK input list (new "Access" line) and the kys-eval README now state
+exactly: the init repo is public with gating disabled and needs no token; the raw-selected repo is gated and the
+collaborator needs a Hugging Face token with write access to `blab-jhu`, kept in the environment, never in a file.
+kys-eval `main` = `00bbca3483b35e932e20f75e6a49c18a57a225e4` (README only). No token appears in any file.

@@ -94,10 +94,8 @@ sha256 and total) and `fix_ds_metadata.py` on the downloaded `signal-disagreemen
 `<ACCOUNT>`, `<GPU_TYPE>`, `<TIME>` (`01:00:00` per checkpoint).
 
 **C. Access.**
-- An HF token with write access to `blab-jhu` (for uploads to `blab-jhu/KYS-1.5B-Raw-Selected-Baselines`).
-  The inputs (`blab-jhu/KYS-Pre-Rewritten`, `wytro/Know-Your-Sources-init`, `wytro/KYS-1.5B-Rewritten-v2`) are public
-  and need no token. `blab-jhu/KYS-1.5B-Raw-Selected-Baselines` is **gated**: scoring downloads its checkpoints, so
-  every evaluation node also needs that login (an account that has accepted its access conditions).
+- `wytro/Know-Your-Sources-init` is public with gating disabled (verified 2026-11-08 by an anonymous download); it needs no token. `blab-jhu/KYS-Pre-Rewritten` and `wytro/KYS-1.5B-Rewritten-v2` are public as well.
+- `blab-jhu/KYS-1.5B-Raw-Selected-Baselines` is gated: the collaborator needs a Hugging Face token with write access to `blab-jhu`, kept in the environment (`HF_TOKEN` or `huggingface-cli login`) on every node that uploads or scores, never in a file.
 - GitHub push to a branch `marc-runs` of `imHuicongZhang/nanotron`, or send a patch.
 - Tell Huicong which usernames to grant.
 - Keep tokens in the environment (`HF_TOKEN`, `huggingface-cli login`). **Never put a token in a config, a

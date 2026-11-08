@@ -38,6 +38,7 @@ The list lives in `tools/kys_raw/registry.py`. Every tool reads it from there.
   order), `tokenizer/`, `manifest.json` (counts, `expected_total_tokens`, and sha256 of every file), `selection/`
   and `reports/`. It is published as raw text; you tokenize it (below).
 - **Init checkpoints:** `wytro/Know-Your-Sources-init`.
+- **Access:** `wytro/Know-Your-Sources-init` is public with gating disabled (verified 2026-11-08 by an anonymous download); it needs no token. `blab-jhu/KYS-1.5B-Raw-Selected-Baselines` is gated: the collaborator needs a Hugging Face token with write access to `blab-jhu`, kept in the environment (`HF_TOKEN` or `huggingface-cli login`) on every node that uploads or scores, never in a file.
 
   | seed | directory | hash manifest | rolling sha256 |
   |---|---|---|---|

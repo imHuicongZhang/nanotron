@@ -1,0 +1,2 @@
+wytro/Know-Your-Sources-init private=False gated=False anonymous download OK
+blab-jhu/KYS-1.5B-Raw-Selected-Baselines private=False gated=auto anonymous download FAILS GatedRepoError
