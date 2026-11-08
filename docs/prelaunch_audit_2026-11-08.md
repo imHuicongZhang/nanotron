@@ -331,3 +331,169 @@ level; `paired_analysis.py` reads the raw JSON on both sides and has no such art
 
 Revisions after this addendum: nanotron `huicong-dev` = the commit adding this addendum (docs only); kys-eval `main` =
 `668a9dd3`; `projects/rewrite` `master` = `c639080` (local only).
+
+## 12. Addendum (2026-11-08, second review round) — Issues A–D and documentation
+
+Repair round after GPT-6's independent review. Same rules as before: read-only on data, CPU only, no training-side
+change. **Correction to §11:** the identity test has **16** checks, not 17 as written there; all 16 passed then and
+pass now.
+
+### Issue A — comparator coverage: closed (no further change)
+
+Closed by kys-eval `668a9dd3` (each setting also paired with `quality_base`; Δ = setting − comparator) and
+`projects/rewrite` `c639080` (`paired_analysis.py --kys-results`). Identity test (`analysis_gaps/`): the 27 rebuttal
+cells built from their comparators' v2 JSONs reproduce the comparators bit for bit, the 15 v2 pairs are unchanged,
+setting − comparator is 0.00 / 0.00 / 0/3 in all 222 added rows, setting − Quality Base equals comparator − Quality
+Base field for field, six malformed-input cases are refused, and `aggregate.py`'s Quality-Base pairs equal the
+paired analysis's in mean, SD and seed count. Backup of the analysis code: Item D below.
+
+### Issue B — positive-seed counts near zero: fixed (kys-eval `6da264bf`)
+
+**Diagnosis confirmed.** In `reference/rewritten_v2_54_per_task.csv` every `acc`/`acc_norm` has exactly 10
+decimals; against the 54 v2 LightEval JSONs only 642 of 3,456 task values are bit-identical and the largest error is
+5.0e-11. LightEval and kys-eval (`common.write_json`) both serialize floats with Python's `json` (shortest round-trip
+repr), so the new cells are full precision while the comparator was not. An exact tie became ±1e-11 and was counted as
+a positive or negative seed (78 of 108 primary rows in the round-1 identity test).
+
+**Fix** (kys-eval `main` **`6da264bf8665b3cfbbd0736a2c24259d138511ba`**, pushed):
+- `reference/rewritten_v2_54_per_task.json`: the 54 cells × 64 task keys copied from the v2 JSONs without rounding,
+  with each source file's sha256, GPU and LightEval sha; built by the new `reference/build_rewritten_v2_reference.py`,
+  which also checks that every CSV value is the `.10f` rounding of the stored one (3,456/3,456).
+- `aggregate.load_rewritten` reads only that file (schema-checked; passing the CSV is refused). **No tolerance:** both
+  sides hold the same IEEE doubles and `benchmark_scores` combines them in a fixed order, so identical inputs give
+  exactly 0.0. The reasoning is in the docstrings of `load_rewritten` and `config.REWRITTEN_V2_PER_TASK_JSON`.
+  `--rewritten-csv` became `--rewritten-reference`; the CSV stays as a readable copy.
+- Scoring untouched: no change to `common.py`, `eval_checkpoint.py`, `run_grid.py`, `reference_check.py` or the
+  protocol constants, so "kys-eval `216c1ba` or later" still holds.
+
+**Tests.**
+- New `selftest.test_pairing_statistics`:
+  - every reference double survives JSON round trips unchanged (the `results.json` path);
+  - the 10-decimal CSV is shown to differ (the hazard) and is refused as a reference;
+  - per-seed offsets on every task give the expected values. Epoch 1, +0.01 / −0.02 / +0.03 (mixed signs): mean, ddof-1 SD
+    and 2/3 positive seeds. Epoch 2, all 0 (exact ties): Δ = 0.0, 0/3. Epoch 3, +0.01 / 0 / −0.01: mean 0, SD 0.01, 1/3.
+  - checked on all 12 benchmarks against values computed independently from the shifted tasks.
+- `test_aggregation`: primary-pair Δ and SD are exactly 0.0 with 0 positive seeds (no tolerance), over 13 pairs × 3 × 12.
+- Selftest passes (`issue_b/selftest_6da264bf.log`).
+- Independent audit check (`issue_b/check_reference_json.py`, log alongside): the reference JSON equals the 54 v2 JSONs bit
+  for bit in all 3,456 task entries, and 54/54 recorded source sha256 match the files.
+- Identity test rerun with strict checks (`analysis_gaps/test_run.log`; round 1 kept as `test_run_round1.log`):
+  16/16 pass; **0 of 108 primary rows** count a positive seed, and Δ = 0.0 and SD = 0.0 exactly.
+
+### Item D — analysis code backed up (nanotron `91ae7f16`)
+
+`docs/rebuttal_q1_paired_analysis/` in nanotron `huicong-dev` is a `git archive` copy of `projects/rewrite` commit
+`c639080` (15 files, byte-identical: `paired_analysis.py`, README, all CSVs, `tables.tex`, …), plus `SOURCE.md`
+naming the source commit and noting that the script resolves its inputs relative to `projects/rewrite`. **Note:** the
+nanotron repository is public; that README contains a draft of rebuttal text (§5) and the 54 v2 per-checkpoint scores.
+
+### Documentation (nanotron `91ae7f16`, kys-eval `6da264bf`)
+
+| file | change |
+|---|---|
+| WORKFLOW §0C | inputs (`KYS-Pre-Rewritten`, `Know-Your-Sources-init` — verified public today, anonymous download OK — and `KYS-1.5B-Rewritten-v2`) need no token; `blab-jhu/KYS-1.5B-Raw-Selected-Baselines` is gated (anonymous download still fails), so evaluation nodes need a login, and uploads need a token with write access to `blab-jhu` |
+| WORKFLOW §1b | "Without it, the script plans all eight settings" → both tools refuse to run without `--settings` (wrong since `28a205f2`) |
+| WORKFLOW §13 | new "Known deviations of the rebuttal set": λ0 seed 44 at dp 8 / accum 4; the training-hardware difference against the v2 comparators (stated as "the authors' cluster, dp 4 per their checkpoint metadata": the v2 GPU model is not recorded in the files I read) |
+| RUNBOOK λ0 section | greedy-decoding sentence: rewrites made once, July 2026, same rewriter and vLLM 0.22.0 as λ = 0.5, `temperature=0`, no sampling seed, shipped as data, not bitwise reproducible |
+| kys-eval `config.py` docstring, README (note at the top, §access, reference-check section, file table), `reference/expected_diversity_oriented_seed42_ep3.json` `note` | no longer say v2 is not the source of the paper's tables or that the reference checkpoint is not public; README says the raw-selected repo is gated and uploads need write access to `blab-jhu`; the JSON reference and its builder are documented |
+
+Left alone as instructed: the HF model card of `wytro/KYS-1.5B-Rewritten-v2` (still says the v2 checkpoints are not
+behind the paper's numbers) — **pending authorization**; the manuscript; the collaborator's workflow structure.
+
+### Issue C — λ0 vs λ0.5 prompt identity: same prompt established from the outputs
+
+Scripts in `prelaunch_audit_2026-11-08/prompt_identity/` (`compare_rewrites.py`, `controls.py`, `length_check.py`);
+logs `logs/prompt_identity*.log`; results `evidence/prompt_identity.json`, `prompt_identity_controls.json`,
+`prompt_identity_length.json`, per-pair table `prompt_identity_pairs.parquet`, 200 mismatch excerpts
+`prompt_identity_mismatches.jsonl`. Nothing was regenerated; inputs were read only.
+
+**1. Records.**
+- `projects/rewrite` git: the prompt files have no history. `00_TMP/wikipedia_style_rephrasing_grounded.md` is
+  untracked; the only commit touching `07_rewrite/` / `09_Distill/` is `242f72a`, an archive commit.
+- File mtimes: the grounded prompt (597 bytes) and the rewrite logs all show 2026-08-20, after both runs (June 6 and
+  July 10). That date is consistent with a copy to the current filesystem, so mtimes carry no information.
+- SLURM / vLLM worker logs: only progress bars and engine arguments; no prompt text, hash or token counts. The engine
+  arguments are the same for the two runs (§1).
+- `07_rewrite/progress/*_worker*.json` record `total_input_tokens` per worker (e.g. λ0 worker 0: 1,180,008,146 over
+  693,284 docs). These are sums over different document sets, so they cannot be compared without re-tokenizing both
+  source sets; not used.
+- `input_tokens_qwen`: **not present** in the published corpus. `wytro/Know-Your-Sources@9e5ff24`
+  `disagreement_aware/` has the columns `doc_id, orig_doc_id, text, source_prompt, train_tokens` (`metadata.json`
+  lists the same five). The local λ0 `rewritten/` files have no such column either.
+- Neither prompt file's content as of the run dates can be recovered from records.
+
+**2. Direct data check.** All rows of published `disagreement_aware/part_00000.parquet` (λ0.5; 222,953 wikipedia +
+113,379 distill rows) were matched to the local λ0 corpus on (scored-pool `doc_id`, `source_prompt`):
+
+| comparison | rows | exact match | mismatches: first divergence (median / p10 of the text) | diverge in first 50 chars | diverge at char 0 |
+|---|---:|---:|---|---:|---:|
+| **λ0 vs λ0.5, wikipedia** | 197,689 | **51.9%** | 43% / 11% | 0.41% | 0.05% |
+| **λ0 vs λ0.5, distill** | 95,794 | **45.9%** | 47% / 14% | 0.22% | 0.001% |
+| control S: `diversity_oriented` (job 1545473) vs λ0.5 (1519364), same prompt path, wikipedia | 5,498 | 55.7% | 44% / 12% | 0.35% | 0.02% |
+| control S, distill | 2,126 | 49.9% | 49% / 15% | 0.19% | 0 |
+| control D: λ0 wikipedia vs λ0 distill rewrite of the same document (different prompts) | 3,811 | **0.0%** | 0.1% / 0% | 90% | 48% |
+
+- **Exact-match rate falls with output length**, identically shaped for the question and the same-prompt control
+  (λ0.5 output length bins; λ0-vs-λ0.5 / control S):
+  - wikipedia: <1k chars 84.9 / 86.0%, 1–2k 66.3 / 69.6%, 2–3k 50.7 / 56.0%, 3–4k 40.9 / 47.4%, 4–6k 32.9 / 37.5%,
+    ≥6k 20.1 / 18.2%;
+  - distill: 80.8 / 82.3%, 54.4 / 55.0%, 37.6 / 44.8%, 25.9 / 30.2%, 16.3 / 23.8%, 5.8 / 6.7%.
+- **Mismatches are tail-level, not systematic.** They share a long prefix and then diverge (the median at 43–47% of
+  the text). The earliest divergences are near-synonym word choices with the rest of the opening identical ("In her
+  upbringing" / "In her formative years", "born Victor" / "born as Victor"), the signature of a near-tied greedy step
+  under batch-dependent bf16 numerics. A prompt difference instead gives 0% exact and divergence at the start
+  (control D).
+- **Uniformity.** Across λ0's 200 rewrite shards the wikipedia exact rate ranges 28.8–74.0% (distill 26.6–73.6%),
+  more spread than binomial noise; the per-worker rates are flat (wikipedia 49–54%, distill 44–48%). The spread is
+  consistent with batch-level nondeterminism (each shard is one `llm.generate` call) and is only weakly related to
+  mean length (Pearson r = 0.24). The lowest shard is far from the 0% a different prompt gives, so no shard or
+  worker of either run used another prompt.
+- **Residual.** Within length bins, λ0-vs-λ0.5 is 1–7 points below control S. That could come from different nodes
+  (n15 in July vs n01 in June) or from the smaller control sample. It is not a prompt effect, which would be ~100
+  points.
+
+**3. Conclusion.** The λ0 and λ0.5 rewrites were produced with the same prompts. A document rewritten in both runs
+gives the identical text about half the time, at the same rate and with the same divergence pattern as two
+independent runs that share the prompt path; a prompt difference gives no identical text. What cannot be
+established is a byte-level match of the prompt files, because their dated contents were not archived. For the
+rebuttal's deviation list: *"λ0's rewrites were generated in a separate run (July 2026) with the same rewriter,
+vLLM version, prompts and greedy decoding as λ0.5; because batched greedy decoding is not bitwise reproducible,
+about half of the documents rewritten in both runs have identical text and the rest diverge partway through, as in
+any re-run."* Recommended to add it there; it is not a defect.
+
+### Checks that need Marc's cluster or a GPU (not run here)
+
+1. **Reference check** on the scoring H100, before any scoring:
+   `python -m kys_eval.reference_check --model hf://wytro/KYS-1.5B-Rewritten-v2/rewrite-1p5b/seed42/diversity_oriented/ep3/hf@b22c87333783945e1c655ae46886b7e842ee4203`.
+   - Pass: `model.safetensors` sha256 = `733262aec4ca52fe94b69df0acf7ef1faa7cd0fc1f42ee79b91004a022db3f45`;
+     the four LightEval hashes equal for all 64 tasks; per-task acc/acc_norm within 0.005 and Mean6/MMLU within
+     0.001; exact match expected on H100 80GB HBM3.
+   - Also run `check_install` (must end OK) and `selftest` there.
+2. **Training side:** the INSTALL.md smoke checks, s/it, full `assert_invariants.py` on the rendered configs against
+   their data, `tokenize_raw_text.sh`'s exact totals, and the λ0 `sha256sum -c`.
+   - The first real trunk1 restart must log step+1 (B1).
+3. **Hub access:** acceptance of the gated `blab-jhu/KYS-1.5B-Raw-Selected-Baselines` on every scoring node, and a
+   write token for uploads.
+4. **Evaluation:** the 27-cell array with `KYS_GRID_ARGS` set, then `aggregate.py`.
+   - Then `paired_analysis.py --kys-results` on the returned `results.json` files, on our side.
+
+### Unresolved limitations
+
+- Prompt-file content at the run dates (Issue C) is not archived. Output equivalence is established; byte identity of
+  the files is not.
+- The v2 training GPU model is not recorded in the files read.
+- The HF model card of `wytro/KYS-1.5B-Rewritten-v2` still carries the stale v2 statement: **pending authorization**.
+- The `projects/rewrite` repository still has no remote; nanotron `docs/rebuttal_q1_paired_analysis/` is the remote
+  copy and must be re-copied after any change.
+- Earlier open items unchanged: G-N3 (any "H100" accepted for scoring), G-N4 (re-upload to the same path needs
+  `--force`), G-D7 (`assert_invariants.py` comment), G-O4 (eval upload folder wording), D-F1.
+
+### Revisions at the end of this round
+
+- nanotron `huicong-dev`: `91ae7f16` + the commit adding this addendum and the new handoff (docs only). Since
+  `6fe10b9b`, no file under `tools/`, `deploy/`, `src/` or the seed config folders has changed; only `docs/` and the two
+  `.md` files under `configs/1.5B-baseline/`.
+- kys-eval `main`: `6da264bf`. Since `216c1ba`, no change to `common.py`, `eval_checkpoint.py`, `run_grid.py`,
+  `reference_check.py`, `tasks/`, `patches/` or `slurm/`.
+- `projects/rewrite` `master`: `c639080` (local only).
+- **No training-side change awaits approval.**

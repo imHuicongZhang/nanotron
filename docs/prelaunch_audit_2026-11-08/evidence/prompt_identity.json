@@ -1,0 +1,53 @@
+{
+ "wikipedia": {
+  "pairs": 197689,
+  "exact": 102583,
+  "exact_rate": 0.5189110167991138,
+  "whitespace_normalised_equal": 102611,
+  "mismatches": 95106,
+  "mismatch_first_diff_fraction_quantiles": {
+   "0.0": 0.0,
+   "0.1": 0.11309755149630782,
+   "0.25": 0.22857142857142856,
+   "0.5": 0.43125499600319744,
+   "0.75": 0.6763565891472868,
+   "0.9": 0.8592420726991493,
+   "1.0": 1.0
+  },
+  "mismatches_diverging_in_first_50_chars": 811,
+  "mismatch_similarity_first3000_quantiles": {
+   "0.0": 0.21807506814845878,
+   "0.1": 0.6861045442605727,
+   "0.5": 0.9266666666666666,
+   "0.9": 0.9972404277337013
+  }
+ },
+ "distill": {
+  "pairs": 95794,
+  "exact": 43979,
+  "exact_rate": 0.459099734847694,
+  "whitespace_normalised_equal": 43992,
+  "mismatches": 51815,
+  "mismatch_first_diff_fraction_quantiles": {
+   "0.0": 0.0,
+   "0.1": 0.14036867918146456,
+   "0.25": 0.2616387337057728,
+   "0.5": 0.4659188955996549,
+   "0.75": 0.7003762935089369,
+   "0.9": 0.8729133010231557,
+   "1.0": 1.0
+  },
+  "mismatches_diverging_in_first_50_chars": 208,
+  "mismatch_similarity_first3000_quantiles": {
+   "0.0": 0.29020013802622496,
+   "0.1": 0.6406666666666667,
+   "0.5": 0.8842357164223751,
+   "0.9": 0.9932942162615256
+  }
+ },
+ "da_part": "/weka/scratch/jhu/bvandur1/zhuicon1/projects/nanotron-kys-lambda0/docs/prelaunch_audit_2026-11-08/work/kys_da/disagreement_aware/part_00000.parquet",
+ "da_rows_by_prompt": {
+  "wikipedia": 222953,
+  "distill": 113379
+ }
+}

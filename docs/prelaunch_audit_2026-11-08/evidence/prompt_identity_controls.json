@@ -1,0 +1,168 @@
+{
+ "P_lambda0_vs_lambda05": {
+  "wikipedia": {
+   "pairs": 197689,
+   "exact_rate": 0.5189110167991138,
+   "mismatch_first_diff_fraction_median": 0.43125526104315487,
+   "mismatch_first_diff_fraction_p10": 0.1131033522631692,
+   "diverge_in_first_50_chars_rate": 0.004102403269782335,
+   "diverge_at_char_0_rate": 0.0005260788410078456
+  },
+  "distill": {
+   "pairs": 95794,
+   "exact_rate": 0.459099734847694,
+   "mismatch_first_diff_fraction_median": 0.4659188955996549,
+   "mismatch_first_diff_fraction_p10": 0.1403690778544453,
+   "diverge_in_first_50_chars_rate": 0.002171325970311293,
+   "diverge_at_char_0_rate": 1.043906716495814e-05
+  }
+ },
+ "S_same_prompt_DO_vs_lambda05": {
+  "wikipedia": {
+   "pairs": 5498,
+   "exact_rate": 0.5569297926518734,
+   "mismatch_first_diff_fraction_median": 0.44479504512921175,
+   "mismatch_first_diff_fraction_p10": 0.1179374428135507,
+   "diverge_in_first_50_chars_rate": 0.0034558021098581304,
+   "diverge_at_char_0_rate": 0.00018188432157148054
+  },
+  "distill": {
+   "pairs": 2126,
+   "exact_rate": 0.49858889934148637,
+   "mismatch_first_diff_fraction_median": 0.4920422415194851,
+   "mismatch_first_diff_fraction_p10": 0.1476033498563828,
+   "diverge_in_first_50_chars_rate": 0.0018814675446848542,
+   "diverge_at_char_0_rate": 0.0
+  }
+ },
+ "D_wikipedia_vs_distill_same_doc_lambda0": {
+  "pairs": 3811,
+  "exact_rate": 0.0,
+  "mismatch_first_diff_fraction_median": 0.0010162601626016261,
+  "mismatch_first_diff_fraction_p10": 0.0,
+  "diverge_in_first_50_chars_rate": 0.8955654683810024,
+  "diverge_at_char_0_rate": 0.4783521385463133
+ },
+ "P_wikipedia_by_lambda0_shard": {
+  "shards": 200,
+  "pairs_per_shard_median": 990.0,
+  "rate_min": 0.2883625128733265,
+  "rate_max": 0.7398615232443125,
+  "binomial_z_abs_max": 14.378473185302916,
+  "shards_with_abs_z_gt_4": 97,
+  "rate_by_worker": {
+   "0": 0.5268245136660845,
+   "1": 0.5062914572864322,
+   "2": 0.5267104409857328,
+   "3": 0.5213412164898356,
+   "4": 0.5141836776104866,
+   "5": 0.5360891590678825,
+   "6": 0.4894932514345753,
+   "7": 0.530509227476477
+  }
+ },
+ "P_distill_by_lambda0_shard": {
+  "shards": 200,
+  "pairs_per_shard_median": 477.0,
+  "rate_min": 0.26558891454965355,
+  "rate_max": 0.7355212355212355,
+  "binomial_z_abs_max": 12.62480218921132,
+  "shards_with_abs_z_gt_4": 44,
+  "rate_by_worker": {
+   "0": 0.46341055448691143,
+   "1": 0.467603759461033,
+   "2": 0.47786878464465954,
+   "3": 0.4648247422680412,
+   "4": 0.4521130282570643,
+   "5": 0.4523650342637473,
+   "6": 0.43901192504258946,
+   "7": 0.45491217749390706
+  }
+ },
+ "P_early_divergence_examples": [
+  {
+   "doc_id": 43121,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 7,
+   "lambda05_head": "In her upbringing, the narrator was closely connected to all the women in her family, especially her mother. However, their bond was maintained through an unspo",
+   "lambda0_head": "In her formative years, the narrator was intimately connected with her female relatives, especially her mother, yet their closeness was underpinned by an unspok"
+  },
+  {
+   "doc_id": 139447,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 31,
+   "lambda05_head": "Victor Serge (1890–1947), born Victor Lvovich Kibalchich, was a Russian anarchist and writer who was raised by impoverished exiles in Brussels. His early life w",
+   "lambda0_head": "Victor Serge (1890–1947), born as Victor Lvovich Kibalchich, was a Russian anarchist and writer who was raised by impoverished exiles in Brussels. His early lif"
+  },
+  {
+   "doc_id": 140132,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 42,
+   "lambda05_head": "The Baltimore Sun\n\nAmid the continuous, unrelenting rhythm, a message in 'Silence'\n\nPortishead, 2008.\n\nMy experience with Portishead, much like much of Coachell",
+   "lambda0_head": "The Baltimore Sun\n\nAmid the continuous, unyielding rhythm, a message in 'Silence'\n\nPortishead, 2008.\n\nMy experience with Portishead at Coachella 2008 was solita"
+  },
+  {
+   "doc_id": 166274,
+   "source_prompt": "distill",
+   "first_diff_char": 42,
+   "lambda05_head": "Sleeping Arrangements\n\nSome friends share a king-sized bed with their two children, a practice they believe benefits the entire family. Known as \"co-sleeping,\" ",
+   "lambda0_head": "Sleeping Arrangements\n\nSome friends share their king-sized bed with their two children, a practice they believe benefits the entire family. Known as \"co-sleepin"
+  },
+  {
+   "doc_id": 190796,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 3,
+   "lambda05_head": "On February 5, 2012, Carolyn Schnurer, a notable figure in fashion, was the subject of interest. Schnurer, born Carolyn Goldsand in New York City on January 5, ",
+   "lambda0_head": "On Sunday, February 5, 2012, Carolyn Schnurer's work was highlighted. Schnurer, born Carolyn Goldsand in New York City on January 5, 1908, initially pursued a c"
+  },
+  {
+   "doc_id": 257386,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 30,
+   "lambda05_head": "On Wednesday, June 9, 2010, a new smoking ban/heart attack study was criticized as flawed and misleading. The study claimed that a smoking ban in England led to",
+   "lambda0_head": "On Wednesday, June 9, 2010, a critical analysis was published questioning the validity of a study claiming a significant reduction in heart attack rates followi"
+  },
+  {
+   "doc_id": 259658,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 2,
+   "lambda05_head": "A creative project involves modifying a clock to run in reverse. This can be a fun endeavor, especially if you need a clock that counts down rather than up. The",
+   "lambda0_head": "A fascinating project for creating a reverse-running clock involves adjusting a travel clock to run backwards. This can be achieved by reversing the plate mecha"
+  },
+  {
+   "doc_id": 269637,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 44,
+   "lambda05_head": "WSJ's Heard on the Street advises investors against chasing Pandora's stock if its market debut is as robust as anticipated on Wednesday. Despite its strong use",
+   "lambda0_head": "WSJ's Heard on the Street advises investors not to rush into Pandora shares if the company's market debut is as robust as anticipated on Wednesday. Despite its "
+  },
+  {
+   "doc_id": 364102,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 23,
+   "lambda05_head": "August 6, 2013\n\nI have consistently enjoyed homeschooling Georgia, and this summer has been no exception. Although I had hoped to accomplish more, the current p",
+   "lambda0_head": "August 6, 2013\n\nI have always enjoyed teaching Georgia at home, and this summer has been no exception. Although I had hoped to accomplish more, the current pace"
+  },
+  {
+   "doc_id": 402681,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 5,
+   "lambda05_head": "---\n\nThe journey through the Minima block diagram led to the \"Bidirectional RF Amplifier\" or Bidi Amp, a component of significant interest. This amplifier was f",
+   "lambda0_head": "---\n\nBidirectional RF Amplifier\n\nIn my exploration of the Minima block diagram, I arrived at the \"Bidirectional RF Amplifier\" or Bidi Amp. This component is cru"
+  },
+  {
+   "doc_id": 547790,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 0,
+   "lambda05_head": "To begin, conduct a thorough examination of the current employment prospects for accountants. Subsequently, from the array of potential roles within the account",
+   "lambda0_head": "Here is a paraphrased version:\n\nTo begin, conduct a thorough examination of the current employment prospects for accountants. Subsequently, from the array of po"
+  },
+  {
+   "doc_id": 723364,
+   "source_prompt": "wikipedia",
+   "first_diff_char": 41,
+   "lambda05_head": "Rescuing a Hedgehog: A Personal Account\n\nThe joy of rescuing a hedgehog is a significant experience, especially when one considers the endangered status of thes",
+   "lambda0_head": "Rescuing a Hedgehog: A Personal Account\n\nWe have the pleasure of sharing our experience in rescuing a hedgehog, a process that could have been fraught with erro"
+  }
+ ]
+}
