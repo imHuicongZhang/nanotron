@@ -497,3 +497,9 @@ any re-run."* Recommended to add it there; it is not a defect.
   `reference_check.py`, `tasks/`, `patches/` or `slurm/`.
 - `projects/rewrite` `master`: `c639080` (local only).
 - **No training-side change awaits approval.**
+
+### Note (2026-11-08, after §12)
+
+README §5 (draft rebuttal text and caveats) was removed from the public copy `docs/rebuttal_q1_paired_analysis/` in
+`ac3dfa2c`. The text remains readable in this public repository's history (commit `91ae7f16`). By the user's
+decision the history is left as is: no rewrite, no force-push. The canonical copy in `projects/rewrite` is unchanged.
