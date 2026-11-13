@@ -69,10 +69,10 @@ EXTRA = {   # published path -> local file (small provenance / validation record
     f'{NS}/reports/test_resumable_shuffle_real100k.json': PREP / 'reports/test_resumable_shuffle_real100k.json',
     f'{NS}/reports/pool_sha256_sample.json': PREP / 'reports/pool_sha256_sample.json',
     **{f'{NS}/reports/{n}_{s}.json': PREP / ('state' if n == 'stage4_shuffle' else 'reports') / f'{n}_{s}.json'
-       for s in S.RAW_SETTINGS for n in ('stage4_shuffle', 'stage5', 'tokenize')},
+       for s in S.RAW_SETTINGS for n in ('stage4_shuffle', 'stage5', 'tokenize', 'stage7')},
     **{f'{NS}/code/{n}': PREP / 'code' / n for n in ('stage12_ids_select.py', 'stage3_extract.py', 'stage4_assemble.py',
                                                      'stage4b_shuffle.py', 'resumable_shuffle.py', 'stage5_validate_corpus.py',
-                                                     'make_config.py', 'test_resumable_shuffle.py')},
+                                                     'stage7_final_validate.py', 'make_config.py', 'test_resumable_shuffle.py')},
 }
 log = lambda m: print(f'[release_raw3b] {time.strftime("%Y-%m-%dT%H:%M:%S")} {m}', flush=True)  # noqa: E731
 
@@ -97,6 +97,12 @@ def st_gate() -> dict:
             errs.append(f'{s}: stage5 did not pass')
         if not t.get('pass') or t['tokens'] != S.TOKENIZED_TOKENS[s] or t['shards'] != S.CORPUS_PARTS[s]:
             errs.append(f'{s}: tokenization not reconciled')
+        f7 = PREP / f'reports/stage7_{s}.json'   # per-document final validation (lengths, EOS, components by id list)
+        v7 = json.loads(f7.read_text()) if f7.is_file() else {}
+        if v7.get('pass') is not True or v7.get('partial') or v7['totals']['tokens'] != S.TOKENIZED_TOKENS[s] \
+                or v7['totals']['rows'] != S.CORPUS_ROWS[s] or v7['totals']['base_tokens'] != S.SHARED_BASE_TRAIN_TOKENS \
+                or v7['totals']['block_tokens'] != S.RAW_STRATEGY_BLOCK[s]['train_tokens']:
+            errs.append(f'{s}: stage7 final validation missing or not passed')
         if v['rows'] != S.CORPUS_ROWS[s] or v['train_tokens'] != S.CORPUS_TRAIN_TOKENS[s] or v['empty_texts'] != S.CORPUS_EMPTY_DOCS[s]:
             errs.append(f'{s}: stage5 rows/tokens/empty differ from science_3b')
         if sorted(sh['files']) != sorted(p.name for p in shuffled(s).glob('part_*.parquet')) or len(sh['files']) != S.CORPUS_PARTS[s]:
@@ -262,8 +268,10 @@ retained rewritten blocks of its counterpart (`ids/<setting>_selected_perm_order
 `source_prompt="original"`; base and strategy membership is defined by the two id lists. Text comes from the public
 pool `blab-jhu/dclm-refinedweb-600m-sample` (id → file/row: `mapping/shard_manifest.parquet`). Expected counts and
 digests: `mapping/expected_raw_sets.json`. Shuffle: seed 42, the same two-pass bucketed shuffle as the four-setting
-corpora (`reports/test_resumable_shuffle_real100k.json`). Validation: `reports/stage5_<setting>.json`,
-`reports/tokenize_<setting>.json`.
+corpora (`reports/test_resumable_shuffle_real100k.json`). Validation: `reports/stage5_<setting>.json` (text vs
+source, ids, membership), `reports/tokenize_<setting>.json` (shard totals), `reports/stage7_<setting>.json` (every
+document: index length == tokens_llama2 + 1, ends in `</s>`, no BOS; base and strategy docs/tokens by the id lists; sha256
+of every shard file).
 
 Training: code `{h['code']['repo']}` branch `{h['code']['branch']}` (commit `{h['code']['commit']}`).
 Same model, seed 42, optimizer, LR schedule, global batch and branch points as the four-setting grid: 2 settings x 9
@@ -271,6 +279,12 @@ segments = 18 segments, 6 annealed finals. **Reuse the existing 3B seed-42 init*
 
 Files: `RAW_RELEASE_MANIFEST.json` (size and sha256 of every new file), `HANDOFF_RAW.json`, `RAW_UPLOAD_RECEIPT.json`
 (the verified content revision).
+
+Recovery: download only the raw paths at the receipt's revision
+(`--include "corpora/raw_*" "tokenized/raw_*" "raw_baselines/*"`), check every file against `RAW_RELEASE_MANIFEST.json`
+(`kys3b.py check --corpus --hash`), and re-download any file whose sha256 differs. The corpora can be rebuilt from the public
+pool with `code/` (stage12 → stage3 → stage4 → stage4b → stage5 → stage7, each resumable); the id lists and
+`mapping/expected_raw_sets.json` pin the exact membership, and `reports/stage4_shuffle_<setting>.json` the part sha256s.
 """
 
 
