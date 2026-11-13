@@ -8,6 +8,7 @@
     python deploy/portable_3b/kys3b.py plan              --operator <operator.yaml>
     python deploy/portable_3b/kys3b.py init-config       --config <rendered trunk1.yaml> --out <init.yaml> --ckpt <dir>
     python deploy/portable_3b/kys3b.py finalize-init     --operator <operator.yaml>
+    python deploy/portable_3b/kys3b.py verify-init       --operator <operator.yaml>
     python deploy/portable_3b/kys3b.py seed              --operator <operator.yaml> --config <yaml>
     python deploy/portable_3b/kys3b.py prepare           --operator <operator.yaml> --run <segment run name>
     python deploy/portable_3b/kys3b.py finish            --operator <operator.yaml> --run <segment run name>
@@ -30,6 +31,14 @@ render writes, under CONFIG_ROOT:
   operator.resolved.yaml       the validated operator config the render used
   render_manifest.json         sha256 of every rendered file, code commit, deployment
   slurm/                       per-segment sbatch files and submit_grid.sh (only with scheduler.type: slurm)
+Raw baselines (opt-in): an optional operator section
+  grid: {settings: [raw_diversity_oriented, raw_disagreement_aware], init_weights_sha256: <64 hex>}
+selects the two raw-baseline settings (2 x 9 = 18 segments, 6 annealed finals) INSTEAD of the four-setting grid; without
+it everything renders exactly as before. Raw settings REUSE the existing _init_3B_seed42 (the one the four-setting grid
+was trained from): init_weights_sha256 must be the weights_sha256 of its init_manifest.json, no init job is rendered,
+finalize-init is refused, submit_grid.sh first runs verify-init, and prepare refuses to seed a trunk from any other init.
+Use a separate CONFIG_ROOT for the raw selection; INIT_ROOT, CHECKPOINT_ROOT (per-setting namespaces) and DATA_ROOT
+(tokenized/<raw setting>/, raw_baselines/RAW_RELEASE_MANIFEST.json) stay the same.
 prepare / finish are run around every segment (run_segment.sh does it): prepare refuses a drifted config, a changed
 deployment (CHECKPOINT_ROOT/kys3b_deployment.json), a missing W&B login, a missing resume source or one written at
 another data-parallel size; it seeds trunk1 from the shared init, and gives trunk1 past step 0 full-state loading.
@@ -121,6 +130,32 @@ SLURM_SCHEMA = {
 }
 
 
+GRID_KEYS = {'settings': 'the settings to render: the four-setting grid (default, key absent) or a subset of '
+                         + ', '.join(S.RAW_SETTINGS),
+             'init_weights_sha256': 'weights_sha256 of your EXISTING <INIT_ROOT>/_init_3B_seed42/init_manifest.json '
+                                    '(required for raw settings: they reuse that init)'}
+SHA256_HEX = re.compile(r'^[0-9a-f]{64}$')
+
+
+def grid_problems(g) -> list[str]:
+    if not isinstance(g, dict):
+        return ['grid: must be a mapping with settings (+ init_weights_sha256), or absent']
+    errs = [f'grid.{k}: unknown key (allowed: {", ".join(GRID_KEYS)})' for k in g if k not in GRID_KEYS]
+    st = g.get('settings')
+    if not (isinstance(st, list) and st and all(isinstance(x, str) for x in st)) or len(set(st)) != len(st):
+        return errs + [f'grid.settings: a non-empty list of distinct names ({GRID_KEYS["settings"]})']
+    raw = set(st) <= set(S.RAW_SETTINGS)
+    if not raw and sorted(st) != sorted(S.GRID_SETTINGS):
+        errs.append(f'grid.settings {st}: either exactly the four-setting grid {S.GRID_SETTINGS} or a subset of '
+                    f'{S.RAW_SETTINGS} (the raw baselines are never mixed into the four-setting render)')
+    pin = g.get('init_weights_sha256')
+    if raw and not (isinstance(pin, str) and SHA256_HEX.match(pin)):
+        errs.append(f'grid.init_weights_sha256: {GRID_KEYS["init_weights_sha256"]}; got {pin!r}')
+    elif pin is not None and not (isinstance(pin, str) and SHA256_HEX.match(pin)):
+        errs.append(f'grid.init_weights_sha256: 64 lowercase hex characters or absent; got {pin!r}')
+    return errs
+
+
 class OperatorError(SystemExit):
     def __init__(self, problems):
         self.problems = list(problems)
@@ -196,10 +231,12 @@ def validate_operator(op) -> dict:
     if not isinstance(op, dict):
         raise OperatorError(['the operator file is not a YAML mapping'])
     for k in op:
-        if k not in SCHEMA:
-            problems.append(f'{k}: unknown section (allowed: {", ".join(SCHEMA)})')
+        if k not in SCHEMA and k != 'grid':
+            problems.append(f'{k}: unknown section (allowed: {", ".join(SCHEMA)}, and the optional grid)')
     for sec, schema in SCHEMA.items():
         _check_section(sec, schema, op.get(sec), problems)
+    if 'grid' in op:
+        problems += grid_problems(op['grid'])
     sch = op.get('scheduler') if isinstance(op.get('scheduler'), dict) else {}
     if sch.get('type') == 'slurm':
         _check_section('scheduler.slurm', SLURM_SCHEMA, sch.get('slurm'), problems)
@@ -262,6 +299,12 @@ class Site:
         self.init_dir = self.config_root / 'init'
         self.run_dir = self.config_root / 'run'
         self.init_scratch = self.init_root / f'{S.INIT_DIRNAME}.run'
+        g = op.get('grid') or {}
+        sel = g.get('settings') or S.GRID_SETTINGS
+        self.raw = set(sel) <= set(S.RAW_SETTINGS)                 # raw baselines: reuse the existing init
+        self.settings = [x for x in (S.RAW_SETTINGS if self.raw else S.GRID_SETTINGS) if x in sel]
+        self.init_pin = g.get('init_weights_sha256')
+        self.init_source = INIT_SOURCE_SETTING if INIT_SOURCE_SETTING in self.settings else self.settings[0]
 
     @property
     def tokenized(self) -> Path:
@@ -307,6 +350,8 @@ class Site:
                 'KYS3B_NPROC_PER_NODE': ln['nproc_per_node'], 'KYS3B_DP': self.dp, 'KYS3B_RDZV_BACKEND': ln['rdzv_backend'],
                 'KYS3B_RDZV_ENDPOINT': ln['rdzv_endpoint'], 'KYS3B_RDZV_ID': ln['rdzv_id'],
                 'KYS3B_SCHEDULER': self.op['scheduler']['type']}
+        if self.raw:
+            rows.update({'KYS3B_INIT_MODE': 'reuse', 'KYS3B_INIT_WEIGHTS_SHA256': self.init_pin})
         return ('# KYS 3B site environment, rendered by deploy/portable_3b/kys3b.py; do not edit (re-render instead).\n'
                 '# Sourced by run_segment.sh / launch_torchrun.sh / create_init.sh. ${VAR} references resolve at launch.\n'
                 + ''.join(f'export {k}={q(v)}\n' for k, v in rows.items()))
@@ -314,7 +359,7 @@ class Site:
 
 def plan(site: Site) -> dict:
     segs = []
-    for s in S.GRID_SETTINGS:
+    for s in site.settings:
         for k in S.KINDS:
             c = site.config(s, k)
             segs.append({'run': S.seg_name(s, k), 'setting': s, 'kind': k, 'config': str(site.cfg_path(s, k)),
@@ -325,6 +370,13 @@ def plan(site: Site) -> dict:
                          'checkpoints_path': c['checkpoints']['checkpoints_path'],
                          'resume_from': c['checkpoints']['resume_checkpoint_path']})
     order = ['init'] + [x['run'] for k in S.TRUNK_KINDS + S.BRANCH_KINDS for x in segs if x['kind'] == k]
+    if site.raw:
+        return {'grid': f'KYS 3B rewrite-600m raw baselines, seed 42, {len(site.settings)} setting(s)',
+                'settings': site.settings, 'n_segments': len(segs), 'n_final_models': sum(x['final_model'] for x in segs),
+                'init': {'mode': 'reuse-existing (never created for raw settings)',
+                         'init_dir': str(initlib.init_parent(site.init_root)), 'weights_sha256': site.init_pin,
+                         'shared_by': S.GRID_SETTINGS + site.settings, 'verify': 'kys3b.py verify-init'},
+                'deployment': site.deployment(), 'order': order, 'segments': segs}
     return {'grid': 'KYS 3B rewrite-600m, seed 42, four settings', 'settings': S.GRID_SETTINGS,
             'n_segments': len(segs), 'n_final_models': sum(x['final_model'] for x in segs),
             'init': {'config': str(site.init_dir / 'init.yaml'), 'env': str(site.init_dir / 'init.env'),
@@ -353,7 +405,7 @@ def _sbatch(site: Site, job: str, cmd: str) -> str:
 def render_files(site: Site) -> dict[str, str]:
     """relative path under CONFIG_ROOT -> text. Deterministic for a given operator config and code."""
     files: dict[str, str] = {}
-    for s in S.GRID_SETTINGS:
+    for s in site.settings:
         for k in S.KINDS:
             c = site.config(s, k)
             lrs = c['optimizer']['learning_rate_scheduler']
@@ -373,19 +425,31 @@ def render_files(site: Site) -> dict[str, str]:
     files['operator.resolved.yaml'] = yaml.safe_dump(site.op, sort_keys=False)
     if site.op['scheduler']['type'] == 'slurm':
         rs = f'bash {site.code}/deploy/portable_3b/run_segment.sh {site.config_root}/site.env'
-        files['slurm/init.sbatch'] = _sbatch(site, 'kys3b_init', f'exec bash {site.code}/deploy/portable_3b/create_init.sh '
-                                                                 f'{site.config_root}/site.env')
-        for s in S.GRID_SETTINGS:
+        if not site.raw:
+            files['slurm/init.sbatch'] = _sbatch(site, 'kys3b_init', f'exec bash {site.code}/deploy/portable_3b/create_init.sh '
+                                                                     f'{site.config_root}/site.env')
+        for s in site.settings:
             for k in S.KINDS:
                 files[f'slurm/{S.seg_name(s, k)}.sbatch'] = _sbatch(site, f'kys3b_{S.slug(s)}_{k}', f'exec {rs} {S.seg_name(s, k)}')
-        sub = ['#!/usr/bin/env bash', '# Rendered by kys3b.py: submits the init job and the 4 x 9 segment jobs with afterok',
-               '# dependencies (plan.json). Review it before running; nothing is submitted by render.', 'set -euo pipefail',
-               f'D={site.config_root}/slurm', 'INIT=$(sbatch --parsable "$D/init.sbatch")', 'echo "init $INIT"']
-        for s in S.GRID_SETTINGS:
+        if site.raw:
+            sub = ['#!/usr/bin/env bash', f'# Rendered by kys3b.py: verifies the EXISTING shared init (weights_sha256 '
+                   f'{site.init_pin}), then submits the {len(site.settings)} x 9 raw-baseline segment jobs with afterok',
+                   '# dependencies (plan.json). No init job: raw settings reuse the init of the four-setting grid.',
+                   '# Review it before running; nothing is submitted by render.', 'set -euo pipefail',
+                   f'D={site.config_root}/slurm',
+                   f'"{site.python}" "{site.code}/deploy/portable_3b/kys3b.py" verify-init --operator "{site.config_root}/operator.resolved.yaml"']
+        else:
+            sub = ['#!/usr/bin/env bash', '# Rendered by kys3b.py: submits the init job and the 4 x 9 segment jobs with afterok',
+                   '# dependencies (plan.json). Review it before running; nothing is submitted by render.', 'set -euo pipefail',
+                   f'D={site.config_root}/slurm', 'INIT=$(sbatch --parsable "$D/init.sbatch")', 'echo "init $INIT"']
+        for s in site.settings:
             v = S.slug(s).upper()
             for k in S.KINDS:
-                dep = '$INIT' if S.DEPENDS[k] is None else f'${v}_{S.DEPENDS[k].upper()}'
-                sub.append(f'{v}_{k.upper()}=$(sbatch --parsable --dependency=afterok:{dep} "$D/{S.seg_name(s, k)}.sbatch")')
+                if S.DEPENDS[k] is None and site.raw:
+                    sub.append(f'{v}_{k.upper()}=$(sbatch --parsable "$D/{S.seg_name(s, k)}.sbatch")')
+                else:
+                    dep = '$INIT' if S.DEPENDS[k] is None else f'${v}_{S.DEPENDS[k].upper()}'
+                    sub.append(f'{v}_{k.upper()}=$(sbatch --parsable --dependency=afterok:{dep} "$D/{S.seg_name(s, k)}.sbatch")')
                 sub.append(f'echo "{S.seg_name(s, k)} ${v}_{k.upper()}"')
         files['slurm/submit_grid.sh'] = '\n'.join(sub) + '\n'
     return files
@@ -419,12 +483,12 @@ def render(site: Site, force: bool = False) -> dict:
         p.write_text(text)
         if rel.endswith('.sh') or rel.endswith('.sbatch'):
             p.chmod(0o755)
-    rec = startup.derive_init(site.cfg_path(INIT_SOURCE_SETTING, 'trunk1'), site.init_dir / 'init.yaml', site.init_scratch)
+    rec = startup.derive_init(site.cfg_path(site.init_source, 'trunk1'), site.init_dir / 'init.yaml', site.init_scratch)
     (site.init_dir / 'init_derive.json').write_text(json.dumps(rec, indent=1) + '\n')
     files['init/init.yaml'] = (site.init_dir / 'init.yaml').read_text()
     files['init/init_derive.json'] = (site.init_dir / 'init_derive.json').read_text()
     man = {'rendered': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'code_root': str(site.code), 'code_commit': code_commit(site.code),
-           'deployment': site.deployment(), 'settings': S.GRID_SETTINGS,
+           'deployment': site.deployment(), 'settings': site.settings,
            'files': {k: hashlib.sha256(v.encode()).hexdigest() for k, v in sorted(files.items())}}
     man_p.write_text(json.dumps(man, indent=1) + '\n')
     return man
@@ -487,10 +551,11 @@ def science_problems(site: Site, cfgs: dict) -> list[str]:
         for p in (v for _, v in _flat(c) if isinstance(v, str) and v.startswith('/')):
             if any(p.startswith(x) for x in PUBLISHER['path_prefixes']):
                 errs.append(f'{n}: publisher path {p}')
-    if len(outs) != len(S.GRID_SETTINGS) * (1 + len(S.BRANCH_KINDS)):
-        errs.append(f'{len(outs)} distinct output folders, expected {len(S.GRID_SETTINGS) * 4} (one trunk + 3 branches per setting)')
+    n_set = len({s for s, _ in cfgs})
+    if len(outs) != n_set * (1 + len(S.BRANCH_KINDS)):
+        errs.append(f'{len(outs)} distinct output folders, expected {n_set * 4} (one trunk + 3 branches per setting)')
     if len({(c['tokens']['micro_batch_size'], c['parallelism']['dp'], c['optimizer']['zero_stage']) for c in cfgs.values()}) != 1:
-        errs.append('the grid mixes deployments; one micro-batch size / dp / zero stage for all four settings')
+        errs.append('the grid mixes deployments; one micro-batch size / dp / zero stage for all settings')
     return errs
 
 
@@ -505,12 +570,12 @@ def corpus_problems(site: Site, hash_binaries: bool) -> list[str]:
         p = site.tokenizer / n
         if not p.is_file() or _sha256(p) != want:
             errs.append(f'{p}: missing or not the published tokenizer (sha256 {want[:12]}...)')
-    man_p = site.data / 'RELEASE_MANIFEST.json'
+    man_p = site.data / ('raw_baselines/RAW_RELEASE_MANIFEST.json' if site.raw else 'RELEASE_MANIFEST.json')
     man = json.loads(man_p.read_text())['files'] if man_p.is_file() else None
     if man is None:
         errs.append(f'{man_p}: missing (download it with the data)')
     want_line = f'{site.tokenizer}|2'
-    for s in S.GRID_SETTINGS:
+    for s in site.settings:
         folder = site.tokenized / s
         shards = sorted(folder.glob('*.ds'))
         total, lines = 0, set()
@@ -553,17 +618,17 @@ def check(site: Site, corpus: bool, hash_binaries: bool) -> dict:
     if init.is_file():
         tmp = site.report_root / '.check_init.yaml'
         tmp.parent.mkdir(parents=True, exist_ok=True)
-        startup.derive_init(site.cfg_path(INIT_SOURCE_SETTING, 'trunk1'), tmp, site.init_scratch)
+        startup.derive_init(site.cfg_path(site.init_source, 'trunk1'), tmp, site.init_scratch)
         if tmp.read_text() != init.read_text():
             errs.append(f'{init}: differs from derive_init of the rendered trunk1 config (re-render)')
         tmp.unlink()
     else:
         errs.append(f'{init}: missing (render)')
-    cfgs = {(s, k): site.config(s, k) for s in S.GRID_SETTINGS for k in S.KINDS}
+    cfgs = {(s, k): site.config(s, k) for s in site.settings for k in S.KINDS}
     errs += science_problems(site, cfgs)
     if corpus:
         errs += corpus_problems(site, hash_binaries)
-    rep = {'ok': not errs, 'problems': errs, 'n_configs': len(cfgs), 'settings': S.GRID_SETTINGS,
+    rep = {'ok': not errs, 'problems': errs, 'n_configs': len(cfgs), 'settings': site.settings,
            'deployment': site.deployment(), 'corpus_checked': corpus, 'binaries_hashed': hash_binaries,
            'checked': time.strftime('%Y-%m-%dT%H:%M:%S%z')}
     site.report_root.mkdir(parents=True, exist_ok=True)
@@ -573,7 +638,7 @@ def check(site: Site, corpus: bool, hash_binaries: bool) -> dict:
 
 # ---- per-segment preparation ------------------------------------------------------------------------------------------
 def _segment(site: Site, run: str) -> tuple[str, str]:
-    for s in S.GRID_SETTINGS:
+    for s in site.settings:
         for k in S.KINDS:
             if S.seg_name(s, k) == run:
                 return s, k
@@ -634,7 +699,7 @@ def prepare(site: Site, run: str) -> tuple[int, str]:
     if k == 'trunk1':
         seeded, init_m = False, None
         if not (ckpt / 'latest.txt').is_file():          # only a fresh trunk needs (and is seeded from) the init
-            init_m = initlib.verify_init(site.init_root)
+            init_m = verify_init(site)
             par = initlib.init_parent(site.init_root)
             seeded = initlib.seed_trunk(ckpt, par / '0', par / initlib.MANIFEST)
         latest = int((ckpt / 'latest.txt').read_text().strip())
@@ -644,6 +709,9 @@ def prepare(site: Site, run: str) -> tuple[int, str]:
             note = f'trunk1 continues {ckpt}/{latest} with optimizer + LR scheduler state'
         else:
             init_m = init_m or initlib.read_manifest(site.init_root)
+            if site.init_pin and init_m['weights_sha256'] != site.init_pin:
+                raise SystemExit(f'{initlib.init_parent(site.init_root)}: weights_sha256 {init_m["weights_sha256"]} is not the '
+                                 f'pinned shared init {site.init_pin} (grid.init_weights_sha256)')
             note = f'trunk1 starts weights-only from the shared init {init_m["weights_sha256"][:12]}' + (' (seeded now)' if seeded else '')
         src = ckpt / str(latest)
     elif k.startswith('trunk'):
@@ -669,6 +737,16 @@ def prepare(site: Site, run: str) -> tuple[int, str]:
     return 0, str(eff)
 
 
+def verify_init(site: Site) -> dict:
+    """verify_init of the shared init (files + weights digest) and, if the operator pins it, that it IS the pinned init."""
+    m = initlib.verify_init(site.init_root)
+    if site.init_pin and m['weights_sha256'] != site.init_pin:
+        raise SystemExit(f'{initlib.init_parent(site.init_root)}: weights_sha256 {m["weights_sha256"]} != grid.init_weights_sha256 '
+                         f'{site.init_pin}. Raw settings must reuse the init the four-setting grid was trained from; '
+                         f'point INIT_ROOT at it (never create a new one).')
+    return m
+
+
 def finish(site: Site, run: str) -> tuple[int, str]:
     s, k = _segment(site, run)
     ckpt = Path(site.config(s, k)['checkpoints']['checkpoints_path'])
@@ -684,7 +762,7 @@ def finish(site: Site, run: str) -> tuple[int, str]:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0], formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('command', choices=['validate', 'render', 'relocate-metadata', 'check', 'plan', 'init-config',
-                                        'finalize-init', 'seed', 'prepare', 'finish', 'startup-derive',
+                                        'finalize-init', 'verify-init', 'seed', 'prepare', 'finish', 'startup-derive',
                                         'startup-summarize', 'check-log', 'wandb-check'])
     ap.add_argument('--operator', type=Path)
     ap.add_argument('--config', type=Path)
@@ -721,22 +799,28 @@ def main(argv=None) -> int:
         print(f'[kys3b] operator config OK: {site.deployment()}')
     elif a.command == 'render':
         man = render(site, a.force)
-        print(f'[kys3b] rendered {len(man["files"])} files to {site.config_root}: 4 settings x {len(S.KINDS)} segments '
-              f'(+ init), mbs {site.mbs} x accum {site.accum} x dp {site.dp} = {S.GLOBAL_BATCH_SEQ}')
+        print(f'[kys3b] rendered {len(man["files"])} files to {site.config_root}: {len(site.settings)} settings x {len(S.KINDS)} segments '
+              f'{"(reusing the existing init " + site.init_pin[:12] + ")" if site.raw else "(+ init)"}, mbs {site.mbs} x accum {site.accum} x dp {site.dp} = {S.GLOBAL_BATCH_SEQ}')
     elif a.command == 'relocate-metadata':
-        for s in S.GRID_SETTINGS:
+        for s in site.settings:
             subprocess.run([sys.executable, str(site.code / 'tools' / 'fix_ds_metadata.py'), '--output-folder',
                             str(site.tokenized / s), '--tokenizer-dir', str(site.tokenizer)], check=True)
     elif a.command == 'check':
         rep = check(site, a.corpus, a.hash)
         for e in rep['problems']:
             print(f'[kys3b] PROBLEM {e}')
-        print(f'[kys3b] {"OK" if rep["ok"] else "FAILED"}: {rep["n_configs"]} configs of {len(S.GRID_SETTINGS)} settings'
+        print(f'[kys3b] {"OK" if rep["ok"] else "FAILED"}: {rep["n_configs"]} configs of {len(site.settings)} settings'
               + (' + corpus' + (' (binaries hashed)' if a.hash else ' (sizes, totals, metadata)') if a.corpus else ''))
         return 0 if rep['ok'] else 1
     elif a.command == 'plan':
         print(json.dumps(plan(site), indent=1))
+    elif a.command == 'verify-init':
+        m = verify_init(site)
+        print(f'[kys3b] shared init OK: {initlib.init_parent(site.init_root)} files {m["files"]} weights_sha256 {m["weights_sha256"]}')
     elif a.command == 'finalize-init':
+        if site.raw:
+            raise SystemExit('finalize-init: refused for raw-baseline settings; they reuse the existing shared init '
+                             '(grid.init_weights_sha256). Never create a new init for them.')
         rec = json.loads((site.init_dir / 'init_derive.json').read_text())
         m = initlib.finalize_init(site.init_scratch, site.init_root,
                                   {'init_config': str(site.init_dir / 'init.yaml'),
@@ -758,10 +842,10 @@ def main(argv=None) -> int:
         print(msg)
         return rc
     elif a.command == 'startup-derive':
-        startup.derive_startup(site.cfg_path(INIT_SOURCE_SETTING, 'trunk1'), a.workdir)
+        startup.derive_startup(site.cfg_path(site.init_source, 'trunk1'), a.workdir)
         print(f'[kys3b] wrote {startup.STARTUP_PHASES} to {a.workdir}/cfg')
     elif a.command == 'startup-summarize':
-        rep = startup.summarize(site.cfg_path(INIT_SOURCE_SETTING, 'trunk1'), a.workdir, a.mem_budget_gib)
+        rep = startup.summarize(site.cfg_path(site.init_source, 'trunk1'), a.workdir, a.mem_budget_gib)
         print(json.dumps({k: v for k, v in rep.items() if k != 'phases'}, indent=1))
         return 0 if rep['ok'] else 1
     return 0

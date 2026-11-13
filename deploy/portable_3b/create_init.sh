@@ -16,6 +16,10 @@ set -a; source "$SITE"; set +a
 K="$KYS3B_PYTHON $HERE/kys3b.py"
 PARENT="$KYS3B_INIT_ROOT/_init_3B_seed42"
 SCRATCH="$KYS3B_INIT_ROOT/_init_3B_seed42.run"
+if [[ "${KYS3B_INIT_MODE:-create}" == reuse ]]; then   # raw baselines: never create an init, only verify the pinned one
+  $K verify-init --operator "$KYS3B_OPERATOR" || die "raw-baseline settings reuse the existing shared init (weights_sha256 ${KYS3B_INIT_WEIGHTS_SHA256:-?}); point INIT_ROOT at it. A new init is never created for them."
+  exit 0
+fi
 mkdir -p "$KYS3B_INIT_ROOT" "$KYS3B_LOG_ROOT"
 exec 9>"$KYS3B_INIT_ROOT/.init.lock"
 flock -n 9 || die "another create_init.sh holds $KYS3B_INIT_ROOT/.init.lock"

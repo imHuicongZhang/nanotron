@@ -30,6 +30,15 @@ from pathlib import Path
 SEED = 42
 # The four settings, in release order. All four are trained in the portable grid (4 x 3 annealed finals = 12).
 GRID_SETTINGS = ['quality-first', 'diversity-oriented', 'disagreement-aware', 'quality-base']
+# Raw (un-rewritten) baselines, released separately (raw_baselines/RAW_RELEASE_MANIFEST.json). Opt-in only: never part of
+# GRID_SETTINGS / the default render; selected with the operator key grid.settings. Each corpus = the shared ~10B raw base
+# once + a seed-42 whole-document sample (~10B raw tokens) of the unique source documents of the final retained rewritten
+# blocks of its counterpart. Same model, seed, optimizer, LR schedule, global batch and branch points: 2 x 9 = 18 segments,
+# 6 annealed finals. They REUSE the existing _init_3B_seed42 (never create a new init).
+RAW_SETTINGS = ['raw_diversity_oriented', 'raw_disagreement_aware']
+RAW_COUNTERPART = {'raw_diversity_oriented': 'diversity-oriented', 'raw_disagreement_aware': 'disagreement-aware'}
+ALL_SETTINGS = GRID_SETTINGS + RAW_SETTINGS
+assert not set(GRID_SETTINGS) & set(RAW_SETTINGS)
 
 # ---- tokenizer: the exact 1.5B KYS llama-2 tokenizer, as published in tokenizer/ of the dataset ----------------------
 TOKENIZER_SHA256 = {
@@ -38,6 +47,7 @@ TOKENIZER_SHA256 = {
     'tokenizer_report.json': '4dcd1212911e7acfd59068eab1b96ed8077584fecded75fe0335035d9913c8c1',
 }
 
+SHARED_BASE_TRAIN_TOKENS = 10_000_000_186           # the shared raw base (in every rewritten corpus and both raw corpora)
 # ---- corpus (validated 2026-10-17; quality-base 2026-10-30) ---------------------------------------------------------
 CORPUS_TRAIN_TOKENS = {'quality-first': 20_000_000_270, 'diversity-oriented': 19_834_314_433,
                        'disagreement-aware': 20_000_000_227, 'quality-base': 20_000_000_299}
@@ -47,8 +57,17 @@ CORPUS_PARTS = {'quality-first': 65, 'diversity-oriented': 54, 'disagreement-awa
 # Rows with empty text: counted as one EOS in corpus_train_tokens, skipped by datatrove's tokenizer, so the tokenized
 # stream holds corpus_train_tokens - empty documents. diversity-oriented's 165,685,567-token shortfall is accepted.
 CORPUS_EMPTY_DOCS = {'quality-first': 27, 'diversity-oriented': 2, 'disagreement-aware': 8, 'quality-base': 0}
+# Raw baselines (built and validated on Skipjack 2026-11-13; raw_baselines_prep stage12/stage5 reports). Both corpora:
+# train tokens = Llama-2 tokens of the ORIGINAL text + 1 EOS per document; no shortfall; no empty documents.
+CORPUS_TRAIN_TOKENS.update({'raw_diversity_oriented': 20_000_001_178, 'raw_disagreement_aware': 20_000_007_963})
+CORPUS_ROWS.update({'raw_diversity_oriented': 16_148_288, 'raw_disagreement_aware': 15_880_055})
+CORPUS_PARTS.update({'raw_diversity_oriented': 33, 'raw_disagreement_aware': 32})
+CORPUS_EMPTY_DOCS.update({'raw_diversity_oriented': 0, 'raw_disagreement_aware': 0})
+RAW_STRATEGY_BLOCK = {'raw_diversity_oriented': {'docs': 5_620_401, 'train_tokens': 10_000_000_992, 'source_docs': 10_944_263},
+                      'raw_disagreement_aware': {'docs': 5_352_168, 'train_tokens': 10_000_007_777, 'source_docs': 10_390_612}}
+assert all(CORPUS_TRAIN_TOKENS[s] == SHARED_BASE_TRAIN_TOKENS + RAW_STRATEGY_BLOCK[s]['train_tokens'] for s in RAW_SETTINGS)
 TOKENIZED_TOKENS = {s: CORPUS_TRAIN_TOKENS[s] - CORPUS_EMPTY_DOCS[s] for s in CORPUS_TRAIN_TOKENS}
-SHARED_BASE_TRAIN_TOKENS = 10_000_000_186
+assert set(CORPUS_TRAIN_TOKENS) == set(CORPUS_ROWS) == set(CORPUS_PARTS) == set(CORPUS_EMPTY_DOCS) == set(ALL_SETTINGS)
 
 # ---- batch and schedule ---------------------------------------------------------------------------------------------
 SEQ_LEN = 2048
@@ -133,7 +152,7 @@ def build_config(setting: str, kind: str, *, tokenized_root, tokenizer_dir, runs
                  dp: int, micro_batch_size: int, zero_stage: int, recompute_layer: bool) -> dict:
     """The nanotron config of one segment. Only the arguments are deployment- or site-specific; everything else is
     the scientific contract above."""
-    assert setting in GRID_SETTINGS and kind in KINDS, (setting, kind)
+    assert setting in ALL_SETTINGS and kind in KINDS, (setting, kind)
     if zero_stage not in (0, 1):
         raise ValueError(f'zero_stage must be 0 or 1 (got {zero_stage!r})')
     if kind.startswith('trunk'):

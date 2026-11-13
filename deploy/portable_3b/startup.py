@@ -55,7 +55,7 @@ def require_trunk1(c: dict, where) -> str:
     run = c['general']['run']
     if not run.endswith('_trunk1') or c['checkpoints']['load_optimizer'] or c['checkpoints']['load_lr_scheduler']:
         raise StartupError(f'{where}: not a rendered trunk1 config (weights-only load from the init); got run {run!r}')
-    for s in S.GRID_SETTINGS:
+    for s in S.ALL_SETTINGS:
         if run == S.seg_name(s, 'trunk1'):
             return s
     raise StartupError(f'{where}: general.run {run!r} is not a trunk1 segment of the 3B grid')
