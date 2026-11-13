@@ -405,6 +405,9 @@ def main(argv=None) -> int:
             r = record(s)
             print(f'{s:15s} {"-" if r is None else ("ok" if r.get("ok") else "FAILED")}')
         return 0
+    tok = Path.home() / '.cache' / 'huggingface' / 'token'      # ~/.bashrc points HF_HOME at another project's cache
+    if not os.environ.get('HF_TOKEN') and not os.environ.get('HF_TOKEN_PATH') and tok.is_file():
+        os.environ['HF_TOKEN_PATH'] = str(tok)
     REC.mkdir(parents=True, exist_ok=True)
     lock = open(REC / '.uploader.lock', 'w')
     import fcntl
