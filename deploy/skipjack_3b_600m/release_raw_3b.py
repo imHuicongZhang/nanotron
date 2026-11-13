@@ -20,7 +20,9 @@ Stages run in order; each writes <reports>/release_raw_3b/<stage>.json and is sk
   upload          upload_large_folder of the stage tree (resumable, only new paths), circuit breaker on 401/403/long 429;
                   the three raw_baselines/ top files are committed last
   verify_remote   every new path remotely with the same size and sha256; every file of the pre-upload revision unchanged
-                  (same size and LFS sha256 / git blob id); no other new files; records the content revision
+                  (same size and LFS sha256 / git blob id); no other new files; records the content revision.
+                  One owner-approved exception (2026-11-13): .gitattributes may differ only by Hub-appended LFS rules,
+                  each naming exactly one new manifest file (gitattributes_append_check); recorded, never silent
   fresh_download  sampled at that revision into an empty directory: manifest, first/last part of each corpus (sha256, rows),
                   one tokenized shard triple of each (sha256, tokens), the id lists (sha256)
   receipt         raw_baselines/RAW_UPLOAD_RECEIPT.json (local + Hub) describing the verified content revision
@@ -31,6 +33,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import shutil
 import sys
 import time
@@ -58,7 +61,7 @@ TOP = (f'{NS}/RAW_RELEASE_MANIFEST.json', f'{NS}/HANDOFF_RAW.json', f'{NS}/READM
 RECEIPT = f'{NS}/RAW_UPLOAD_RECEIPT.json'
 PORTABLE_TESTS = ['deploy/portable_3b/test_portable_3b_operator.py', 'deploy/portable_3b/test_portable_3b_render.py',
                   'deploy/portable_3b/test_portable_3b_init.py', 'deploy/portable_3b/test_portable_3b_lr.py',
-                  'deploy/portable_3b/test_portable_3b_raw.py']
+                  'deploy/portable_3b/test_portable_3b_raw.py', 'deploy/skipjack_3b_600m/test_release_raw_3b.py']
 EXTRA = {   # published path -> local file (small provenance / validation records)
     f'{NS}/ids/base_ids_sorted.npy': PREP / 'stage1_ids/base_ids_sorted.npy',
     **{f'{NS}/ids/{s}_selected_perm_order.npy': PREP / f'stage2_select/{s}_selected_perm_order.npy' for s in S.RAW_SETTINGS},
@@ -341,21 +344,101 @@ def st_upload() -> dict:
     return {'ok': private == PRIVATE, 'top_commit': commit, 'revision': rev, 'rate_limited_429': b.n_rate}
 
 
+GITATTRIBUTES = '.gitattributes'
+LFS_ATTRS = ('filter=lfs', 'diff=lfs', 'merge=lfs', '-text')
+_LITERAL_PATH = re.compile(r'[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)+')   # anchored (has a '/'), no glob/escape/quote characters
+
+
+def gitattributes_append_check(old: bytes, new: bytes, new_files, original_files) -> dict:
+    """The one change to an existing file the owner allowed (2026-11-13): the Hub appends one LFS rule per new binary
+    file to .gitattributes. Allowed only if `old` is an exact byte prefix of `new` ending at a line boundary, and every
+    appended line is `<literal path> filter=lfs diff=lfs merge=lfs -text` where the path is a file of this extension's
+    manifest (`new_files`), is not an original release file and is not a directory prefix of one (`original_files`).
+    A literal path containing '/' matches exactly that path, so no appended rule can change any original file's attributes.
+    Anything else (edited/removed old lines, glob or unanchored patterns, macros, negations, quoted patterns, comments,
+    blank lines, other attributes, paths outside the manifest) is rejected."""
+    new_files, original_files = set(new_files), set(original_files)
+    problems, paths = [], []
+    if not new.startswith(old):
+        problems.append('pre-upload content is not an exact byte prefix')
+    elif old and not old.endswith(b'\n'):
+        problems.append('pre-upload content does not end in a newline (an append would edit its last line)')
+    else:
+        added = new[len(old):]
+        try:
+            text = added.decode('ascii')
+        except UnicodeDecodeError:
+            text = ''
+            problems.append('appended bytes are not ASCII')
+        lines = text.split('\n')
+        if lines[-1] == '':
+            lines.pop()
+        else:
+            problems.append('appended text does not end in a newline')
+        for i, line in enumerate(lines):
+            path, *attrs = line.split(' ')
+            why = None
+            if not _LITERAL_PATH.fullmatch(path) or any(seg in ('.', '..') for seg in path.split('/')):
+                why = 'not an anchored literal path (glob, unanchored, quoted, macro, negation, comment or blank)'
+            elif tuple(attrs) != LFS_ATTRS:
+                why = f'attributes are not exactly "{" ".join(LFS_ATTRS)}"'
+            elif path not in new_files:
+                why = 'path is not a file of the raw-baseline manifest'
+            elif path in original_files or any(o.startswith(path + '/') for o in original_files):
+                why = 'path is (or contains) an original release file'
+            if why:
+                problems.append(f'appended line {i + 1} {line[:160]!r}: {why}')
+            else:
+                paths.append(path)
+        if len(set(paths)) != len(paths):
+            problems.append('duplicate appended rules')
+    return {'ok': not problems, 'old_bytes': len(old), 'new_bytes': len(new), 'appended_rules': len(paths),
+            'appended_paths': sorted(paths), 'problems': problems}
+
+
 def st_verify_remote() -> dict:
+    from huggingface_hub import hf_hub_download
     a = RL.api()
     remote, rev, private = RL._remote_files(a)
     exp = _expected()
-    before = json.loads((REC / 'remote_before.json').read_text())['files']
+    man_files = set(json.loads((STAGE / TOP[0]).read_text())['files'])
+    rb = json.loads((REC / 'remote_before.json').read_text())
+    before = rb['files']
     tmp = WORK / 'verify_tmp'
+    shutil.rmtree(tmp, ignore_errors=True)
     missing = [r for r in exp if r not in remote]
     bad = [r for r in exp if r in remote and (remote[r]['bytes'] != exp[r]['bytes']
                                               or RL._remote_sha(a, r, remote[r], rev, tmp) != exp[r]['sha256'])]
     changed = [r for r, m in before.items() if remote.get(r) != m]
     unexpected = sorted(set(remote) - set(exp) - set(before) - {RECEIPT})
+    exception = None
+    if GITATTRIBUTES in changed and GITATTRIBUTES in remote:
+        # owner-approved metadata exception (2026-11-13). Both versions are downloaded and tied to the listed blob ids
+        # before their content is judged.
+        old_p = Path(hf_hub_download(REPO_ID, GITATTRIBUTES, repo_type='dataset', revision=rb['revision'],
+                                     cache_dir=str(tmp / 'old')))
+        new_p = Path(hf_hub_download(REPO_ID, GITATTRIBUTES, repo_type='dataset', revision=rev, cache_dir=str(tmp / 'new')))
+        exception = gitattributes_append_check(old_p.read_bytes(), new_p.read_bytes(), man_files, before)
+        blobs = {'old': (RL.git_blob_sha1(old_p), before[GITATTRIBUTES]['blob_id']),
+                 'new': (RL.git_blob_sha1(new_p), remote[GITATTRIBUTES]['blob_id'])}
+        for k, (got, want) in blobs.items():
+            if got != want:
+                exception['problems'].append(f'{k} download blob {got} != listed blob {want}')
+        not_lfs = [p for p in exception['appended_paths'] if not (remote.get(p) or {}).get('lfs_sha256')]
+        if not_lfs:
+            exception['problems'].append(f'appended rules for files not stored in LFS: {not_lfs[:5]}')
+        exception.update(ok=not exception['problems'], path=GITATTRIBUTES, revision_before=rb['revision'],
+                         revision_after=rev, old_blob_id=blobs['old'][1], new_blob_id=blobs['new'][1],
+                         old_sha256=RL.sha256(old_p), new_sha256=RL.sha256(new_p),
+                         approved='owner, 2026-11-13: append-only Hub LFS rules for new raw-baseline manifest files only')
     shutil.rmtree(tmp, ignore_errors=True)
-    return {'ok': private == PRIVATE and not (missing or bad or changed or unexpected), 'content_revision': rev,
-            'checked_new': len(exp), 'existing_unchanged': len(before) - len(changed), 'missing': missing,
-            'mismatched': bad, 'existing_changed': changed, 'unexpected': unexpected}
+    allowed = [GITATTRIBUTES] if exception and exception['ok'] else []
+    blocking = [r for r in changed if r not in allowed]
+    return {'ok': private == PRIVATE and not (missing or bad or blocking or unexpected), 'content_revision': rev,
+            'checked_new': len(exp), 'existing_files': len(before), 'existing_unchanged': len(before) - len(changed),
+            'missing': missing, 'mismatched': bad, 'existing_changed': changed,
+            'existing_changed_allowed_metadata_exception': allowed, 'existing_changed_blocking': blocking,
+            'gitattributes_exception': exception, 'unexpected': unexpected}
 
 
 def st_fresh_download() -> dict:
@@ -390,12 +473,36 @@ def st_fresh_download() -> dict:
     return {'ok': not errs, 'revision': rev, 'files': picks, 'problems': errs}
 
 
+TOOLING_ONLY = {'deploy/skipjack_3b_600m/release_raw_3b.py', 'deploy/skipjack_3b_600m/test_release_raw_3b.py'}
+
+
 def st_receipt() -> dict:
     from huggingface_hub import CommitOperationAdd
-    rec = {'dataset': REPO_ID, 'content_revision': record('verify_remote')['content_revision'],
+    vr = record('verify_remote')
+    code = {k: (record('code') or {}).get(k) for k in ('repo', 'branch', 'commit')}
+    training = json.loads((STAGE / TOP[1]).read_text())['code']['commit']    # what the published HANDOFF_RAW.json names
+    touched = sorted(set(RL.sh(['git', '-C', CHECKOUT, 'diff', '--name-only', training, code['commit']]).stdout.split()))
+    if RL.sh(['git', '-C', CHECKOUT, 'merge-base', '--is-ancestor', training, code['commit']], check=False).returncode \
+            or set(touched) - TOOLING_ONLY:
+        raise SystemExit(f'{code["commit"]} is not a release-tooling-only descendant of {training}: {touched}')
+    exc = vr.get('gitattributes_exception')
+    rec = {'dataset': REPO_ID, 'content_revision': vr['content_revision'],
            'manifest': TOP[0], 'manifest_sha256': record('stage')['top_files'][TOP[0]]['sha256'],
-           'code': {k: (record('code') or {}).get(k) for k in ('repo', 'branch', 'commit')},
-           'verify_remote': {k: v for k, v in record('verify_remote').items() if k != 'ok'},
+           'code': {**code, 'training_commit': training, 'release_tooling_commit': code['commit'],
+                    'files_changed_since_training_commit': touched,
+                    'note': f'{TOP[1]} and the README name training commit {training}; the branch head '
+                            f'{code["commit"]} differs from it only in release tooling (verification), never in training'},
+           'existing_release': {
+               'files_before': vr['existing_files'], 'byte_identical': vr['existing_unchanged'],
+               'metadata_exception': None if not exc else {
+                   'path': exc['path'], 'statement': (
+                       f'NOT byte-identical: the Hub appended {exc["appended_rules"]} LFS rules to {exc["path"]} '
+                       f'({exc["old_bytes"]} -> {exc["new_bytes"]} bytes). The pre-upload content is an exact byte prefix; '
+                       'every appended rule names exactly one new file of the raw-baseline manifest; none applies to an '
+                       'original release file. Accepted under the owner-approved exception of 2026-11-13.'),
+                   **{k: exc[k] for k in ('revision_before', 'revision_after', 'old_blob_id', 'new_blob_id', 'old_sha256',
+                                          'new_sha256', 'appended_rules', 'approved')}}},
+           'verify_remote': {k: v for k, v in vr.items() if k != 'ok'},
            'fresh_download': record('fresh_download'), 'written': time.strftime('%Y-%m-%dT%H:%M:%S%z')}
     p = WORK / 'RAW_UPLOAD_RECEIPT.json'
     RL.write_json(p, rec)
